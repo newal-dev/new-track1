@@ -173,3 +173,22 @@ test('different keyboards: full-width and Arabic-Indic digits, full-width @, and
   assert.equal(d.norm('Irra deebi’ii jalqabi'), d.norm("Irra deebi'ii jalqabi"));
   assert.equal(d.norm('ሰላም፡ዓለም፧'), 'ሰላም ዓለም');
 });
+test('language page listens right after each invitation: "አማርኛ" said after the Amharic one is caught by an Amharic recogniser', async () => {
+  const heard = [], played = [];
+  const d = make({ lp: true, welcome: true, l: 'en', manual: false });
+  d.canHear = () => true; d.beep = () => {};
+  d.playList = (items, cb) => { played.push(items.map(x => x.l + '/' + x.id).join(',')); if (cb) cb(); };
+  // A fake recogniser: silence in English, "አማርኛ" in Amharic.
+  d.recog = lang => { heard.push(lang); const r = { start() { setTimeout(() => { if (lang === 'am-ET') r.onresult({ results: [[{ transcript: 'አማርኛ' }]] }); r.onend(); }, 1); }, abort() {} }; return r; };
+  const chosen = await new Promise(res => { d.chooseLang = res; d.askLang(); });
+  assert.equal(chosen, 'am');
+  assert.deepEqual(played, ['en/langAsk', 'am/langSelf']); // it did not wait for the other four languages
+  assert.deepEqual(heard, ['en-US', 'am-ET']);
+});
+test('language page: a recogniser language the browser does not support falls back to the next one', async () => {
+  const heard = [];
+  const d = make({ lp: true, welcome: true, l: 'en', manual: false });
+  d.recog = lang => { heard.push(lang); const r = { start() { setTimeout(() => { if (lang === 'so-SO') { r.onerror({ error: 'language-not-supported' }); return; } r.onresult({ results: [[{ transcript: 'Soomaali' }]] }); r.onend(); }, 1); }, abort() {} }; return r; };
+  const chosen = await new Promise(res => { d.chooseLang = res; d.listenLang(['so-SO', 'en-US'], () => res('miss'), 0); });
+  assert.equal(chosen, 'so'); assert.deepEqual(heard, ['so-SO', 'en-US']);
+});

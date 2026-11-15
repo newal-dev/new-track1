@@ -80,6 +80,10 @@ const lev = (a, b) => { const d = Array.from({ length: b.length + 1 }, (x, k) =>
 // Spelling differences that do not matter when matching a spoken name: vowels, doubled letters, ph/f, gn/ny.
 const fold = w => w.replace(/ph/g, 'f').replace(/gn|ny/g, 'n').replace(/[aeiouy]+/g, 'a').replace(/(.)\1+/g, '$1');
 const LANG_RE = /^(en|am|om|ti|so|sid)$/;
+// Language page: which recogniser listens after each language's invitation, and for how long (ms after the microphone
+// is on). Amharic writes Ge'ez names (አማርኛ, ትግርኛ); Oromo and Sidama names are in Latin letters, which English catches.
+const LANG_EAR = { en: ['en-US'], am: ['am-ET', 'en-US'], om: ['en-US'], ti: ['am-ET', 'en-US'], so: ['so-SO', 'en-US'], sid: ['en-US'] };
+const LANG_WINDOW = 4000;
 const LANG = id => LANGS.find(x => x.id === id) || LANGS[0];
 // Keyboards differ: full-width digits and ＠ (phone keyboards, IMEs) and Arabic-Indic digits become plain 0-9 and @ before checking.
 const ascii = v => String(v == null ? '' : v).normalize('NFKC').replace(/[٠-٩۰-۹]/g, d => String(d.charCodeAt(0) & 0xF));
@@ -958,12 +962,32 @@ class DbForm extends HTMLElement {
     return err + j([T(s.q, l), T(s.hint, l), ...opts, ins]);
   }
 
-  // Language page, spoken: the English question, then each language's own invitation (from its own recorded clip), then listen.
+  // Language page, spoken. People answer as soon as they hear their own language, so the page does not wait until the
+  // end: after the English question, and after each language's own invitation, there is a beep and a short listening
+  // window (LANG_WINDOW) with a recogniser that suits that language (LANG_EAR). Any language name counts in any window.
+  // If nothing is caught, it asks once more in English and Amharic and listens with an Amharic recogniser.
   askLang() {
     if (this.manual || !this.lp) return;
-    const items = [{ l: 'en', id: 'langAsk', t: UI.langAsk.en }, ...LANGS.filter(x => x.id !== 'en').map(x => ({ l: x.id, id: 'langSelf', t: UI.langSelf[x.id] }))];
     this.say(UI.langAsk.en);
-    this.playList(items, () => this.cue(() => this.hearLang()));
+    this.langMicOff = false;
+    let n = 0;
+    const step = () => {
+      if (this.manual || !this.lp) return;
+      if (n >= LANGS.length) return this.langAgain();
+      const x = LANGS[n++], item = x.id === 'en' ? { l: 'en', id: 'langAsk', t: UI.langAsk.en } : { l: x.id, id: 'langSelf', t: UI.langSelf[x.id] };
+      this.playList([item], () => {
+        if (this.langMicOff || !this.canHear()) return step();
+        const k = this.tok; this.beep();
+        setTimeout(() => { if (k === this.tok) this.listenLang(LANG_EAR[x.id], step, LANG_WINDOW); }, 250);
+      });
+    };
+    step();
+  }
+  langAgain() {
+    if (this.manual || !this.lp || this.langMicOff || !this.canHear()) return;
+    const none = () => { this.say(UI.langNone.en); this.playList([{ l: 'en', id: 'langNone', t: UI.langNone.en }]); };
+    this.say(UI.langAgain.en + ' ' + UI.langAgain.am);
+    this.playList([{ l: 'en', id: 'langAgain', t: UI.langAgain.en }, { l: 'am', id: 'langAgain', t: UI.langAgain.am }], () => this.cue(() => this.listenLang(['am-ET', 'en-US'], none, 0), 'am'));
   }
 
   // Play clips that may be in different languages. A missing clip is read by a device voice for its language; if there is none, it is skipped.
@@ -1115,27 +1139,28 @@ class DbForm extends HTMLElement {
     return near.length === 1 ? near[0].id : '';
   }
 
-  // Listen for a language name. Round 0: an English recogniser (the question was asked in English). If it did not catch a
-  // language, round 1 asks once more, in English and Amharic, and listens with an Amharic recogniser, which writes
-  // Ethiopian language names (አማርኛ, ኦሮምኛ, ትግርኛ, ሶማሊኛ, ሲዳምኛ) far better.
-  hearLang(round = 0) {
+  // Listen once for a language name. srs: recogniser languages to try, in order (the next one if a language is not
+  // supported). miss(): called when nothing usable was heard. ms: how long to wait for speech to begin once the
+  // microphone is on (0 = as long as the browser waits). Once the person starts speaking, it waits for them to finish.
+  listenLang(srs, miss, ms) {
     if (this.manual || !this.lp) return;
-    const rec = this.recog(round ? 'am-ET' : 'en-US'); if (!rec) return;
-    let fin = false;
-    const retry = () => {
-      if (this.manual || !this.lp) return;
-      if (round) { this.say(UI.langNone.en); this.playList([{ l: 'en', id: 'langNone', t: UI.langNone.en }]); return; }
-      this.say(UI.langAgain.en + ' ' + UI.langAgain.am);
-      this.playList([{ l: 'en', id: 'langAgain', t: UI.langAgain.en }, { l: 'am', id: 'langAgain', t: UI.langAgain.am }], () => this.cue(() => this.hearLang(1), 'am'));
-    };
-    rec.onresult = e => { fin = true; const id = this.pickLang(alts(e)); if (id) this.chooseLang(id); else retry(); };
+    const [sr, ...rest] = srs, rec = this.recog(sr);
+    if (!rec) return miss();
+    let fin = false, spoke = false, timer = null;
+    const end = () => { fin = true; clearTimeout(timer); this.cap('idle'); if (this.rec === rec) this.rec = null; };
+    const done = id => { if (fin || this.manual) return; end(); if (id) this.chooseLang(id); else miss(); };
+    rec.onspeechstart = () => { spoke = true; clearTimeout(timer); };
+    // The window starts when the microphone is really on (not while Chrome still asks for permission).
+    rec.onaudiostart = () => { if (ms) timer = setTimeout(() => { if (spoke || fin || this.manual) return; end(); rec.onend = null; rec.onresult = null; try { rec.abort(); } catch (x) { /* ignore */ } miss(); }, ms); };
+    rec.onresult = e => done(this.pickLang(alts(e)));
     rec.onerror = e => {
-      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { fin = true; this.say(UI.micblocked.en); }
-      else if (e.error === 'language-not-supported') { fin = true; if (round) this.say(UI.langNone.en); else retry(); }
+      if (fin) return;
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { end(); this.langMicOff = true; this.say(UI.micblocked.en); miss(); }
+      else if (e.error === 'language-not-supported' && rest.length) { end(); rec.onend = null; this.listenLang(rest, miss, ms); }
     };
-    rec.onend = () => { this.cap('idle'); if (this.rec === rec) this.rec = null; if (!fin) { fin = true; retry(); } };
+    rec.onend = () => done('');
     this.rec = rec; this.cap('listening');
-    try { rec.start(); } catch (x) { /* the buttons still work */ }
+    try { rec.start(); } catch (x) { done(''); }
   }
 
   // A language was chosen (button or voice): switch, then ask "read aloud?" in that language.

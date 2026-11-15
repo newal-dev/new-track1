@@ -95,7 +95,7 @@ STEPS
    it is and ask me before stopping anything.
 5. Install and run the automated tests:
    - `npm ci`
-   - `npm test`  (expect 102 passing)
+   - `npm test`  (expect 104 passing)
    - `npx playwright install chromium`
    - `npm run test:a11y`  (expect 30 passed; it starts its own servers)
    - `npm run contrast`  (expect 75 of 75 pairs pass)
@@ -130,7 +130,7 @@ STEPS
       <li>pronunciation is understandable (write down words that sound wrong);</li>
       <li>after reading you hear "Speak now", a beep, and a <strong>Listening</strong> banner appears.</li>
     </ul></li>
-  <li><strong>Language page:</strong> the English voice names only English; then each language invites you in its own voice and by its own name. Say your language's name in your own words (for example "አማርኛ"): it should be chosen. If it is not understood, you hear "Please say the name of your language again" in English and Amharic, then a second beep.</li>
+  <li><strong>Language page:</strong> the English voice names only English; then each language invites you in its own voice and by its own name. After each language's invitation there is a beep: say your language's name in your own words right then (for example "አማርኛ" after the Amharic invitation). It should be chosen without waiting for the other languages. If it is not understood, you hear "Please say the name of your language again" in English and Amharic, then a second beep.</li>
   <li><strong>Tab test:</strong> press Tab and Shift+Tab. Each choice (radio choices too) is read as number, name and "selected" or "not selected". The consent boxes on the review page are read in your language.</li>
   <li><strong>Review page:</strong> it is read in your language: each answer with its number and question, then the consent sentence and "Do you want to submit your answers?". A typed name is read by an English voice if your device has none for your language.</li>
   <li>Press <strong>Escape</strong>: all sound stops at once.</li>

@@ -230,7 +230,7 @@ Do this once on a computer and once on a phone. It takes about 15 minutes.
 
 **Sound and voice** (Chrome or Edge, on HTTPS)
 - [ ] After a page is read, you hear "Speak now", then a beep, and the **Listening** banner appears.
-- [ ] On the language page, saying a language name works, also in its own words ("አማርኛ", "Afaan Oromoo", "ትግርኛ", "Soomaali", "Sidaamu Afoo"). If the first try is not understood, it asks again in English and Amharic.
+- [ ] On the language page, a beep follows the English question and each language's invitation; saying a language name right after the beep works, also in its own words ("አማርኛ", "Afaan Oromoo", "ትግርኛ", "Soomaali", "Sidaamu Afoo"). If the first try is not understood, it asks again in English and Amharic.
 - [ ] Saying a number ("two") or a word ("Next", "Back") works. A phone number can be spoken ("zero nine one one…") and is read back digit by digit.
 - [ ] In Amharic, Afaan Oromoo, Tigrinya, Somali and Sidaamu Afoo you hear the recorded clips (not silence), **including the review page**.
 

@@ -20,7 +20,7 @@ Results: **Supports**, **Partially supports**, **Does not support**, **Not appli
 | axe-core via @axe-core/playwright | axe-core 4.14.0 | Tags `wcag2a wcag2aa wcag21a wcag21aa wcag22aa`; 36 scans in 30 browser tests (`tests/a11y.spec.js`) | **0 violations of any impact** (0 critical, 0 serious, 0 moderate, 0 minor) |
 | Playwright | 1.65.1, Chromium 153.0.8010.12 | Keyboard-only completion of the job flow; Tab through every radio choice and Enter to choose (Amharic); keyboard help in the chosen language; Larger text kept after reload; every clip the spoken review page plays exists in all six languages; focus after each step and after errors; 640 px (200%) and 320 px (400%) widths; captions with sound off; drafts; offline | 30 of 30 pass |
 | `tools/contrast-check.mjs` (`npm run contrast`) | in repo | 15 colour pairs (text 4.5:1, non-text 3:1) in each of the 5 token sets | **75 of 75 pass**; see section 4 |
-| Node test runner | Node 20+ | `tests/core.test.js`, `tests/voice.test.js`, `tests/api.test.js` | 102 of 102 pass |
+| Node test runner | Node 20+ | `tests/core.test.js`, `tests/voice.test.js`, `tests/api.test.js` | 104 of 104 pass |
 
 The 34 axe scans: language page (3 flows); read-aloud question and welcome (Amharic); every sign-up question, review with consent and thank-you; error states for required answer, phone format, missing consent and date without month; employer Ethiopian date; six themes, each with an error showing; 200% and 400% zoom; caption box while reading aloud; draft offer; offline-queued page; Amharic question page; Savanna-style host; demo LMS; LTI launch page; SMS inbox; design system page. Raw results are attached to each run in `test-results/a11y-results.json` (attachment `axe-scans`).
 
@@ -114,7 +114,7 @@ The pass/fail gate needs these results. Fill each row after the session using `d
 |---|---|---|
 | Time-outs locked people out | No time limits; drafts kept on the device | 2.2.1; test "drafts…" |
 | Long pages were overwhelming | One question per screen, progress "Question n of t" | All flow tests |
-| Voice and review were needed | Speak button, hands-free mode, review page with Change and "Start again" | `tests/voice.test.js` (22 tests) |
+| Voice and review were needed | Speak button, hands-free mode, review page with Change and "Start again" | `tests/voice.test.js` (24 tests) |
 | Read-aloud in Ethiopian languages | Recorded clips in am, om, ti, so; captions for every clip | `public/audio/` (79 clips per language) |
 | Blocked without a kebele ID | Four routes, including "I don't have an ID. Refer me through a partner"; no document number collected | API test "only known ID routes are stored" |
 | Support needs felt like a medical form | Functional, non-medical labels; optional; "No proof needed"; separate consent; never shown to employers | API tests "privacy isolation", "support needs are dropped without their own consent" |
