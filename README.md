@@ -30,6 +30,8 @@ Wait until you see `Plugin server on http://localhost:3000`, then open:
 
 **Without Docker:** `npm ci`, then `npm start` in one terminal and `npm run demo` in another. The URLs are the same.
 
+**Online (one server, one address):** the API server also serves the demo partner site at `/site/` (the bare address opens it), so the whole MVP can be deployed as one container. Step by step for Render's free plan (a `render.yaml` blueprint is included): **[DEPLOY.md](DEPLOY.md)**.
+
 **Run the tests:**
 ```sh
 npm ci
@@ -95,7 +97,7 @@ A **keyboard help strip** at the top of every page says this in the chosen langu
 There are no time limits anywhere. The same information is in [`openapi.yaml`](openapi.yaml) (`info.description` and `x-accessibility`).
 
 ## Languages, voice and audio
-- The first page asks in English for English only; then each language invites its own speakers in its own voice and by its own name ("ለአማርኛ «አማርኛ» ይበሉ"). People can answer with the English name or their own ("አማርኛ", "Afaan Oromoo", "ትግርኛ", "Soomaali", "Sidaamu Afoo"): people answer as soon as they hear their own language, so after the English question and after each language's invitation there is a beep and a 4-second listening window, with a recogniser that suits that language (Amharic and Tigrinya: Amharic recognition, which writes the Ge'ez names; Somali: Somali; others: English). The recogniser's five best guesses are checked, common mis-hearings and near misses count, and if nothing is understood it asks again in English and Amharic and listens with an Amharic recogniser. All non-English text is a **draft** until a native speaker checks it: the Amharic, and every line marked `VERIFY_NATIVE`.
+- The first page asks in English for English only; then each language invites its own speakers in its own voice and by its own name ("ለአማርኛ «አማርኛ» ይበሉ"). People can answer with the English name or their own ("አማርኛ", "Afaan Oromoo", "ትግርኛ", "Soomaali", "Sidaamu Afoo"): people answer as soon as they hear their own language, so after the English question and after each language's invitation there is a beep and a 4-second listening window, with a recogniser that suits that language (Amharic and Tigrinya: Amharic recognition, which writes the Ge'ez names; Somali: Somali; others: English). The recogniser's five best guesses are checked, common mis-hearings and near misses count, and if nothing is understood it asks again in English and Amharic and listens with an Amharic recogniser. The **Amharic** text has been checked by a native speaker. Afaan Oromoo, Tigrinya, Somali and Sidaamu Afoo are still **drafts** until native speakers check them (every line marked `VERIFY_NATIVE`).
 - **Read aloud** plays clips from `public/audio/{en,am,om,ti,so,sid}/` (Meta MMS-TTS, made offline in Google Colab). It falls back to the device voice, and says so when there is none. English uses the device voice.
 - **The review page is spoken in every language**, from short clips: heading, number, question, the chosen option (or "skipped"), a phone number digit by digit, the consent sentence and the question. Only words the person typed (a name) need a voice: the device voice for the language, or else an English voice, with Ge'ez spelled in Latin letters, so it is never silent. The same applies to the consent boxes, colour themes and job titles when they get keyboard focus.
 - To regenerate clips: `npm run recording`, then follow "How to make the clips" in [RECORDING_SCRIPT.md](RECORDING_SCRIPT.md). Every clip the form uses exists for every language (a browser test checks the review page's clips).
@@ -152,7 +154,7 @@ docs/                  WCAG 2.2 AA report, manual test script
 
 ## Known limitations
 - Not yet tested with NVDA, TalkBack or the co-designer: see section 1.2 of the WCAG report.
-- Translations are drafts until native speakers check them.
+- Afaan Oromoo, Tigrinya, Somali and Sidaamu Afoo translations are drafts until native speakers check them (Amharic is checked).
 - Browser speech recognition often has no Afaan Oromoo or Tigrinya, so people type instead.
 - LTI is launch only. Not tested inside the real Savanna.
 - Storage is in memory and there is no authentication (demo).

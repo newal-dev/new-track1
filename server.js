@@ -60,7 +60,8 @@ export function jobPosting(j, base) {
 }
 
 export async function createApp(opt = {}) {
-  const BASE = (opt.publicUrl || process.env.PUBLIC_URL || 'http://localhost:3000').replace(/\/$/, '');
+  // Render.com and similar hosts give the public address in RENDER_EXTERNAL_URL, so a one-click deploy needs no settings.
+  const BASE = (opt.publicUrl || process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000').replace(/\/$/, '');
   const SECRET = opt.secret || process.env.APP_SECRET || randomBytes(32).toString('hex');
   const ADMIN = opt.adminToken ?? process.env.ADMIN_TOKEN ?? '';
   const origins = (opt.origins ?? process.env.ALLOWED_ORIGINS ?? '').split(',').map(x => x.trim()).filter(Boolean);
@@ -91,11 +92,24 @@ export async function createApp(opt = {}) {
   app.get('/db-sw.js', (q, r) => fresh(r.type('application/javascript')).send(fs.readFileSync(path.join(ROOT, 'public/db-sw.js'), 'utf8').replace(/const DB_CACHE = '[^']*';/, `const DB_CACHE = 'db-form-${RELEASE}';`)));
   app.get('/openapi.yaml', (q, r) => r.type('text/yaml').sendFile(path.join(ROOT, 'openapi.yaml')));
   app.use(express.static(path.join(ROOT, 'public'), { maxAge: '1h', setHeaders: (r, p) => { if (/[\\/]audio[\\/]/.test(p)) fresh(r); } }));
+  // The demo partner site, from this same server, at /site/ (one address for a deployed MVP). Its pages point at
+  // http://localhost:3000; that is replaced with this server's own address as they are sent.
+  const SITE = path.join(ROOT, 'demo-host');
+  app.get('/site', (q, r, next) => (q.path === '/site' ? r.redirect(301, '/site/') : next()));
+  app.get(/^\/site\/(.*)$/, (q, r, next) => {
+    const rel = q.params[0] || 'index.html', f = path.normalize(path.join(SITE, rel));
+    if (!f.startsWith(SITE + path.sep) || !fs.existsSync(f) || !fs.statSync(f).isFile()) return next();
+    if (!/\.(html|js|css)$/.test(f)) return r.sendFile(f);
+    const type = f.endsWith('.html') ? 'html' : f.endsWith('.js') ? 'application/javascript' : 'css';
+    fresh(r.type(type)).send(fs.readFileSync(f, 'utf8').replaceAll('http://localhost:3000', BASE));
+  });
+  // The front door: people (and judges) opening the bare address land on the demo site; ?info shows the server summary.
+  app.get('/', (q, r, next) => ('info' in q.query || process.env.ROOT_INFO === '1' ? next() : r.redirect(302, '/site/')));
   app.get('/', (q, r) => r.type('text').send(`Inclusive Access plugin server.
 Widget: ${BASE}/widget.js   (also /db-form.js)
 API: ${BASE}/v1/health, ${BASE}/v1/jobs   OpenAPI: ${BASE}/openapi.yaml
 LTI 1.3: ${BASE}/lti/config.json   Demo LMS: ${BASE}/demo/lms   SMS inbox: ${BASE}/demo/sms-inbox
-Demo partner site: http://localhost:8080`));
+Demo partner site: ${BASE}/site/ (and http://localhost:8080 with docker compose)`));
 
   // ---- REST API (Level 2) ----
   app.get('/v1/health', (q, r) => r.json({ ok: true, consentVersion: CONSENT_VERSION }));

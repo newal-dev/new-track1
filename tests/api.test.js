@@ -40,6 +40,15 @@ describe('health and widget', () => {
     assert.doesNotMatch(sw, /db-form-v\d/);
     assert.match(sw, /cache: 'no-cache'/);
   });
+  test('the demo partner site is served at /site/ with the server address filled in, and the bare address opens it', async () => {
+    const r = await fetch(U + '/', { redirect: 'manual' }); assert.equal(r.status, 302); assert.equal(r.headers.get('location'), '/site/');
+    const html = await (await fetch(U + '/site/')).text();
+    assert.ok(html.includes(U + '/widget.js') && !html.includes('localhost:3000'));
+    assert.ok((await (await fetch(U + '/site/db-sw.js')).text()).includes(U + '/db-sw.js'));
+    assert.equal((await fetch(U + '/site/savanna.html')).status, 200);
+    assert.equal((await fetch(U + '/site/../server.js')).status, 404);
+    assert.match(await (await fetch(U + '/?info')).text(), /Inclusive Access plugin server/);
+  });
   test('db-form.js is still served (old install snippet)', async () => { assert.equal((await fetch(U + '/db-form.js')).status, 200); });
   test('OpenAPI spec is served', async () => { const t = await (await fetch(U + '/openapi.yaml')).text(); assert.match(t, /openapi: 3/); });
   test('service worker and local fonts are served', async () => {

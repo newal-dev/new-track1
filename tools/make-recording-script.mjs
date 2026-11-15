@@ -78,7 +78,7 @@ for (const flow of ['signup', 'job', 'employer']) {
 // clips[lang][id] = text
 const clips = Object.fromEntries(ALL.map(l => [l, Object.fromEntries(items.filter(it => it.langs.includes(l)).map(it => [it.id, it.t(l)]))]));
 const count = l => Object.keys(clips[l]).length, total = ALL.reduce((s, l) => s + count(l), 0);
-const label = Object.fromEntries(LANGS.map(x => [x.id, x.id === 'en' ? 'English' : x.id === 'am' ? 'አማርኛ (draft, must be checked)' : `${x.name} (draft, VERIFY_NATIVE)`]));
+const label = Object.fromEntries(LANGS.map(x => [x.id, x.id === 'en' ? 'English' : x.id === 'am' ? 'አማርኛ (checked by a native speaker)' : `${x.name} (draft, VERIFY_NATIVE)`]));
 
 let md = `# Recording script for read-aloud audio
 

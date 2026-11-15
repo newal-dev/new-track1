@@ -135,7 +135,7 @@ Most phones have **no voice** for Amharic, Afaan Oromoo, Tigrinya or Somali. So 
 - The clips live in folders on the server: `audio/en/`, `audio/am/`, `audio/om/`, `audio/ti/`, `audio/so/`. File name = clip id + `.mp3`, for example `audio/am/fullName.mp3`.
 - **Making the clips** (free, about 20 minutes): follow "How to make the clips" in [`RECORDING_SCRIPT.md`](RECORDING_SCRIPT.md). In short: run `npm run recording`, paste `tools/colab_generate_audio.py` into Google Colab, press Run, unzip `audio.zip` into `public/audio/`.
 - **Licence:** the voice models (Meta MMS-TTS) are licensed **CC-BY-NC 4.0, non-commercial**. Clips made with them are fine for non-profit programmes. A commercial service needs human recordings or another voice; the file names stay the same.
-- **A native speaker must listen to every clip** before you go live. The Afaan Oromoo, Tigrinya and Somali text is a draft (marked `VERIFY_NATIVE` in the code), and the Amharic must also be checked.
+- **A native speaker must listen to every clip** before you go live. The Afaan Oromoo, Tigrinya, Somali and Sidaamu Afoo text is a draft (marked `VERIFY_NATIVE` in the code). The Amharic text has been checked by a native speaker.
 - If you change any wording in the form, run `npm run recording` again and remake the changed clips.
 - If you host the audio somewhere else (for example a CDN), point the `audio` attribute there. Audio files do not need any special CORS headers.
 

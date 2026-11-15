@@ -5,7 +5,7 @@
    <db-form flow='employer' api='https://YOUR-HOST/v1'></db-form>     any flow (the original tag)
    partner: name shown in the consent question.  sw: path of the partner's one-line service worker (offline).  asr: browser | off | a name registered with DbForm.registerASR().  fonts='no': do not load the local fonts.  jsonld='no': do not add schema.org/JobPosting to the page.
    flow: signup | job | employer.  lang: en | am | om | ti | so | sid (anything else falls back to en).  lang-ask='no': skip the first page that asks for the language (shown in English by default).  theme: auto | standard | dark | contrast | rg | by (the person's own choice in the Colours menu wins).  CSS hooks on <db-form>: --db-accent, --db-font.  hide: optional comma list of question ids to leave out, e.g. hide='idRoute,support' (fullName, role and job cannot be hidden).  audio: optional base URL of recorded .mp3 files (BASE/en|am|om|ti|so/QUESTIONID.mp3).  Events: db-complete, db-error.
-   Amharic text is a DRAFT: have a native speaker check every string before submitting.
+   Amharic text was checked by a native Amharic speaker (15 Nov 2026).
    Afaan Oromoo (om), Tigrinya (ti), Somali (so) and Sidaamu Afoo (sid, see the SID block) text is a machine-assisted DRAFT: every line marked // VERIFY_NATIVE must be reviewed by a native speaker. */
 // Everything below is block-scoped so its names (LANGS, UI, T, ...) never clash with the host page's own scripts.
 {

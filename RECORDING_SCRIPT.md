@@ -200,13 +200,13 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Please say the name of your language again.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/langAgain.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/langAgain.mp3`
 
 > እባክዎ የቋንቋዎን ስም እንደገና ይናገሩ።
 
 ### `langSelf`: Language page: invitation in the language itself (played after langAsk)
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/langSelf.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/langSelf.mp3`
 
 > ለአማርኛ «አማርኛ» ይበሉ፤ ወይም «አማርኛ» የሚለውን ቁልፍ ይጫኑ።
 
@@ -232,7 +232,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Would you like this page to be read aloud to you? Please say Yes or No, or press a button. If you choose Yes, or press a Speak button later, your browser may send your voice to its provider to turn it into text. You can choose No and type instead.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/raAsk.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/raAsk.mp3`
 
 > ይህ ገጽ እንዲነበብልዎ ይፈልጋሉ? «አዎ» ወይም «አይ» ይበሉ፤ ወይም አንድ ቁልፍ ይጫኑ። «አዎ» ከመረጡ ወይም በኋላ «ተናገር» ከተጫኑ አሳሽዎ ድምፅዎን ወደ ጽሑፍ ለመቀየር ወደ አቅራቢው ሊልክ ይችላል። «አይ» መርጠው በምትኩ መጻፍ ይችላሉ።
 
@@ -258,7 +258,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > We did not hear an answer, so we will take that as No. If you would like the page read aloud, please say Yes now, or press the Yes button.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/raAgain.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/raAgain.mp3`
 
 > መልስ አልሰማንም። እንደ «አይ» እንወስደዋለን። እንዲነበብልዎ ከፈለጉ አሁን «አዎ» ይበሉ ወይም «አዎ» የሚለውን ይጫኑ።
 
@@ -284,7 +284,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Welcome! A simpler way to register and find opportunities. Start. Start with voice. Read to me. On a keyboard: press Tab to go down, Shift and Tab to go up, Space or Enter to choose, and Escape to stop the voice. Say Start to begin.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/welcome.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/welcome.mp3`
 
 > እንኳን ደህና መጡ! ለመመዝገብና ዕድሎችን ለማግኘት ቀለል ያለ መንገድ። ጀምር. በድምፅ ጀምር. አንብቡልኝ. በቁልፍ ሰሌዳ፦ ወደ ታች ለመሄድ Tab፣ ወደ ላይ ለመመለስ Shift እና Tab፣ ለመምረጥ Space ወይም Enter፣ ድምፁን ለማቆም Escape ይጫኑ። ለመጀመር «ጀምር» ይበሉ።
 
@@ -310,7 +310,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > How would you like to use this form? Optional. You can skip this. 1: Larger text. 2: Pictures next to choices. Say the number or the name of your choice. Say Next to continue, or Read aloud to hear this again. Say Skip to skip this question.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/prefs.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/prefs.mp3`
 
 > ይህን ቅጽ እንዴት መጠቀም ይፈልጋሉ? አማራጭ ነው። መዝለል ይችላሉ። 1: ትልቅ ጽሑፍ. 2: ከምርጫዎች ጋር ሥዕሎች. የምርጫዎን ቁጥር ወይም ስም ይናገሩ። ለመቀጠል «ቀጥል»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ። ይህን ጥያቄ ለመዝለል «ዝለል» ይበሉ።
 
@@ -336,7 +336,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > What is your full name? The name you use every day is fine. Speak your answer now. Say Next to continue, Back to go back, or Read aloud to hear this again.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/fullName.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/fullName.mp3`
 
 > ሙሉ ስምዎ ማነው? በየቀኑ የሚጠቀሙበት ስም በቂ ነው። መልስዎን አሁን ይናገሩ። ለመቀጠል «ቀጥል»፣ ለመመለስ «ተመለስ»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ።
 
@@ -362,7 +362,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > What phone number or email can we use? Only used to contact you about this programme. A phone number has 10 digits and starts with 0. You can say it or type it. Speak your answer now. Say Next to continue, Back to go back, or Read aloud to hear this again.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/contact.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/contact.mp3`
 
 > ልናገኝዎ የምንችልበት ስልክ ቁጥር ወይም ኢሜይል ምንድን ነው? ስለዚህ ፕሮግራም ለማግኘት ብቻ ነው የሚያገለግለው። ስልክ ቁጥር በዜሮ የሚጀምር ባለ አሥር አሃዝ ነው። መናገር ወይም መጻፍ ይችላሉ። መልስዎን አሁን ይናገሩ። ለመቀጠል «ቀጥል»፣ ለመመለስ «ተመለስ»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ።
 
@@ -388,7 +388,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > How would you like to show who you are? 1: Kebele ID or passport. 2: Refugee or returnee ID. 3: Another document. 4: I don't have an ID. Refer me through a partner organisation. Say the number or the name of your choice. Say Next to continue, Back to go back, or Read aloud to hear this again.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/idRoute.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/idRoute.mp3`
 
 > ማንነትዎን እንዴት ማሳየት ይፈልጋሉ? 1: ቀበሌ መታወቂያ ወይም ፓስፖርት. 2: የስደተኛ ወይም ተመላሽ መታወቂያ. 3: ሌላ ሰነድ. 4: ሰነድ የለኝም። አጋር ድርጅት እንዲያመላክተኝ ይጠይቁ. የምርጫዎን ቁጥር ወይም ስም ይናገሩ። ለመቀጠል «ቀጥል»፣ ለመመለስ «ተመለስ»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ።
 
@@ -414,7 +414,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > What support would help you? Choose any. You can skip this. No proof needed. Only the organisers see it, and only to prepare help for you. 1: I use a screen reader. 2: Large text. 3: I prefer to speak my answers. 4: Ethiopian Sign Language interpreter. 5: Simple words and pictures. 6: Please call me to help. Say the number or the name of your choice. Say Next to continue, Back to go back, or Read aloud to hear this again. Say Skip to skip this question.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/support.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/support.mp3`
 
 > ምን ዓይነት እገዛ ይጠቅምዎታል? የፈለጉትን ይምረጡ። ይህን መዝለል ይችላሉ። ማስረጃ አያስፈልግም። አዘጋጆቹ ብቻ ያዩታል፤ ለእርስዎ እገዛ ለማዘጋጀት ብቻ። 1: ስክሪን ሪደር እጠቀማለሁ. 2: ትልቅ ጽሑፍ. 3: መልሶቼን በድምፅ መናገር እመርጣለሁ. 4: የኢትዮጵያ ምልክት ቋንቋ አስተርጓሚ. 5: ቀላል ቃላትና ሥዕሎች. 6: እባክዎ ደውለው ያግዙኝ. የምርጫዎን ቁጥር ወይም ስም ይናገሩ። ለመቀጠል «ቀጥል»፣ ለመመለስ «ተመለስ»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ። ይህን ጥያቄ ለመዝለል «ዝለል» ይበሉ።
 
@@ -440,7 +440,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > What support do you need at work? Choose any. Private. This stays on your device and is only used to show suitable jobs. 1: Step-free workplace. 2: Screen-reader friendly tools. 3: Sign language interpreter. 4: Flexible hours. 5: Work from home. Say the number or the name of your choice. Say Next to continue, or Read aloud to hear this again. Say Skip to skip this question.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/needs.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/needs.mp3`
 
 > በሥራ ላይ ምን እገዛ ያስፈልግዎታል? የፈለጉትን ይምረጡ። ሚስጥራዊ ነው። በመሣሪያዎ ላይ ብቻ ይቆያል፤ ተስማሚ ሥራዎችን ለማሳየት ብቻ ነው። 1: ከደረጃ ነፃ የሥራ ቦታ. 2: ለስክሪን ሪደር ተስማሚ መሣሪያዎች. 3: የምልክት ቋንቋ አስተርጓሚ. 4: ተለዋዋጭ የሥራ ሰዓት. 5: ከቤት መሥራት. የምርጫዎን ቁጥር ወይም ስም ይናገሩ። ለመቀጠል «ቀጥል»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ። ይህን ጥያቄ ለመዝለል «ዝለል» ይበሉ።
 
@@ -466,7 +466,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Why do you want this job? A few words are enough. You can speak instead. Speak your answer now. Say Next to continue, Back to go back, or Read aloud to hear this again.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/why.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/why.mp3`
 
 > ይህን ሥራ ለምን ይፈልጋሉ? ጥቂት ቃላት በቂ ናቸው። በድምፅ መናገርም ይችላሉ። መልስዎን አሁን ይናገሩ። ለመቀጠል «ቀጥል»፣ ለመመለስ «ተመለስ»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ።
 
@@ -492,7 +492,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > What is the job title? Speak your answer now. Say Next to continue, or Read aloud to hear this again.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/job.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/job.mp3`
 
 > የሥራው መጠሪያ ምንድን ነው? መልስዎን አሁን ይናገሩ። ለመቀጠል «ቀጥል»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ።
 
@@ -518,7 +518,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Which adjustments can this job offer? 1: Step-free workplace. 2: Screen-reader friendly tools. 3: Sign language interpreter. 4: Flexible hours. 5: Work from home. Say the number or the name of your choice. Say Next to continue, Back to go back, or Read aloud to hear this again. Say Skip to skip this question.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/offers.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/offers.mp3`
 
 > ይህ ሥራ ምን ዓይነት ማስተካከያዎችን ማቅረብ ይችላል? 1: ከደረጃ ነፃ የሥራ ቦታ. 2: ለስክሪን ሪደር ተስማሚ መሣሪያዎች. 3: የምልክት ቋንቋ አስተርጓሚ. 4: ተለዋዋጭ የሥራ ሰዓት. 5: ከቤት መሥራት. የምርጫዎን ቁጥር ወይም ስም ይናገሩ። ለመቀጠል «ቀጥል»፣ ለመመለስ «ተመለስ»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ። ይህን ጥያቄ ለመዝለል «ዝለል» ይበሉ።
 
@@ -544,7 +544,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > When do applications close? Optional. Ethiopian calendar. If you only know the month, choose Not sure for the day. Please type your answer in the box. Then press Enter, or press the Next button.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/closes.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/closes.mp3`
 
 > ማመልከቻ መቼ ይዘጋል? አማራጭ ነው። በኢትዮጵያ አቆጣጠር። ወሩን ብቻ ካወቁ ለቀኑ «እርግጠኛ አይደለሁም» ይምረጡ። እባክዎ መልስዎን በሳጥኑ ውስጥ ይጻፉ። ከዚያ Enter ወይም «ቀጥል» የሚለውን ቁልፍ ይጫኑ።
 
@@ -570,7 +570,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Please answer this question, or press Back.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/errNeed.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/errNeed.mp3`
 
 > እባክዎ ይህን ጥያቄ ይመልሱ ወይም ተመለስ ይጫኑ።
 
@@ -596,7 +596,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Please type a phone number with 10 digits, starting with zero, or an email address with an @ sign.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/errBad.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/errBad.mp3`
 
 > እባክዎ በዜሮ የሚጀምር ባለ አሥር አሃዝ ስልክ ቁጥር ይጻፉ፤ ወይም «@» ምልክት ያለው ኢሜይል አድራሻ ይጻፉ።
 
@@ -622,7 +622,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > We could not send your answers. Nothing is lost. Please try again.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/errFail.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/errFail.mp3`
 
 > መልሶችዎን መላክ አልቻልንም። ምንም አልጠፋም። እባክዎ እንደገና ይሞክሩ።
 
@@ -648,7 +648,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Sorry, I did not understand. Please say the number of your choice.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/unclear.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/unclear.mp3`
 
 > ይቅርታ፣ አልገባኝም። እባክዎ የምርጫዎን ቁጥር ይናገሩ።
 
@@ -674,7 +674,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Nothing is chosen. Say a number or a name, or say Skip.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/noneSel.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/noneSel.mp3`
 
 > ምንም አልተመረጠም። ቁጥር ወይም ስም ይናገሩ፤ ወይም «ዝለል» ይበሉ።
 
@@ -700,7 +700,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > We did not hear you. Press the big Speak button, or press Stop reading to use the keyboard.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/idle.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/idle.mp3`
 
 > አልሰማንዎትም። ትልቁን «ተናገር» ቁልፍ ይጫኑ፤ ወይም ኪቦርድ ለመጠቀም «ማንበብ አቁም» ይጫኑ።
 
@@ -726,7 +726,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Say Start to begin.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/sayWelcome.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/sayWelcome.mp3`
 
 > ለመጀመር «ጀምር» ይበሉ።
 
@@ -752,7 +752,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Do you want to submit your answers? Say Yes to submit, or No to change something.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/reviewAsk.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/reviewAsk.mp3`
 
 > መልሶችዎን ማስገባት ይፈልጋሉ? ለማስገባት «አዎ»፣ አንድ ነገር ለመቀየር «አይ» ይበሉ።
 
@@ -778,7 +778,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > We heard your answer. It is shown on the screen. Say Next to continue, or say your answer again.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/heardGeneric.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/heardGeneric.mp3`
 
 > መልስዎን ሰምተናል። በማያ ገጹ ላይ ይታያል። ለመቀጠል «ቀጥል» ይበሉ ወይም መልስዎን እንደገና ይናገሩ።
 
@@ -804,7 +804,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > You chose
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/choseA.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/choseA.mp3`
 
 > የመረጡት
 
@@ -830,7 +830,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Say Next to continue, or choose again.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/choseB.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/choseB.mp3`
 
 > ለመቀጠል «ቀጥል» ይበሉ ወይም እንደገና ይምረጡ።
 
@@ -856,7 +856,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Please tick the box to agree before sending, or press Back.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/errConsentNeed.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/errConsentNeed.mp3`
 
 > ከመላክዎ በፊት ለመስማማት ሳጥኑን ምልክት ያድርጉ፤ ወይም ተመለስ ይጫኑ።
 
@@ -882,7 +882,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Please choose a month, or set day and year to Not sure to skip the date.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/errDateBad.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/errDateBad.mp3`
 
 > እባክዎ ወር ይምረጡ፤ ወይም ቀኑን ለመዝለል ቀንና ዓመትን «እርግጠኛ አይደለሁም» ያድርጉ።
 
@@ -908,7 +908,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Welcome back Your answers from last time are kept on this device. Continue where I stopped Start again
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/draftH.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/draftH.mp3`
 
 > እንኳን ደህና ተመለሱ ካለፈው ጊዜ መልሶችዎ በዚህ መሣሪያ ላይ ተቀምጠዋል። ካቆምኩበት ቀጥል እንደገና ጀምር
 
@@ -934,7 +934,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > You are offline. Your answers are saved on this device and will be sent when you are back online.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/queued.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/queued.mp3`
 
 > ከመስመር ውጭ ነዎት። መልሶችዎ በዚህ መሣሪያ ላይ ተቀምጠዋል፤ መስመር ላይ ሲመለሱ ይላካሉ።
 
@@ -960,7 +960,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Your saved answers have now been sent.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/sentLater.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/sentLater.mp3`
 
 > የተቀመጡት መልሶችዎ አሁን ተልከዋል።
 
@@ -986,7 +986,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Press any key or tap the screen to hear the questions.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/tapToHear.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/tapToHear.mp3`
 
 > ጥያቄዎቹን ለመስማት ማንኛውንም ቁልፍ ይጫኑ ወይም ማያውን ይንኩ።
 
@@ -1012,7 +1012,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Zero
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/n0.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/n0.mp3`
 
 > ዜሮ
 
@@ -1038,7 +1038,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > One
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/n1.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/n1.mp3`
 
 > አንድ
 
@@ -1064,7 +1064,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Two
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/n2.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/n2.mp3`
 
 > ሁለት
 
@@ -1090,7 +1090,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Three
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/n3.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/n3.mp3`
 
 > ሦስት
 
@@ -1116,7 +1116,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Four
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/n4.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/n4.mp3`
 
 > አራት
 
@@ -1142,7 +1142,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Five
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/n5.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/n5.mp3`
 
 > አምስት
 
@@ -1168,7 +1168,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Six
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/n6.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/n6.mp3`
 
 > ስድስት
 
@@ -1194,7 +1194,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Seven
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/n7.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/n7.mp3`
 
 > ሰባት
 
@@ -1220,7 +1220,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Eight
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/n8.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/n8.mp3`
 
 > ስምንት
 
@@ -1246,7 +1246,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Nine
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/n9.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/n9.mp3`
 
 > ዘጠኝ
 
@@ -1272,7 +1272,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Check your answers
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/reviewH.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/reviewH.mp3`
 
 > መልሶችዎን ያረጋግጡ
 
@@ -1298,7 +1298,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > (skipped)
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/skipped.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/skipped.mp3`
 
 > (ተዘሏል)
 
@@ -1324,7 +1324,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > To change an answer with the keyboard, press Tab until you reach its Change button, then press Enter.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/reviewKeys.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/reviewKeys.mp3`
 
 > መልስ በቁልፍ ሰሌዳ ለመቀየር፣ የመልሱ «ቀይር» ቁልፍ ላይ እስኪደርሱ Tab ይጫኑ፤ ከዚያ Enter ይጫኑ።
 
@@ -1350,7 +1350,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > I agree to send these answers to the organisers of this website.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/consentOrg.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/consentOrg.mp3`
 
 > እነዚህን መልሶች ለየዚህ ድረ-ገጽ አዘጋጆች ለመላክ እስማማለሁ።
 
@@ -1376,7 +1376,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > I agree to send these answers to 
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/consentSendA.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/consentSendA.mp3`
 
 > እነዚህን መልሶች ለ
 
@@ -1398,7 +1398,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 ### `consentSendB`: Consent sentence, part after the partner name (only where words follow the name)
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/consentSendB.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/consentSendB.mp3`
 
 >  ለመላክ እስማማለሁ።
 
@@ -1420,7 +1420,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Also share my support choices with the organisers, so they can prepare help. If you leave this empty, your support choices are not sent.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/consentSupport.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/consentSupport.mp3`
 
 > የእገዛ ምርጫዎቼንም እገዛ እንዲያዘጋጁ ለአዘጋጆቹ አጋራ። ይህን ባዶ ከተዉት የእገዛ ምርጫዎችዎ አይላኩም።
 
@@ -1446,7 +1446,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > You chose some support. Do you also want to share your support choices with the organisers, so they can prepare help? Say Yes or No.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/askSupport.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/askSupport.mp3`
 
 > የእገዛ ምርጫ መርጠዋል። እገዛ እንዲያዘጋጁ የእገዛ ምርጫዎችዎን ለአዘጋጆቹም ማጋራት ይፈልጋሉ? «አዎ» ወይም «አይ» ይበሉ።
 
@@ -1472,7 +1472,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > We heard
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/heardA.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/heardA.mp3`
 
 > የሰማነው
 
@@ -1498,7 +1498,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Say Next to continue, or say your answer again.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/heardB.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/heardB.mp3`
 
 > ለመቀጠል «ቀጥል» ይበሉ ወይም መልስዎን እንደገና ይናገሩ።
 
@@ -1524,7 +1524,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Colours and text size
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/display.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/display.mp3`
 
 > ቀለምና የጽሑፍ መጠን
 
@@ -1550,7 +1550,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Same as my device
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/th_auto.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/th_auto.mp3`
 
 > እንደ መሣሪያዬ
 
@@ -1576,7 +1576,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Standard
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/th_standard.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/th_standard.mp3`
 
 > መደበኛ
 
@@ -1602,7 +1602,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Dark
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/th_dark.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/th_dark.mp3`
 
 > ጨለማ
 
@@ -1628,7 +1628,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > High contrast (black and white)
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/th_contrast.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/th_contrast.mp3`
 
 > ከፍተኛ ንፅፅር (ጥቁርና ነጭ)
 
@@ -1654,7 +1654,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Blue and orange (for red-green colour blindness)
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/th_rg.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/th_rg.mp3`
 
 > ሰማያዊና ብርቱካናማ (ቀይና አረንጓዴን ለማይለዩ)
 
@@ -1680,7 +1680,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Teal and red (for blue-yellow colour blindness)
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/th_by.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/th_by.mp3`
 
 > ደማቅ አረንጓዴና ቀይ (ሰማያዊና ቢጫን ለማይለዩ)
 
@@ -1706,7 +1706,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Say Start again to go back to the first question, or say the number of the question you want to change.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/reviewFix.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/reviewFix.mp3`
 
 > ወደ መጀመሪያው ጥያቄ ለመመለስ «እንደገና ጀምር» ይበሉ፤ ወይም መቀየር የሚፈልጉትን ጥያቄ ቁጥር ይናገሩ።
 
@@ -1732,7 +1732,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Thank you. We received your answers.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/done.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/done.mp3`
 
 > እናመሰግናለን። መልሶችዎን ተቀብለናል።
 
@@ -1758,7 +1758,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Speak now.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/speakNow.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/speakNow.mp3`
 
 > አሁን ይናገሩ።
 
@@ -1784,7 +1784,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > selected
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/sel.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/sel.mp3`
 
 > ተመርጧል
 
@@ -1810,7 +1810,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > not selected
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/unsel.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/unsel.mp3`
 
 > አልተመረጠም
 
@@ -1836,7 +1836,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > English
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/langName.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/langName.mp3`
 
 > አማርኛ
 
@@ -1862,7 +1862,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Next
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/b_next.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/b_next.mp3`
 
 > ቀጥል
 
@@ -1888,7 +1888,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Back
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/b_back.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/b_back.mp3`
 
 > ተመለስ
 
@@ -1914,7 +1914,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Skip
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/b_skip.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/b_skip.mp3`
 
 > ዝለል
 
@@ -1940,7 +1940,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Read aloud
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/b_read.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/b_read.mp3`
 
 > አንብብልኝ
 
@@ -1966,7 +1966,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Speak
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/b_speak.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/b_speak.mp3`
 
 > ተናገር
 
@@ -1992,7 +1992,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Read to me
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/b_readToMe.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/b_readToMe.mp3`
 
 > አንብቡልኝ
 
@@ -2018,7 +2018,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Stop reading
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/b_stopRead.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/b_stopRead.mp3`
 
 > ማንበብ አቁም
 
@@ -2044,7 +2044,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Yes, submit
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/b_send.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/b_send.mp3`
 
 > አዎ፣ አስገባ
 
@@ -2070,7 +2070,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > No, change something
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/b_noChange.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/b_noChange.mp3`
 
 > አይ፣ አንድ ነገር ልቀይር
 
@@ -2096,7 +2096,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Start again
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/b_restart.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/b_restart.mp3`
 
 > እንደገና ጀምር
 
@@ -2122,7 +2122,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Change
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/b_change.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/b_change.mp3`
 
 > ቀይር
 
@@ -2148,7 +2148,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Start
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/b_start.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/b_start.mp3`
 
 > ጀምር
 
@@ -2174,7 +2174,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Start with voice
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/b_startVoice.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/b_startVoice.mp3`
 
 > በድምፅ ጀምር
 
@@ -2200,7 +2200,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Yes, read aloud
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/b_raYes.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/b_raYes.mp3`
 
 > አዎ፣ ይነበብልኝ
 
@@ -2226,7 +2226,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > No, thank you
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/b_raNo.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/b_raNo.mp3`
 
 > አይ፣ አያስፈልግም
 
@@ -2252,7 +2252,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Continue where I stopped
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/b_draftGo.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/b_draftGo.mp3`
 
 > ካቆምኩበት ቀጥል
 
@@ -2278,7 +2278,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > How would you like to use this form?
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/q_prefs.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/q_prefs.mp3`
 
 > ይህን ቅጽ እንዴት መጠቀም ይፈልጋሉ?
 
@@ -2304,7 +2304,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Larger text
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/o_prefs_large.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/o_prefs_large.mp3`
 
 > ትልቅ ጽሑፍ
 
@@ -2330,7 +2330,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Pictures next to choices
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/o_prefs_simple.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/o_prefs_simple.mp3`
 
 > ከምርጫዎች ጋር ሥዕሎች
 
@@ -2356,7 +2356,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > What is your full name?
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/q_fullName.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/q_fullName.mp3`
 
 > ሙሉ ስምዎ ማነው?
 
@@ -2382,7 +2382,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > What phone number or email can we use?
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/q_contact.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/q_contact.mp3`
 
 > ልናገኝዎ የምንችልበት ስልክ ቁጥር ወይም ኢሜይል ምንድን ነው?
 
@@ -2408,7 +2408,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > How would you like to show who you are?
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/q_idRoute.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/q_idRoute.mp3`
 
 > ማንነትዎን እንዴት ማሳየት ይፈልጋሉ?
 
@@ -2434,7 +2434,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Kebele ID or passport
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/o_idRoute_kebele.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/o_idRoute_kebele.mp3`
 
 > ቀበሌ መታወቂያ ወይም ፓስፖርት
 
@@ -2460,7 +2460,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Refugee or returnee ID
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/o_idRoute_refugee.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/o_idRoute_refugee.mp3`
 
 > የስደተኛ ወይም ተመላሽ መታወቂያ
 
@@ -2486,7 +2486,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Another document
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/o_idRoute_other.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/o_idRoute_other.mp3`
 
 > ሌላ ሰነድ
 
@@ -2512,7 +2512,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > I don't have an ID. Refer me through a partner organisation
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/o_idRoute_refer.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/o_idRoute_refer.mp3`
 
 > ሰነድ የለኝም። አጋር ድርጅት እንዲያመላክተኝ ይጠይቁ
 
@@ -2538,7 +2538,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > What support would help you? Choose any.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/q_support.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/q_support.mp3`
 
 > ምን ዓይነት እገዛ ይጠቅምዎታል? የፈለጉትን ይምረጡ።
 
@@ -2564,7 +2564,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > I use a screen reader
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/o_support_screenreader.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/o_support_screenreader.mp3`
 
 > ስክሪን ሪደር እጠቀማለሁ
 
@@ -2590,7 +2590,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Large text
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/o_support_large.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/o_support_large.mp3`
 
 > ትልቅ ጽሑፍ
 
@@ -2616,7 +2616,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > I prefer to speak my answers
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/o_support_voice.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/o_support_voice.mp3`
 
 > መልሶቼን በድምፅ መናገር እመርጣለሁ
 
@@ -2642,7 +2642,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Ethiopian Sign Language interpreter
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/o_support_sign.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/o_support_sign.mp3`
 
 > የኢትዮጵያ ምልክት ቋንቋ አስተርጓሚ
 
@@ -2668,7 +2668,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Simple words and pictures
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/o_support_simple.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/o_support_simple.mp3`
 
 > ቀላል ቃላትና ሥዕሎች
 
@@ -2694,7 +2694,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Please call me to help
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/o_support_human.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/o_support_human.mp3`
 
 > እባክዎ ደውለው ያግዙኝ
 
@@ -2720,7 +2720,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > What support do you need at work? Choose any.
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/q_needs.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/q_needs.mp3`
 
 > በሥራ ላይ ምን እገዛ ያስፈልግዎታል? የፈለጉትን ይምረጡ።
 
@@ -2746,7 +2746,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Step-free workplace
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/o_needs_stepfree.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/o_needs_stepfree.mp3`
 
 > ከደረጃ ነፃ የሥራ ቦታ
 
@@ -2772,7 +2772,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Screen-reader friendly tools
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/o_needs_reader.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/o_needs_reader.mp3`
 
 > ለስክሪን ሪደር ተስማሚ መሣሪያዎች
 
@@ -2798,7 +2798,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Sign language interpreter
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/o_needs_interp.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/o_needs_interp.mp3`
 
 > የምልክት ቋንቋ አስተርጓሚ
 
@@ -2824,7 +2824,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Flexible hours
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/o_needs_hours.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/o_needs_hours.mp3`
 
 > ተለዋዋጭ የሥራ ሰዓት
 
@@ -2850,7 +2850,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Work from home
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/o_needs_remote.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/o_needs_remote.mp3`
 
 > ከቤት መሥራት
 
@@ -2876,7 +2876,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Which job are you applying for?
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/q_role.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/q_role.mp3`
 
 > የትኛውን ሥራ እየጠየቁ ነው?
 
@@ -2902,7 +2902,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Why do you want this job?
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/q_why.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/q_why.mp3`
 
 > ይህን ሥራ ለምን ይፈልጋሉ?
 
@@ -2928,7 +2928,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > What is the job title?
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/q_job.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/q_job.mp3`
 
 > የሥራው መጠሪያ ምንድን ነው?
 
@@ -2954,7 +2954,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Which adjustments can this job offer?
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/q_offers.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/q_offers.mp3`
 
 > ይህ ሥራ ምን ዓይነት ማስተካከያዎችን ማቅረብ ይችላል?
 
@@ -2980,7 +2980,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Step-free workplace
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/o_offers_stepfree.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/o_offers_stepfree.mp3`
 
 > ከደረጃ ነፃ የሥራ ቦታ
 
@@ -3006,7 +3006,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Screen-reader friendly tools
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/o_offers_reader.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/o_offers_reader.mp3`
 
 > ለስክሪን ሪደር ተስማሚ መሣሪያዎች
 
@@ -3032,7 +3032,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Sign language interpreter
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/o_offers_interp.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/o_offers_interp.mp3`
 
 > የምልክት ቋንቋ አስተርጓሚ
 
@@ -3058,7 +3058,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Flexible hours
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/o_offers_hours.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/o_offers_hours.mp3`
 
 > ተለዋዋጭ የሥራ ሰዓት
 
@@ -3084,7 +3084,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Work from home
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/o_offers_remote.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/o_offers_remote.mp3`
 
 > ከቤት መሥራት
 
@@ -3110,7 +3110,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > When do applications close?
 
-**አማርኛ (draft, must be checked)** → `public/audio/am/q_closes.mp3`
+**አማርኛ (checked by a native speaker)** → `public/audio/am/q_closes.mp3`
 
 > ማመልከቻ መቼ ይዘጋል?
 

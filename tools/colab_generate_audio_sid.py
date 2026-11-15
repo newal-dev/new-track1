@@ -66,7 +66,9 @@ KEY_WORDS = r"\b(Tab|Shift|Space|Enter|Escape|Esc)\b"
 # Words the romaniser spells badly for the voice (uroman adds a vowel after every vowelless Ge'ez letter, so ሁለት became
 # "hulate"). Whole phrase -> the Latin spelling the voice model is given instead. Chosen by a native speaker, by ear.
 PRONOUNCE = {
-    "am": {},
+    # Digits chosen by a native Amharic speaker on the listening page (15 Nov 2026). ዜሮ, ሁለት, ስምንት, ዘጠኝ keep the
+    # romaniser's spelling; አንድ, ሦስት, ስድስት are still being chosen.
+    "am": {"አራት": "aratt", "አምስት": "amest", "ሰባት": "sabaat"},
 }
 CLIPS = json.loads(r'''{
  "sid": {
