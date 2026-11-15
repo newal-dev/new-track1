@@ -49,6 +49,12 @@ describe('health and widget', () => {
     assert.equal((await fetch(U + '/site/../server.js')).status, 404);
     assert.match(await (await fetch(U + '/?info')).text(), /Inclusive Access plugin server/);
   });
+  test('the official Savanna starter is served at /site/savanna/ with the sign-up page pointing at this server', async () => {
+    const html = await (await fetch(U + '/site/savanna/pages/signup.html')).text();
+    assert.ok(html.includes(U + '/widget.js') && html.includes('<db-onboarding') && !html.includes('localhost:3000'));
+    assert.equal((await fetch(U + '/site/savanna/assets/css/application_alx.css')).status, 200);
+    assert.equal((await fetch(U + '/site/savanna/../server.js')).status, 404);
+  });
   test('interactive API docs at /docs, and the specification names this server', async () => {
     assert.match(await (await fetch(U + '/docs')).text(), /SwaggerUIBundle\(\{ url: '\/openapi.yaml'/);
     assert.match(await (await fetch(U + '/openapi.yaml')).text(), new RegExp('url: ' + U));

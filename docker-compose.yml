@@ -19,6 +19,8 @@ services:
       - '8080:80'
     volumes:
       - ./demo-host:/usr/share/nginx/html:ro
+      # The official Savanna starter, unchanged, plus our sign-up page: http://localhost:8080/savanna/pages/signup.html
+      - ./savanna:/usr/share/nginx/html/savanna:ro
     depends_on:
       web:
         condition: service_healthy

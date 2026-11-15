@@ -348,3 +348,21 @@ test('outside Savanna: a blank page with no styles at all, only the two lines; t
   expect(done[1].profile.idRoute).toBe('refer'); // no ID: the "refer me" route finishes successfully
   expect(events.some(([t]) => t === 'db-signup:support')).toBe(false);
 });
+
+test('inside the official Savanna starter: signup.html mounts the plug-in; when sign-up is done the page goes to the learner homepage', async ({ page }) => {
+  await page.goto('/savanna/pages/signup.html');
+  const W = page.locator('db-onboarding');
+  await expect(W.locator('#h')).toHaveText('Which language would you like to use?');
+  // Our module only: Savanna's own defects belong to the starter (the guide: "your score is for your module").
+  const r = await new AxeBuilder({ page }).include('db-onboarding').withTags(TAGS).analyze();
+  expect(r.violations.filter(v => ['critical', 'serious'].includes(v.impact)).map(v => v.id)).toEqual([]);
+  await W.locator('[data-pick=am]').click(); await W.locator('[data-ra=n]').click(); await W.locator('[data-start=t]').click();
+  await W.locator('[data-next]').click();
+  await W.locator('#f').fill('ሳሙኤል'); await W.locator('[data-next]').click();
+  await W.locator('#f').fill('0911223344'); await W.locator('[data-next]').click();
+  await W.locator('input[value=refugee]').check(); await W.locator('[data-next]').click();
+  await W.locator('[data-next]').click();
+  await W.locator('#cons').check(); await W.locator('[data-send]').click();
+  await expect(W.locator('#h')).toHaveText('እናመሰግናለን። መልሶችዎን ተቀብለናል።');
+  await page.waitForURL(/homepage-v1-self-paced\.html$/, { timeout: 15000 });
+});

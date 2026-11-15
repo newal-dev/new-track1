@@ -108,11 +108,13 @@ export async function createApp(opt = {}) {
   app.use(express.static(path.join(ROOT, 'public'), { maxAge: '1h', setHeaders: (r, p) => { if (/[\\/]audio[\\/]/.test(p)) fresh(r); } }));
   // The demo partner site, from this same server, at /site/ (one address for a deployed MVP). Its pages point at
   // http://localhost:3000; that is replaced with this server's own address as they are sent.
-  const SITE = path.join(ROOT, 'demo-host');
+  const SITE = path.join(ROOT, 'demo-host'), STARTER = path.join(ROOT, 'savanna');
   app.get('/site', (q, r, next) => (q.path === '/site' ? r.redirect(301, '/site/') : next()));
   app.get(/^\/site\/(.*)$/, (q, r, next) => {
-    const rel = q.params[0] || 'index.html', f = path.normalize(path.join(SITE, rel));
-    if (!f.startsWith(SITE + path.sep) || !fs.existsSync(f) || !fs.statSync(f).isFile()) return next();
+    // /site/savanna/… is the official Savanna starter (savanna/), everything else the demo partner site.
+    const rel = q.params[0] || 'index.html', inStarter = rel.startsWith('savanna/'), base = inStarter ? STARTER : SITE;
+    const f = path.normalize(path.join(base, inStarter ? rel.slice('savanna/'.length) : rel));
+    if (!f.startsWith(base + path.sep) || !fs.existsSync(f) || !fs.statSync(f).isFile()) return next();
     if (!/\.(html|js|css)$/.test(f)) return r.sendFile(f);
     const type = f.endsWith('.html') ? 'html' : f.endsWith('.js') ? 'application/javascript' : 'css';
     fresh(r.type(type)).send(fs.readFileSync(f, 'utf8').replaceAll('http://localhost:3000', BASE));

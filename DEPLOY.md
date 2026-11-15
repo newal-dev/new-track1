@@ -6,6 +6,7 @@ the demo learning platform (LTI 1.3) and the simulated SMS inbox. The bare addre
 | Address | What it is |
 |---|---|
 | `https://YOUR-ADDRESS/` | Demo partner site with the sign-up form (same as `/site/`) |
+| `https://YOUR-ADDRESS/site/savanna/pages/signup.html` | The sign-up inside the official Savanna starter pages |
 | `https://YOUR-ADDRESS/site/savanna.html` | The plug-in inside a Savanna-style course page |
 | `https://YOUR-ADDRESS/site/blank.html` | The plug-in alone on an empty page with no styles (the judge's test) |
 | `https://YOUR-ADDRESS/docs` | Interactive API documentation: try every call |

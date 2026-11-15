@@ -30,6 +30,7 @@ Wait for `Plugin server on http://localhost:3000`, then open:
 |---|---|
 | http://localhost:8080 | Demo partner website with the sign-up form. Its menu switches to **Apply for a job** and **For employers** |
 | http://localhost:8080/blank.html | **The judge's test:** an empty page with no Bootstrap, no Savanna CSS and no styles at all, only the two lines below |
+| http://localhost:8080/savanna/pages/signup.html | **Inside the official Savanna starter** (`savanna/`, ALX's pages unchanged): Savanna's own header and sidebar, our sign-up in `<main>`; when sign-up is done it goes to the learner homepage |
 | http://localhost:8080/savanna.html | The same plug-in inside a Savanna-style course page |
 | http://localhost:3000/docs | **Interactive API documentation** (Swagger UI): try every call in the browser |
 | http://localhost:3000/demo/lms | A built-in learning platform: each button does a real, signed **LTI 1.3** launch |
@@ -46,9 +47,9 @@ Wait for `Plugin server on http://localhost:3000`, then open:
 **Run the tests:**
 ```sh
 npm ci
-npm test                       # 112 unit, voice and API tests; no server needed
+npm test                       # 113 unit, voice and API tests; no server needed
 npx playwright install chromium
-npm run test:a11y              # 31 browser tests with axe-core; starts the servers itself
+npm run test:a11y              # 32 browser tests with axe-core; starts the servers itself
 npm run contrast               # every colour pair in every theme
 node tools/measure-3g.mjs      # load time on Slow 3G and 3G (servers running)
 ```
@@ -114,7 +115,7 @@ curl http://localhost:3000/v1/consents -H "Authorization: Bearer <ADMIN_TOKEN>"
 
 - **LTI 1.3:** OIDC login `/lti/login`, launch `/lti/launch`, keys `/lti/jwks.json`, tool configuration `/lti/config.json`. The launch is checked against the platform's keys, issuer, audience, expiry, one-time nonce, signed state, message type and version. The launch locale chooses the language and the custom `flow` chooses the form; the learner's name and email from the platform are not used. Try it with the built-in platform at `/demo/lms`. To register a real one (Moodle, Canvas, Savanna), set `LTI_ISSUER`, `LTI_CLIENT_ID`, `LTI_AUTH_URL`, `LTI_JWKS_URL` and `LTI_DEPLOYMENT_ID`. Launch only: no grade passback or deep linking.
 - **schema.org/JobPosting:** from the API, and added to the host page as JSON-LD when the job list is shown. It holds only what employers published.
-- **ALX Savanna:** a host like any other: Level 1 in a page, or Level 3 from the platform. `demo-host/savanna.html` shows the course-page case and `/demo/lms` the LTI case.
+- **ALX Savanna:** a host like any other: Level 1 in a page, or Level 3 from the platform. **`savanna/pages/signup.html` runs it inside the official Savanna starter** (github.com/alx-africa/Savanna-static-pages, included unchanged as the Technical Guide asks; see [savanna/NOTICE.md](savanna/NOTICE.md), it is ALX's and not under our licence), `/demo/lms` shows the LTI case.
 
 ## Languages
 
@@ -159,14 +160,14 @@ Rough estimate for **3,000 learners a month**: **about US$5–10 a month** for o
 
 ## Finished and not finished
 
-**Finished:** the three flows (sign-up, job application, employer form) in six languages; voice input and read-aloud with recorded clips; keyboard, screen-reader, 200% text and colour-theme support; consent, separate support consent, export and deletion; drafts and offline sending; Ethiopian calendar; Level 1, Level 2 (OpenAPI + `/docs`) and Level 3 (LTI 1.3 launch, JobPosting); one-container deployment; 112 unit/API tests, 31 browser tests, 0 axe violations.
+**Finished:** the three flows (sign-up, job application, employer form) in six languages; voice input and read-aloud with recorded clips; keyboard, screen-reader, 200% text and colour-theme support; consent, separate support consent, export and deletion; drafts and offline sending; Ethiopian calendar; Level 1, Level 2 (OpenAPI + `/docs`) and Level 3 (LTI 1.3 launch, JobPosting); running inside the official Savanna starter; one-container deployment; 113 unit/API tests, 32 browser tests, 0 axe violations.
 
 **Not finished, honestly:**
 - **Native review** of Afaan Oromoo, Tigrinya, Somali and Sidaamu Afoo (Amharic is checked).
 - **Voice-note fallback** (recording audio where speech-to-text does not work): not built; people type instead.
 - **A partner registering a learner with consent**, and **save and resume by SMS link**: not built (SMS is a simulated inbox for confirmations).
 - **Text in language files** (`en.json`, `am.json`): the text is in tables inside `public/db-form.js`, one block per language, not separate files yet.
-- **Inside the real Savanna:** tested on a Savanna-style page and with LTI 1.3, not inside the live Savanna or the official starter repository.
+- **Inside the live Savanna:** tested inside the official Savanna starter pages and with LTI 1.3, not on the live Savanna platform. The "My Profile" edit mode the guide mentions is not built (the component signs up; it does not edit an existing profile).
 - **Production:** storage is in memory, the API has no staff login, and LTI is launch only. Add a database and authentication before real use.
 - **Voices:** the generated clips are non-commercial (CC-BY-NC); commercial use needs human recordings (the file names stay the same).
 
@@ -194,6 +195,7 @@ public/fonts/          local fonts (OFL)
 server.js              REST API, JobPosting, LTI 1.3, demo LMS, SMS inbox, /docs, the demo site at /site/
 openapi.yaml           API specification
 demo-host/             partner site, blank page, Savanna-style page, design system
+savanna/               the official Savanna starter (ALX's, unchanged) plus pages/signup.html
 tests/                 core, voice and API tests (node --test), a11y.spec.js (Playwright + axe)
 tools/                 recording script and voice generator, contrast check, 3G measurement, demo server
 docs/                  WCAG 2.2 AA report, manual test script, team testing guide
