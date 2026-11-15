@@ -1,0 +1,6 @@
+node_modules
+.git
+New folder
+test-results
+playwright-report
+*.log

@@ -1,16 +1,18 @@
 # ============================================================================
-# Inclusive Access: make the read-aloud clips with Meta MMS-TTS in Google Colab.
+# Inclusive Access: make ALL read-aloud clips with Meta MMS-TTS in Google Colab.
 #
 # HOW TO USE
 #   1. https://colab.research.google.com -> New notebook
-#      (optional, faster: Runtime -> Change runtime type -> T4 GPU)
+#      Recommended: Runtime -> Change runtime type -> T4 GPU (about 10 min; CPU about 30-40 min)
 #   2. Paste this WHOLE file into the first cell and press Run.
-#   3. audio.zip downloads at the end. Unzip it INTO public/audio/ in the project,
-#      so you get e.g. public/audio/am/fullName.mp3
+#   3. audio.zip downloads at the end (and is copied to Google Drive if SAVE_TO_DRIVE = True).
+#      In the project, DELETE the old clips first, then unzip INTO public/audio/,
+#      so you get e.g. public/audio/en/fullName.mp3 and public/audio/am/fullName.mp3
+#   4. Read the "CHECK" lines in the summary: they list letters the voice could not say.
 #
-# The clip text (CLIPS, at the bottom of the settings) is GENERATED from
-# public/db-form.js by `npm run recording`. Do not edit CLIPS here: change the
-# text in db-form.js, run `npm run recording`, and paste the new file.
+# The clip text (CLIPS, below the settings) is GENERATED from public/db-form.js by
+# `npm run recording`. Do not edit CLIPS here: change the text in db-form.js, run
+# `npm run recording`, and paste the new file.
 # A native speaker must listen to every clip before it is used.
 # LICENCE: the MMS-TTS models are CC-BY-NC 4.0 (non-commercial). Clips made here
 # are for non-profit use; a commercial service needs human recordings instead.
@@ -19,43 +21,49 @@
 import subprocess, sys
 subprocess.run([sys.executable, "-m", "pip", "install", "-q", "transformers>=4.33", "uroman>=1.3", "scipy"], check=True)
 
-import os, re, json, shutil, zipfile
+import os, re, json, shutil, unicodedata
 import numpy as np
 import scipy.io.wavfile
 import torch
 from transformers import VitsModel, AutoTokenizer, set_seed
 
 # ---------------------------------------------------------------- settings --
-LANGS_TO_MAKE = ["am", "om", "ti", "so"]   # add "en" to also make English clips (otherwise the device voice reads English)
-ONLY_IDS = []                               # e.g. ["fullName", "errBad"] to remake just a few clips; empty = all
+# Every language, so every clip is the same family of voice and the same loudness.
+LANGS_TO_MAKE = ["en","am","om","ti","so","sid"]
+ONLY_IDS = []            # e.g. ["fullName", "errBad"] to remake just a few clips; empty = all
 MODELS = {
     "en": "facebook/mms-tts-eng",
     "am": "facebook/mms-tts-amh",
     "om": "facebook/mms-tts-orm",
     "ti": "facebook/mms-tts-tir",
     "so": "facebook/mms-tts-som",
+    "sid": "facebook/mms-tts-sid",
 }
+UROMAN_CODE = {"en": "eng", "am": "amh", "om": "orm", "ti": "tir", "so": "som", "sid": "sid"}  # used only if a model expects Latin letters
 SPEAKING_RATE = 0.9      # below 1.0 = slower and clearer
-PAUSE_SENTENCE = 0.45    # seconds of silence between sentences / choices
-PAD = 0.15               # seconds of silence at the start and end
+PAUSE_SENTENCE = 0.45    # seconds of silence between sentences and between numbered choices
+PAUSE_COMMA = 0.18       # shorter breath at commas (the models have no comma of their own)
+PAD = 0.12               # seconds of silence at the start and end of every clip
+LOUDNESS = -18           # target loudness (LUFS) so every clip, in every language, is equally loud
 BITRATE = "48k"          # mono mp3, small enough for 3G
 SEED = 555               # same text -> same voice every run
+SAVE_TO_DRIVE = False    # True = also copy audio.zip to Google Drive (asks for permission)
 OUT = "/content/audio" if os.path.isdir("/content") else os.path.abspath("audio")
 
-# The MMS models have no digits or symbols, so these are spelled out first.  VERIFY_NATIVE (om, ti, so)
+# The MMS models have no digits or symbols, so these are spelled out first.  VERIFY_NATIVE (om, ti, so, sid)
 NUMBERS = {
     "en": ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"],
     "am": ["ዜሮ", "አንድ", "ሁለት", "ሦስት", "አራት", "አምስት", "ስድስት", "ሰባት", "ስምንት", "ዘጠኝ", "አሥር"],
     "om": ["zeeroo", "tokko", "lama", "sadii", "afur", "shan", "jaha", "torba", "saddeet", "sagal", "kudhan"],
     "ti": ["ዜሮ", "ሓደ", "ክልተ", "ሰለስተ", "ኣርባዕተ", "ሓሙሽተ", "ሽዱሽተ", "ሸውዓተ", "ሸሞንተ", "ትሽዓተ", "ዓሰርተ"],
     "so": ["eber", "kow", "laba", "saddex", "afar", "shan", "lix", "toddoba", "siddeed", "sagaal", "toban"],
+    "sid": ["zeero", "mitto", "lame", "sase", "shoole", "onte", "lee", "lamala", "sette", "honse", "tonne"],
 }
-AT_SIGN = {"en": "at", "am": "at", "om": "at", "ti": "at", "so": "at"}
-UROMAN_LANG = {"am": "amh", "ti": "tir"}   # these models expect Latin letters: the Ge'ez text is romanised first
+AT_SIGN = {"en": "at", "am": "at", "om": "at", "ti": "at", "so": "at", "sid": "at"}
 
 CLIPS = json.loads(r'''{
  "en": {
-  "langAsk": "Which language would you like to use? Say English, Amharic, Oromo, Tigrinya or Somali, or press a button.",
+  "langAsk": "Which language would you like to use? Say English, Amharic, Oromo, Tigrinya, Somali or Sidama, or press a button.",
   "raAsk": "Would you like this page to be read aloud to you? Please say Yes or No, or press a button. If you choose Yes, or press a Speak button later, your browser may send your voice to its provider to turn it into text. You can choose No and type instead.",
   "raAgain": "We did not hear an answer, so we will take that as No. If you would like the page read aloud, please say Yes now, or press the Yes button.",
   "welcome": "Welcome! A simpler way to register and find opportunities. Start. Start with voice. Read to me. Say Start to begin.",
@@ -68,6 +76,7 @@ CLIPS = json.loads(r'''{
   "why": "Why do you want this job? A few words are enough. You can speak instead. Speak your answer now. Say Next to continue, Back to go back, or Read aloud to hear this again.",
   "job": "What is the job title? Speak your answer now. Say Next to continue, or Read aloud to hear this again.",
   "offers": "Which adjustments can this job offer? 1: Step-free workplace. 2: Screen-reader friendly tools. 3: Sign language interpreter. 4: Flexible hours. 5: Work from home. Say the number or the name of your choice. Say Next to continue, Back to go back, or Read aloud to hear this again. Say Skip to skip this question.",
+  "closes": "When do applications close? Optional. Ethiopian calendar. If you only know the month, choose Not sure for the day. Please type your answer in the box. Then press Enter, or press the Next button.",
   "errNeed": "Please answer this question, or press Back.",
   "errBad": "Please type a phone number with 10 digits, starting with zero, or an email address with an @ sign.",
   "errFail": "We could not send your answers. Nothing is lost. Please try again.",
@@ -79,6 +88,12 @@ CLIPS = json.loads(r'''{
   "heardGeneric": "We heard your answer. It is shown on the screen. Say Next to continue, or say your answer again.",
   "choseA": "You chose",
   "choseB": "Say Next to continue, or choose again.",
+  "errConsentNeed": "Please tick the box to agree before sending, or press Back.",
+  "errDateBad": "Please choose a month, or set day and year to Not sure to skip the date.",
+  "draftH": "Welcome back Your answers from last time are kept on this device. Continue where I stopped Start again",
+  "queued": "You are offline. Your answers are saved on this device and will be sent when you are back online.",
+  "sentLater": "Your saved answers have now been sent.",
+  "tapToHear": "Press any key or tap the screen to hear the questions.",
   "n1": "One",
   "n2": "Two",
   "n3": "Three",
@@ -108,6 +123,7 @@ CLIPS = json.loads(r'''{
   "b_startVoice": "Start with voice",
   "b_raYes": "Yes, read aloud",
   "b_raNo": "No, thank you",
+  "b_draftGo": "Continue where I stopped",
   "o_prefs_large": "Larger text",
   "o_prefs_simple": "Pictures next to choices",
   "q_fullName": "What is your full name?",
@@ -127,6 +143,7 @@ CLIPS = json.loads(r'''{
   "o_needs_interp": "Sign language interpreter",
   "o_needs_hours": "Flexible hours",
   "o_needs_remote": "Work from home",
+  "q_role": "Which job are you applying for?",
   "q_why": "Why do you want this job?",
   "q_job": "What is the job title?",
   "o_offers_stepfree": "Step-free workplace",
@@ -149,6 +166,7 @@ CLIPS = json.loads(r'''{
   "why": "ይህን ሥራ ለምን ይፈልጋሉ? ጥቂት ቃላት በቂ ናቸው። በድምፅ መናገርም ይችላሉ። መልስዎን አሁን ይናገሩ። ለመቀጠል «ቀጥል»፣ ለመመለስ «ተመለስ»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ።",
   "job": "የሥራው መጠሪያ ምንድን ነው? መልስዎን አሁን ይናገሩ። ለመቀጠል «ቀጥል»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ።",
   "offers": "ይህ ሥራ ምን ዓይነት ማስተካከያዎችን ማቅረብ ይችላል? 1: ከደረጃ ነፃ የሥራ ቦታ. 2: ለስክሪን ሪደር ተስማሚ መሣሪያዎች. 3: የምልክት ቋንቋ አስተርጓሚ. 4: ተለዋዋጭ የሥራ ሰዓት. 5: ከቤት መሥራት. የምርጫዎን ቁጥር ወይም ስም ይናገሩ። ለመቀጠል «ቀጥል»፣ ለመመለስ «ተመለስ»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ። ይህን ጥያቄ ለመዝለል «ዝለል» ይበሉ።",
+  "closes": "ማመልከቻ መቼ ይዘጋል? አማራጭ ነው። በኢትዮጵያ አቆጣጠር። ወሩን ብቻ ካወቁ ለቀኑ «እርግጠኛ አይደለሁም» ይምረጡ። እባክዎ መልስዎን በሳጥኑ ውስጥ ይጻፉ። ከዚያ Enter ወይም «ቀጥል» የሚለውን ቁልፍ ይጫኑ።",
   "errNeed": "እባክዎ ይህን ጥያቄ ይመልሱ ወይም ተመለስ ይጫኑ።",
   "errBad": "እባክዎ በዜሮ የሚጀምር ባለ አሥር አሃዝ ስልክ ቁጥር ይጻፉ፤ ወይም «@» ምልክት ያለው ኢሜይል አድራሻ ይጻፉ።",
   "errFail": "መልሶችዎን መላክ አልቻልንም። ምንም አልጠፋም። እባክዎ እንደገና ይሞክሩ።",
@@ -160,6 +178,12 @@ CLIPS = json.loads(r'''{
   "heardGeneric": "መልስዎን ሰምተናል። በማያ ገጹ ላይ ይታያል። ለመቀጠል «ቀጥል» ይበሉ ወይም መልስዎን እንደገና ይናገሩ።",
   "choseA": "የመረጡት",
   "choseB": "ለመቀጠል «ቀጥል» ይበሉ ወይም እንደገና ይምረጡ።",
+  "errConsentNeed": "ከመላክዎ በፊት ለመስማማት ሳጥኑን ምልክት ያድርጉ፤ ወይም ተመለስ ይጫኑ።",
+  "errDateBad": "እባክዎ ወር ይምረጡ፤ ወይም ቀኑን ለመዝለል ቀንና ዓመትን «እርግጠኛ አይደለሁም» ያድርጉ።",
+  "draftH": "እንኳን ደህና ተመለሱ ካለፈው ጊዜ መልሶችዎ በዚህ መሣሪያ ላይ ተቀምጠዋል። ካቆምኩበት ቀጥል እንደገና ጀምር",
+  "queued": "ከመስመር ውጭ ነዎት። መልሶችዎ በዚህ መሣሪያ ላይ ተቀምጠዋል፤ መስመር ላይ ሲመለሱ ይላካሉ።",
+  "sentLater": "የተቀመጡት መልሶችዎ አሁን ተልከዋል።",
+  "tapToHear": "ጥያቄዎቹን ለመስማት ማንኛውንም ቁልፍ ይጫኑ ወይም ማያውን ይንኩ።",
   "n1": "አንድ",
   "n2": "ሁለት",
   "n3": "ሦስት",
@@ -189,6 +213,7 @@ CLIPS = json.loads(r'''{
   "b_startVoice": "በድምፅ ጀምር",
   "b_raYes": "አዎ፣ ይነበብልኝ",
   "b_raNo": "አይ፣ አያስፈልግም",
+  "b_draftGo": "ካቆምኩበት ቀጥል",
   "o_prefs_large": "ትልቅ ጽሑፍ",
   "o_prefs_simple": "ከምርጫዎች ጋር ሥዕሎች",
   "q_fullName": "ሙሉ ስምዎ ማነው?",
@@ -208,6 +233,7 @@ CLIPS = json.loads(r'''{
   "o_needs_interp": "የምልክት ቋንቋ አስተርጓሚ",
   "o_needs_hours": "ተለዋዋጭ የሥራ ሰዓት",
   "o_needs_remote": "ከቤት መሥራት",
+  "q_role": "የትኛውን ሥራ እየጠየቁ ነው?",
   "q_why": "ይህን ሥራ ለምን ይፈልጋሉ?",
   "q_job": "የሥራው መጠሪያ ምንድን ነው?",
   "o_offers_stepfree": "ከደረጃ ነፃ የሥራ ቦታ",
@@ -230,6 +256,7 @@ CLIPS = json.loads(r'''{
   "why": "Hojii kana maaliif barbaadda? Jechoota muraasni gahaadha. Dubbachuus dandeessa. Amma deebii kee dubbadhu. Itti fufuuf Itti fufi, deebi'uuf Duubatti, ammas dhaga'uuf Sagaleedhaan dubbisi jedhi.",
   "job": "Maqaan hojii kanaa maali? Amma deebii kee dubbadhu. Itti fufuuf Itti fufi, ammas dhaga'uuf Sagaleedhaan dubbisi jedhi.",
   "offers": "Hojiin kun mijeessuu akkamii dhiyeessuu danda'a? 1: Bakka hojii gulantaa hin qabne. 2: Meeshaalee dubbisaa iskiriinii waliin hojjetan. 3: Hiikaa afaan mallattoo. 4: Sa'aatii hojii jijjiiramaa. 5: Mana irraa hojjechuu. Lakkoofsa ykn maqaa filannoo keetii jedhi. Itti fufuuf Itti fufi, deebi'uuf Duubatti, ammas dhaga'uuf Sagaleedhaan dubbisi jedhi. Gaaffii kana irra darbuuf Irra darbi jedhi.",
+  "closes": "Iyyannoon yoom cufama? Dirqama miti. Lakkoofsa Itoophiyaa. Ji'a qofa yoo beekte, guyyaaf 'Hin beeku' filadhu. Maaloo deebii kee saanduqa keessatti barreessi. Achiis Enter ykn qabduu Itti fufi tuqi.",
   "errNeed": "Maaloo gaaffii kana deebisi, ykn Duubatti tuqi.",
   "errBad": "Maaloo lakkoofsa bilbilaa dijiitii 10 qabu kan zeeroon jalqabu, ykn teessoo imeelii mallattoo @ qabu barreessi.",
   "errFail": "Deebii kee erguu hin dandeenye. Homtuu hin badne. Maaloo irra deebi'ii yaali.",
@@ -241,6 +268,12 @@ CLIPS = json.loads(r'''{
   "heardGeneric": "Deebii kee dhageenyeerra. Iskiriinii irratti mul'ata. Itti fufuuf Itti fufi jedhi, ykn deebii kee ammas jedhi.",
   "choseA": "Kan filatte",
   "choseB": "Itti fufuuf Itti fufi jedhi, ykn ammas filadhu.",
+  "errConsentNeed": "Maaloo osoo hin ergin dura walii galuuf saanduqa mallattoo godhi, ykn Duubatti tuqi.",
+  "errDateBad": "Maaloo ji'a filadhu, ykn guyyaa fi bara 'Hin beeku' godhi.",
+  "draftH": "Baga nagaan deebitan Deebiin kee yeroo darbe meeshaa kana irratti kuufameera. Iddoon dhaabe irraa itti fufi Irra deebi'ii jalqabi",
+  "queued": "Ati toora ala jirta. Deebiin kee meeshaa kana irratti kuufameera, yeroo toora irratti deebitu ni ergama.",
+  "sentLater": "Deebiin kee kuufame amma ergameera.",
+  "tapToHear": "Gaaffilee dhaga'uuf qabduu kamiyyuu tuqi ykn iskiriinii tuqi.",
   "n1": "Tokko",
   "n2": "Lama",
   "n3": "Sadii",
@@ -270,6 +303,7 @@ CLIPS = json.loads(r'''{
   "b_startVoice": "Sagaleedhaan jalqabi",
   "b_raYes": "Eeyyee, naaf dubbisi",
   "b_raNo": "Lakki, galatoomi",
+  "b_draftGo": "Iddoon dhaabe irraa itti fufi",
   "o_prefs_large": "Barreeffama guddaa",
   "o_prefs_simple": "Filannoo cinaatti fakkii",
   "q_fullName": "Maqaan kee guutuun eenyu?",
@@ -289,6 +323,7 @@ CLIPS = json.loads(r'''{
   "o_needs_interp": "Hiikaa afaan mallattoo",
   "o_needs_hours": "Sa'aatii hojii jijjiiramaa",
   "o_needs_remote": "Mana irraa hojjechuu",
+  "q_role": "Hojii kamiif iyyachaa jirta?",
   "q_why": "Hojii kana maaliif barbaadda?",
   "q_job": "Maqaan hojii kanaa maali?",
   "o_offers_stepfree": "Bakka hojii gulantaa hin qabne",
@@ -311,6 +346,7 @@ CLIPS = json.loads(r'''{
   "why": "ነዚ ስራሕ ስለምንታይ ትደልይዎ? ውሑዳት ቃላት ይኣኽሉ። ብድምጺ እውን ክትዛረቡ ትኽእሉ ኢኹም። ሕጂ መልስኹም ተዛረቡ። ንምቕጻል «ቀጽል»፣ ንምምላስ «ተመለስ»፣ ደጊምኩም ንምስማዕ «ኣንብበለይ» በሉ።",
   "job": "ሽም እቲ ስራሕ እንታይ እዩ? ሕጂ መልስኹም ተዛረቡ። ንምቕጻል «ቀጽል»፣ ደጊምኩም ንምስማዕ «ኣንብበለይ» በሉ።",
   "offers": "እዚ ስራሕ እንታይ ምትዕርራያት ከቕርብ ይኽእል? 1: ብዘይ መሳልል ዝኣቶ ቦታ ስራሕ. 2: ምስ ስክሪን ሪደር ዝሰማምዑ መሳርሒታት. 3: ተርጓሚ ቋንቋ ምልክት. 4: ተዓጻጻፊ ሰዓታት ስራሕ. 5: ካብ ገዛ ምስራሕ. ቁጽሪ ወይ ስም ምርጫኹም በሉ። ንምቕጻል «ቀጽል»፣ ንምምላስ «ተመለስ»፣ ደጊምኩም ንምስማዕ «ኣንብበለይ» በሉ። ነዚ ሕቶ ንምሕላፍ «ሕለፍ» በሉ።",
+  "closes": "ምዝገባ ማመልከቻ መዓስ ይዕጾ? ግዴታ ኣይኮነን። ብኣቆጻጽራ ኢትዮጵያ። ወርሒ ጥራይ እንተ ፈሊጥኩም፣ ንመዓልቲ «ርግጸኛ ኣይኮንኩን» ምረጹ። በጃኹም መልስኹም ኣብቲ ሳንዱቕ ጽሓፉ። ድሕሪኡ Enter ወይ «ቀጽል» ዝብል መጠወቒ ጠውቑ።",
   "errNeed": "በጃኹም ነዚ ሕቶ ምለሱ፣ ወይ «ተመለስ» ጠውቑ።",
   "errBad": "በጃኹም ብዜሮ ዚጅምር 10 ኣሃዝ ዘለዎ ቁጽሪ ስልኪ፣ ወይ «@» ምልክት ዘለዎ ኢመይል ጽሓፉ።",
   "errFail": "መልስታትኩም ክንሰድድ ኣይከኣልናን። ዋላ ሓንቲ ኣይጠፍአን። በጃኹም ደጊምኩም ፈትኑ።",
@@ -322,6 +358,12 @@ CLIPS = json.loads(r'''{
   "heardGeneric": "መልስኹም ሰሚዕና። ኣብ ስክሪን ይርአ ኣሎ። ንምቕጻል «ቀጽል» በሉ፣ ወይ መልስኹም ደጊምኩም በሉ።",
   "choseA": "ዝመረጽኩምዎ",
   "choseB": "ንምቕጻል «ቀጽል» በሉ፣ ወይ ደጊምኩም ምረጹ።",
+  "errConsentNeed": "በጃኹም ቅድሚ ምልኣኽ ንምስምማዕ ነቲ ሳንዱቕ ምልክት ግበሩ፣ ወይ «ተመለስ» ጠውቑ።",
+  "errDateBad": "በጃኹም ወርሒ ምረጹ፣ ወይ መዓልትን ዓመትን «ርግጸኛ ኣይኮንኩን» ግበሩ።",
+  "draftH": "እንቋዕ ብደሓን ተመለስኩም መልስታትኩም ካብ ዝሓለፈ ግዜ ኣብዚ መሳርሒ ተዓቂቦም ኣለዉ። ካብ ዝኣቋረጽኩዎ ቀጽል ደጊምካ ጀምር",
+  "queued": "ካብ መስመር ወጻኢ ኢኹም። መልስታትኩም ኣብዚ መሳርሒ ተዓቂቦም ኣለዉ፣ ናብ መስመር ምስ ተመለስኩም ክለኣኹ እዮም።",
+  "sentLater": "እቶም ዝተዓቀቡ መልስታትኩም ሕጂ ተላኢኾም።",
+  "tapToHear": "ሕቶታት ንምስማዕ ዝኾነ መጠወቒ ጠውቑ ወይ ስክሪን ተንክፉ።",
   "n1": "ሓደ",
   "n2": "ክልተ",
   "n3": "ሰለስተ",
@@ -351,6 +393,7 @@ CLIPS = json.loads(r'''{
   "b_startVoice": "ብድምጺ ጀምር",
   "b_raYes": "እወ፣ ኣንብቡለይ",
   "b_raNo": "ኣይፋል፣ የቐንየለይ",
+  "b_draftGo": "ካብ ዝኣቋረጽኩዎ ቀጽል",
   "o_prefs_large": "ዓቢ ጽሑፍ",
   "o_prefs_simple": "ምስ ምርጫታት ስእልታት",
   "q_fullName": "ምሉእ ስምኩም መን እዩ?",
@@ -370,6 +413,7 @@ CLIPS = json.loads(r'''{
   "o_needs_interp": "ተርጓሚ ቋንቋ ምልክት",
   "o_needs_hours": "ተዓጻጻፊ ሰዓታት ስራሕ",
   "o_needs_remote": "ካብ ገዛ ምስራሕ",
+  "q_role": "ንኣየናይ ስራሕ ኢኹም እትሓቱ ዘለኹም?",
   "q_why": "ነዚ ስራሕ ስለምንታይ ትደልይዎ?",
   "q_job": "ሽም እቲ ስራሕ እንታይ እዩ?",
   "o_offers_stepfree": "ብዘይ መሳልል ዝኣቶ ቦታ ስራሕ",
@@ -392,6 +436,7 @@ CLIPS = json.loads(r'''{
   "why": "Maxaad u rabtaa shaqadan? Erayo kooban ayaa ku filan. Waad ku hadli kartaa beddelkeeda. Hadda ku hadal jawaabtaada. Dheh Xiga si aad u sii socoto, Dib u noqo si aad dib ugu noqoto, ama Akhri si aad mar kale u maqasho.",
   "job": "Waa maxay magaca shaqada? Hadda ku hadal jawaabtaada. Dheh Xiga si aad u sii socoto, ama Akhri si aad mar kale u maqasho.",
   "offers": "Waa maxay hagaajinta ay shaqadani bixin karto? 1: Goob shaqo oo aan jaranjaro lahayn. 2: Qalab ku habboon akhriyaha shaashadda. 3: Turjubaan luqadda calaamadaha. 4: Saacado dabacsan. 5: Ka shaqeyn guriga. Dheh lambarka ama magaca doorashadaada. Dheh Xiga si aad u sii socoto, Dib u noqo si aad dib ugu noqoto, ama Akhri si aad mar kale u maqasho. Dheh Ka bood si aad su'aashan uga boodo.",
+  "closes": "Goormaa la xirayaa codsiyada? Ikhtiyaari. Kalandarka Itoobiya. Haddii aad bisha oo keliya taqaanno, maalinta u dooro 'Ma hubo'. Fadlan ku qor jawaabtaada sanduuqa. Kadib riix Enter, ama riix badhanka Xiga.",
   "errNeed": "Fadlan ka jawaab su'aashan, ama riix Dib u noqo.",
   "errBad": "Fadlan qor lambar taleefan oo 10 god ah oo ku bilaabmaya eber, ama cinwaan iimayl oo leh calaamadda @.",
   "errFail": "Ma aanaan diri karin jawaabahaaga. Waxba ma lumin. Fadlan mar kale isku day.",
@@ -403,6 +448,12 @@ CLIPS = json.loads(r'''{
   "heardGeneric": "Waan maqalnay jawaabtaada. Waxay ka muuqataa shaashadda. Dheh Xiga si aad u sii socoto, ama mar kale dheh jawaabtaada.",
   "choseA": "Waxaad dooratay",
   "choseB": "Dheh Xiga si aad u sii socoto, ama mar kale dooro.",
+  "errConsentNeed": "Fadlan calaamadee sanduuqa si aad u oggolaato ka hor intaadan dirin, ama riix Dib u noqo.",
+  "errDateBad": "Fadlan dooro bil, ama maalinta iyo sanadka ka dhig 'Ma hubo'.",
+  "draftH": "Ku soo dhawoow mar kale Jawaabahaagii hore waxay ku kaydsan yihiin qalabkan. Ka sii wad halkii aan ku joogsaday Dib u bilow",
+  "queued": "Khadka kama jirtid. Jawaabahaaga waxay ku kaydsan yihiin qalabkan, waxaana la diri doonaa markaad khadka ku soo noqoto.",
+  "sentLater": "Jawaabahaagii kaydsanaa hadda waa la diray.",
+  "tapToHear": "Riix fure kasta ama taabo shaashadda si aad u maqasho su'aalaha.",
   "n1": "Kow",
   "n2": "Laba",
   "n3": "Saddex",
@@ -432,6 +483,7 @@ CLIPS = json.loads(r'''{
   "b_startVoice": "Ku bilow cod",
   "b_raYes": "Haa, ii akhri",
   "b_raNo": "Maya, mahadsanid",
+  "b_draftGo": "Ka sii wad halkii aan ku joogsaday",
   "o_prefs_large": "Qoraal ka weyn",
   "o_prefs_simple": "Sawirro ku xiga doorashooyinka",
   "q_fullName": "Waa maxay magacaaga oo buuxa?",
@@ -451,6 +503,7 @@ CLIPS = json.loads(r'''{
   "o_needs_interp": "Turjubaan luqadda calaamadaha",
   "o_needs_hours": "Saacado dabacsan",
   "o_needs_remote": "Ka shaqeyn guriga",
+  "q_role": "Shaqadee ayaad codsanaysaa?",
   "q_why": "Maxaad u rabtaa shaqadan?",
   "q_job": "Waa maxay magaca shaqada?",
   "o_offers_stepfree": "Goob shaqo oo aan jaranjaro lahayn",
@@ -458,6 +511,96 @@ CLIPS = json.loads(r'''{
   "o_offers_interp": "Turjubaan luqadda calaamadaha",
   "o_offers_hours": "Saacado dabacsan",
   "o_offers_remote": "Ka shaqeyn guriga"
+ },
+ "sid": {
+  "langSelf": "Sidaamu Afoo doorate, Sidama yi, woy Sidaamu Afoo yitanno ilkaawa xiiwi.",
+  "raAsk": "Kuni qoolu qaalinke nabbawamanno gede hasatto? Ikkitinni Ee woy Dee'ni yi, woy mitte ilkaawa xiiwi. Ee yitto ikkiro, woy gedensaanni Hasaawi xiiwitto ikkiro, barbaarsaasikki qaalekki borrote soorrate abbaasi aana soyannosi. Dee'ni yitte borreessa dandaatto.",
+  "raAgain": "Dawaro dimacciishshinoommo, kawule Dee'ni yinoonni gede adhineemmo. Qoolu nabbawamanno gede hasatto ikkiro, xa Ee yi, woy Ee ilkaawa xiiwi.",
+  "welcome": "Dancha dayitine! Borreessamate nna loosu dandoowa afate shota doogo. Hanafi. Qaalinke hanafi. Ane nabbawi. Hanafate Hanafi yi.",
+  "prefs": "Konne foormu hiittoo horoonsi'rate hasatto? Dooro. Darba dandaatto. 1: Lowo borro. 2: Doorshu gaxa misilla. Doorshikki kiiro woy su'ma yi. Albisate Albisi, wole macciishshate Qaalinke nabbawi yi. Tenne xa'mo darbate Darbi yi.",
+  "fullName": "Wo'mu su'mikki ayeti? Barru barrunni horoonsi'ratto su'mu ikkanno. Xa dawarokki hasaawi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi.",
+  "contact": "Hiittoo silki kiiro woy imeelenni dandoonketa? Tenne pirogiraame daafira dandoonketa calla. Silki kiiro tonne kiiro afi'rinohanna zeerotenni hanafanno. Ikkitinni dawarokki saaxine giddo borreessi. Aanchite Enter, woy Albisi ilkaawa xiiwi.",
+  "idRoute": "Ati ayeti ikkitoota hiittoo leellisate hasatto? 1: Qebeele eeshsha woy paaspoorte. 2: Baqatu woy higgaanchu eeshsha. 3: Wole bortaje. 4: Eeshsha diafi'rino. Jaala dirijjiteenni hoolisi'e. Doorshikki kiiro woy su'ma yi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi.",
+  "support": "Hiittoo kaa'lo kaa'lannohe? Ayeeno doori. Tenne darba dandaatto. Ragi dihasiissanno. Qixxeessitooti calla la'anno, kaa'lo qixxeessate calla. 1: Leellisaancho nabbawaancho horoonsi'reemmo. 2: Lowo borro. 3: Dawaro qaalinke hasaawa doorreemmo. 4: Itiyoophiyu Malaatu Afoo turjimaancho. 5: Shota qaalla nna misilla. 6: Ikkitinni kaa'lo daafira silki xa'mi. Doorshikki kiiro woy su'ma yi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi. Tenne xa'mo darbate Darbi yi.",
+  "needs": "Loosu aana hiittoo kaa'lo hasiissannohe? Ayeeno doori. Ma'nunni. Konne uduunnichokki aana keeshshanno, coyi'nanno loosuwa leellisate calla. 1: Gadu dinokki loosu bayicho. 2: Leellisaancho nabbawaanchora coyi'nanno uduunnicho. 3: Malaatu afoo turjimaancho. 4: Soorramanno loosu saate. 5: Mineenni loosa. Doorshikki kiiro woy su'ma yi. Albisate Albisi, wole macciishshate Qaalinke nabbawi yi. Tenne xa'mo darbate Darbi yi.",
+  "why": "Konne loosu mayira hasatto? Shiima qaalla ikkanno. Hasaawa dandaatto. Xa dawarokki hasaawi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi.",
+  "job": "Loosu su'mi ayeti? Xa dawarokki hasaawi. Albisate Albisi, wole macciishshate Qaalinke nabbawi yi.",
+  "offers": "Kuni loosu hiittoo qixxeessuwa aamanno? 1: Gadu dinokki loosu bayicho. 2: Leellisaancho nabbawaanchora coyi'nanno uduunnicho. 3: Malaatu afoo turjimaancho. 4: Soorramanno loosu saate. 5: Mineenni loosa. Doorshikki kiiro woy su'ma yi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi. Tenne xa'mo darbate Darbi yi.",
+  "closes": "Xa'muwu ayi yanna gufamanno? Dooro. Itiyoophiyu barru qoodo. Agana calla huvatto ikkiro, barrara Dianfaa'moommo doori. Ikkitinni dawarokki saaxine giddo borreessi. Aanchite Enter, woy Albisi ilkaawa xiiwi.",
+  "errNeed": "Ikkitinni tenne xa'mo dawaari, woy Higi xiiwi.",
+  "errBad": "Ikkitinni zeerotenni hanafanno, tonne kiiro afi'rino silki kiiro borreessi, woy @ malaatto afi'rino imeele borreessi.",
+  "errFail": "Dawaro keeshshi soya didandiinoommo. Mittunkuri dibaino. Ikkitinni wole paaxi.",
+  "unclear": "Hakkaya, dihuvattoommo. Ikkitinni doorshikki kiiro yi.",
+  "noneSel": "Mittunkuri dooraminokki. Kiiro woy su'ma yi, woy Darbi yi.",
+  "idle": "Dimacciishshinoommo. Lowo Hasaawi ilkaawa xiiwi, woy keyboorde horoonsi'rate Nabbawa uurrisi xiiwi.",
+  "sayWelcome": "Hanafate Hanafi yi.",
+  "reviewAsk": "Dawaro keeshshi soyate hasatto? Soyate Ee, mittu coye soorrate Dee'ni yi.",
+  "heardGeneric": "Dawarokki macciishshinoonni. Leellisaanchu aana leellitanno. Albisate Albisi yi, woy dawarokki wole yi.",
+  "choseA": "Doorttohu",
+  "choseB": "Albisate Albisi yi, woy wole doori.",
+  "errConsentNeed": "Ikkitinni soyitto albaanni ammanaate saaxine malaatisi, woy Higi xiiwi.",
+  "errDateBad": "Ikkitinni agana doori, woy barranna diri Dianfaa'moommo assi.",
+  "draftH": "Dancha higgite Darbinoha yannaha dawaro keeshshi konne uduunnicho aana agarantino. Uurrinoommohunni albisi Wole hanafi",
+  "queued": "Interneete aana dikiitto. Dawaro keeshshi konne uduunnicho aana agarantino, interneete aana higgitto wote soyamanno.",
+  "sentLater": "Agarantino dawaro keeshshi xa soyamino.",
+  "tapToHear": "Xa'muwa macciishshate ayee ilkaawa xiiwi woy leellisaancho kaali.",
+  "n1": "Mitto",
+  "n2": "Lame",
+  "n3": "Sase",
+  "n4": "Shoole",
+  "n5": "Onte",
+  "n6": "Lee",
+  "n7": "Lamala",
+  "n8": "Sette",
+  "reviewFix": "Umi xa'mora higate Wole hanafi yi, woy soorrate hasatto xa'mo kiiro yi.",
+  "done": "Galateemmo. Dawaro keeshshi adhinoonni.",
+  "speakNow": "Xa hasaawi.",
+  "sel": "doodamino",
+  "unsel": "doodaminokki",
+  "langName": "Sidaamu Afoo",
+  "b_next": "Albisi",
+  "b_back": "Higi",
+  "b_skip": "Darbi",
+  "b_read": "Qaalinke nabbawi",
+  "b_speak": "Hasaawi",
+  "b_readToMe": "Ane nabbawi",
+  "b_stopRead": "Nabbawa uurrisi",
+  "b_send": "Ee, soy",
+  "b_noChange": "Dee'ni, mittu coye soorrara",
+  "b_restart": "Wole hanafi",
+  "b_change": "Soorri",
+  "b_start": "Hanafi",
+  "b_startVoice": "Qaalinke hanafi",
+  "b_raYes": "Ee, nabbawi",
+  "b_raNo": "Dee'ni, galateemmo",
+  "b_draftGo": "Uurrinoommohunni albisi",
+  "o_prefs_large": "Lowo borro",
+  "o_prefs_simple": "Doorshu gaxa misilla",
+  "q_fullName": "Wo'mu su'mikki ayeti?",
+  "q_contact": "Hiittoo silki kiiro woy imeelenni dandoonketa?",
+  "o_idRoute_kebele": "Qebeele eeshsha woy paaspoorte",
+  "o_idRoute_refugee": "Baqatu woy higgaanchu eeshsha",
+  "o_idRoute_other": "Wole bortaje",
+  "o_idRoute_refer": "Eeshsha diafi'rino. Jaala dirijjiteenni hoolisi'e",
+  "o_support_screenreader": "Leellisaancho nabbawaancho horoonsi'reemmo",
+  "o_support_large": "Lowo borro",
+  "o_support_voice": "Dawaro qaalinke hasaawa doorreemmo",
+  "o_support_sign": "Itiyoophiyu Malaatu Afoo turjimaancho",
+  "o_support_simple": "Shota qaalla nna misilla",
+  "o_support_human": "Ikkitinni kaa'lo daafira silki xa'mi",
+  "o_needs_stepfree": "Gadu dinokki loosu bayicho",
+  "o_needs_reader": "Leellisaancho nabbawaanchora coyi'nanno uduunnicho",
+  "o_needs_interp": "Malaatu afoo turjimaancho",
+  "o_needs_hours": "Soorramanno loosu saate",
+  "o_needs_remote": "Mineenni loosa",
+  "q_role": "Ayi loosora xa'mitto?",
+  "q_why": "Konne loosu mayira hasatto?",
+  "q_job": "Loosu su'mi ayeti?",
+  "o_offers_stepfree": "Gadu dinokki loosu bayicho",
+  "o_offers_reader": "Leellisaancho nabbawaanchora coyi'nanno uduunnicho",
+  "o_offers_interp": "Malaatu afoo turjimaancho",
+  "o_offers_hours": "Soorramanno loosu saate",
+  "o_offers_remote": "Mineenni loosa"
  }
 }''')
 
@@ -469,61 +612,104 @@ def say_number(lang, digits):
 
 def spoken(lang, text):
     """Screen text -> words the voice model can say."""
-    t = re.sub(r"[«»\"“”]", "", text)
-    t = re.sub(r"(\d+):", lambda m: say_number(lang, m.group(1)) + ".", t)   # "1: Larger text" -> "one. Larger text"
+    t = unicodedata.normalize("NFC", text)
+    t = re.sub(r"[«»\"“”‹›]", "", t)
+    t = re.sub(r"[’‘ʼ`]", "'", t)                                               # one apostrophe (glottal stop in om, so)
+    t = re.sub(r"(\d+):", lambda m: say_number(lang, m.group(1)) + ".", t)      # "1: Larger text" -> "one. Larger text"
     t = t.replace("@", " " + AT_SIGN[lang] + " ")
-    t = re.sub(r"\d+", lambda m: say_number(lang, m.group(0)), t)            # "10" -> "ten", "0n" -> "zeeroon"
-    return t
+    t = re.sub(r"\d+", lambda m: say_number(lang, m.group(0)), t)               # "10" -> "ten", "0n" -> "zeeroon" (suffix kept)
+    t = re.sub(r"[\-–—/]", " ", t)                                              # "Kala-duwanaan" -> two words
+    t = re.sub(r"[()]", ",", t)
+    return re.sub(r"\s+", " ", t).strip()
 
-def sentences(t):
-    parts = re.split(r"(?<=[.?!።፧፤;])\s*", t)
-    return [p.strip(" .?!።፧፤;") for p in parts if p.strip(" .?!።፧፤;")]
+SENT_END = ".?!።፧;፤:፦"
+COMMA = ",፣、"
+def segments(t):
+    """Split into (phrase, pause after it): long pause after a sentence, short after a comma."""
+    out = []
+    for sent in re.split(r"(?<=[" + re.escape(SENT_END) + r"])\s*", t):
+        parts = [p for p in re.split(r"[" + re.escape(COMMA) + r"]\s*", sent)]
+        for i, p in enumerate(parts):
+            p = p.strip(" " + SENT_END + COMMA)
+            if p:
+                out.append((p, PAUSE_COMMA if i < len(parts) - 1 else PAUSE_SENTENCE))
+    return out
+
+def trim(w, rate, thresh=0.02):
+    """Cut the model's own silence at both ends, so pauses are exactly the ones set above."""
+    if not len(w):
+        return w
+    peak = float(np.abs(w).max()) or 1.0
+    idx = np.where(np.abs(w) > peak * thresh)[0]
+    if not len(idx):
+        return w[:0]
+    keep = int(rate * 0.03)                                                     # keep 30 ms so soft endings are not cut
+    w = w[max(0, idx[0] - keep): idx[-1] + keep]
+    f = min(len(w) // 2, int(rate * 0.008))                                     # 8 ms fade: no clicks where pieces join
+    if f:
+        ramp = np.linspace(0, 1, f, dtype=np.float32)
+        w[:f] *= ramp; w[-f:] *= ramp[::-1]
+    return w
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-print("Using", device)
+print("Using", device, "(choose Runtime -> T4 GPU if this says cpu and you want it faster)")
 romaniser = None
-if any(l in UROMAN_LANG for l in LANGS_TO_MAKE):
-    import uroman as ur
-    romaniser = ur.Uroman()
+def romanise(s, lang):
+    global romaniser
+    if romaniser is None:
+        import uroman as ur
+        romaniser = ur.Uroman()
+    return romaniser.romanize_string(s, lcode=UROMAN_CODE[lang])
 
 if os.path.isdir(OUT):
     shutil.rmtree(OUT)
-report = []
+report, dropped = [], {}
 for lang in LANGS_TO_MAKE:
     print(f"\n=== {lang}: loading {MODELS[lang]}")
     tok = AutoTokenizer.from_pretrained(MODELS[lang])
     model = VitsModel.from_pretrained(MODELS[lang]).to(device).eval()
     model.speaking_rate = SPEAKING_RATE
     rate = model.config.sampling_rate
-    gap, pad = np.zeros(int(rate * PAUSE_SENTENCE), np.float32), np.zeros(int(rate * PAD), np.float32)
+    vocab = set(tok.get_vocab().keys())
+    needs_latin = bool(getattr(tok, "is_uroman", False))                       # ask the model, do not guess
+    print(f"    romanise with uroman: {needs_latin}; sampling rate {rate} Hz")
     os.makedirs(f"{OUT}/{lang}", exist_ok=True)
     for cid, text in CLIPS[lang].items():
         if ONLY_IDS and cid not in ONLY_IDS:
             continue
         pieces = []
-        for s in sentences(spoken(lang, text)):
-            if lang in UROMAN_LANG:
-                s = romaniser.romanize_string(s, lcode=UROMAN_LANG[lang])
-            inputs = tok(s.lower(), return_tensors="pt").to(device)
-            if inputs["input_ids"].shape[-1] < 2:      # nothing the model can say (e.g. only symbols)
+        for phrase, pause in segments(spoken(lang, text)):
+            s = romanise(phrase, lang) if needs_latin else phrase
+            s = s.lower()
+            lost = {c for c in s if c != " " and c not in vocab}
+            if lost:
+                dropped.setdefault(lang, {}).setdefault("".join(sorted(lost)), []).append(cid)
+            inputs = tok(s, return_tensors="pt").to(device)
+            if inputs["input_ids"].shape[-1] < 2:                                # nothing the model can say
                 continue
             set_seed(SEED)
             with torch.no_grad():
-                pieces.append(model(**inputs).waveform[0].cpu().numpy())
-            pieces.append(gap)
+                w = model(**inputs).waveform[0].cpu().numpy().astype(np.float32)
+            w = trim(w, rate)
+            if len(w):
+                pieces += [w, np.zeros(int(rate * pause), np.float32)]
         if not pieces:
             print(f"  !! {cid}: nothing to say, skipped")
             report.append((lang, cid, 0.0, "EMPTY"))
             continue
+        pad = np.zeros(int(rate * PAD), np.float32)
         wav = np.concatenate([pad, *pieces[:-1], pad])
-        wav = wav / max(1e-6, float(np.abs(wav).max())) * 0.9          # same loudness for every clip
+        wav = wav / max(1e-6, float(np.abs(wav).max())) * 0.95
         wav_path, mp3_path = f"{OUT}/{lang}/{cid}.wav", f"{OUT}/{lang}/{cid}.mp3"
         scipy.io.wavfile.write(wav_path, rate, (wav * 32767).astype(np.int16))
-        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", wav_path, "-ac", "1", "-b:a", BITRATE, mp3_path], check=True)
+        # Same loudness everywhere (EBU R128), then mono mp3. Peaks are kept below -1.5 dB so phones do not distort.
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", wav_path,
+                        "-af", f"loudnorm=I={LOUDNESS}:TP=-1.5:LRA=11", "-ar", str(rate),
+                        "-ac", "1", "-b:a", BITRATE, mp3_path], check=True)
         os.remove(wav_path)
         secs = len(wav) / rate
         report.append((lang, cid, secs, "LONG (over 40 s)" if secs > 40 else "ok"))
-        print(f"  {cid:14s} {secs:5.1f}s")
+        print(f"  {cid:16s} {secs:5.1f}s")
     del model
     if device == "cuda":
         torch.cuda.empty_cache()
@@ -531,15 +717,28 @@ for lang in LANGS_TO_MAKE:
 print("\nSummary:")
 for lang in LANGS_TO_MAKE:
     made = [r for r in report if r[0] == lang and r[3] != "EMPTY"]
-    print(f"  {lang}: {len(made)} of {len(CLIPS[lang])} clips")
+    want = len(ONLY_IDS) if ONLY_IDS else len(CLIPS[lang])
+    print(f"  {lang}: {len(made)} of {want} clips")
 for r in report:
     if r[3] != "ok":
-        print("  check:", r)
+        print("  CHECK clip:", r)
+for lang, d in dropped.items():
+    for chars, ids in d.items():
+        print(f"  CHECK {lang}: the voice cannot say {chars!r}; it was left out in {len(ids)} phrase(s), e.g. {', '.join(sorted(set(ids))[:6])}")
 
 zip_path = shutil.make_archive(OUT, "zip", OUT)
-print("\nWrote", zip_path, "- unzip it INTO public/audio/")
+print("\nWrote", zip_path, f"({os.path.getsize(zip_path) / 1e6:.1f} MB) - delete the old clips, then unzip INTO public/audio/")
+if SAVE_TO_DRIVE:
+    try:
+        from google.colab import drive
+        drive.mount("/content/drive")
+        shutil.copy(zip_path, "/content/drive/MyDrive/inclusive-access-audio.zip")
+        print("Copied to Google Drive: MyDrive/inclusive-access-audio.zip")
+    except Exception as e:
+        print("Could not copy to Drive:", e)
 try:
     from google.colab import files
     files.download(zip_path)
+    print("If the download did not start: open the Files panel on the left, right-click audio.zip, Download.")
 except ImportError:
     pass

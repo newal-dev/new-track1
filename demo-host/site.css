@@ -1,3 +1,5 @@
+@font-face{font-family:'Source Serif 4';src:url(fonts/source-serif-4-latin-600-normal.woff2) format('woff2');font-weight:600;font-display:swap}
+@font-face{font-family:'Source Serif 4';src:url(fonts/source-serif-4-latin-700-normal.woff2) format('woff2');font-weight:700;font-display:swap}
 /* Demo partner site. Colour tokens come from the plugin (site.js copies them from customElements.get('db-form').design),
    so the header, nav and footer always use the same theme as the form. The values below are only the first-paint fallback. */
 :root{--bg:#f6f4ef;--surface:#ffffff;--surface-2:#efece4;--ink:#1b1d1a;--ink-2:#4a4f47;--line:#d6d1c4;--line-strong:#6b6f66;--accent:#1d5c3f;--accent-hover:#164a32;--accent-ink:#ffffff;--accent-soft:#e2eee6;--error:#a3221b;--error-soft:#fbeae8;--focus:#1d5c3f;--focus-gap:#ffffff;
@@ -54,7 +56,9 @@ dl.facts dd{margin:0}
 .note{font-size:.9375rem;color:var(--ink-2);padding-left:var(--s3);border-left:3px solid var(--accent)}
 
 /* partner developers */
-.dev{margin-top:var(--s8);padding-top:var(--s6);border-top:1px solid var(--line);display:grid;gap:var(--s5)}
+.dev{margin-top:var(--s8);padding-top:var(--s6);border-top:1px solid var(--line);display:grid;gap:var(--s5);grid-template-columns:minmax(0,1fr)}
+.dev p{overflow-wrap:anywhere}
+pre:focus-visible,.scroll:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 @media (min-width:60rem){.dev{grid-template-columns:minmax(0,4fr) minmax(0,8fr);column-gap:var(--s7)}.dev>header{grid-row:span 2}}
 .dev>header{display:grid;gap:var(--s3);align-content:start}
 .dev>header p{color:var(--ink-2)}

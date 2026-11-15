@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang='en'>
+<head>
+<meta charset='utf-8'>
+<title>Inclusive Access: team testing guide</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 18mm 16mm; }
+  body { font: 10.5pt/1.5 'Segoe UI', Arial, sans-serif; color: #1b1d1a; margin: 0; }
+  h1 { font: 700 21pt/1.15 Georgia, serif; margin: 0 0 4pt; }
+  h2 { font: 700 13.5pt/1.2 Georgia, serif; margin: 18pt 0 6pt; padding-top: 6pt; border-top: 1.5pt solid #1d5c3f; break-after: avoid; }
+  h3 { font-size: 11pt; margin: 12pt 0 4pt; break-after: avoid; }
+  p, li { margin: 0 0 5pt; }
+  ul, ol { padding-left: 16pt; margin: 0 0 6pt; }
+  .lead { font-size: 11.5pt; color: #4a4f47; margin-bottom: 10pt; }
+  .meta { font-size: 9pt; color: #4a4f47; margin-bottom: 14pt; }
+  code, pre { font-family: Consolas, 'Courier New', monospace; font-size: 9pt; }
+  code { background: #efece4; padding: 0 2pt; border-radius: 2pt; }
+  pre { background: #f6f4ef; border: 0.75pt solid #d6d1c4; border-left: 3pt solid #1d5c3f; padding: 7pt 9pt; white-space: pre-wrap; word-break: break-word; margin: 4pt 0 8pt; break-inside: avoid; }
+  .prompt { background: #ffffff; border: 1pt solid #1d5c3f; border-left: 4pt solid #1d5c3f; font-size: 8.6pt; line-height: 1.45; break-inside: auto; }
+  table { width: 100%; border-collapse: collapse; margin: 4pt 0 10pt; font-size: 9.3pt; break-inside: auto; }
+  th, td { border: 0.75pt solid #d6d1c4; padding: 4pt 5pt; text-align: left; vertical-align: top; }
+  th { background: #efece4; font-weight: 700; }
+  tr { break-inside: avoid; }
+  .note { border-left: 3pt solid #9a4a00; background: #fdf0e3; padding: 6pt 9pt; margin: 6pt 0 10pt; break-inside: avoid; }
+  .ok { border-left: 3pt solid #1d5c3f; background: #e2eee6; padding: 6pt 9pt; margin: 6pt 0 10pt; break-inside: avoid; }
+  .box { display: inline-block; width: 8pt; height: 8pt; border: 0.9pt solid #1b1d1a; margin-right: 4pt; vertical-align: -1pt; }
+  .checks li { list-style: none; margin-left: -14pt; }
+  .page-break { break-before: page; }
+</style>
+</head>
+<body>
+
+<h1>Inclusive Access: team testing guide</h1>
+<p class='lead'>How to get the latest version, run it, and test everything: audio in six languages, keyboard, screen readers, zoom, colours, offline, and the partner integrations.</p>
+<p class='meta'>Repository: github.com/newal-dev/new-track1 · Branch: <code>samuel</code> · 15 November 2026 · About 60–90 minutes of testing</p>
+
+<div class='ok'><strong>Fastest way:</strong> use section 1 to set up by hand, or copy the prompt in section 2 into an AI coding agent (Claude Code, Cursor, Copilot agent, Codex) and let it set everything up and run the automated tests for you. Then do the hands-on tests in sections 3–8 yourself: they need a person.</div>
+
+<h2>1. Get the code and run it</h2>
+<p>You need <strong>Git</strong>, <strong>Docker Desktop</strong> (started), and <strong>Chrome or Edge</strong>. The audio clips (528 files, about 16 MB) are inside the repository, so cloning downloads them; there is nothing extra to fetch.</p>
+<h3>First time</h3>
+<pre>git clone https://github.com/newal-dev/new-track1.git
+cd new-track1
+git checkout samuel
+docker compose up --build</pre>
+<h3>Already cloned before</h3>
+<pre>cd new-track1
+git fetch origin
+git checkout samuel
+git pull origin samuel
+docker compose up --build</pre>
+<p>Wait for <code>Plugin server on http://localhost:3000</code>, then open <strong>http://localhost:8080</strong>. To stop: Ctrl+C, then <code>docker compose down</code>.</p>
+<p><strong>Without Docker:</strong> install Node.js 20 or newer, run <code>npm ci</code>, then <code>npm start</code> in one terminal and <code>npm run demo</code> in a second.</p>
+<div class='note'><strong>"port is already allocated" or the page looks like a different project?</strong> Another app is using port 3000 or 8080. Run <code>docker ps</code>, stop the other containers with <code>docker stop &lt;name&gt;</code>, and start again. The plug-in only works on these two ports.</div>
+
+<h3>Check the audio arrived</h3>
+<p>In the project folder, <code>public/audio/</code> must contain six folders, each with 88 <code>.mp3</code> files:</p>
+<pre>en  am  om  ti  so  sid</pre>
+<p>Quick check in a browser: http://localhost:3000/audio/am/welcome.mp3 should play.</p>
+
+<h3>Automated tests (one person is enough)</h3>
+<pre>npm ci
+npm test                         # expect: 95 pass (unit, voice, API)
+npx playwright install chromium
+npm run test:a11y                # expect: 27 passed (browser + axe accessibility)
+npm run contrast                 # expect: 75 of 75 pairs pass</pre>
+<p>Stop Docker first (<code>docker compose down</code>) before <code>npm run test:a11y</code>: it starts its own servers on ports 3000 and 8080.</p>
+
+<div class='page-break'></div>
+<h2>2. Prompt for an AI agent</h2>
+<p>Copy everything in the box into your AI coding agent, started in an empty folder where you want the project. It sets up, runs the checks, and reports back. It is told not to change any code.</p>
+<pre class='prompt'>You are helping me test a project on my computer. Work step by step, run the commands
+yourself, and report clearly. Do NOT change, fix, commit or push any code: this is
+testing only. If something fails, show me the exact error and what you think it means.
+
+PROJECT
+- Repository: https://github.com/newal-dev/new-track1.git, branch: samuel
+- It is an accessible sign-up and job form plug-in (Web Component) with a Node.js API,
+  a demo partner website, and read-aloud audio clips in six languages
+  (en, am, om, ti, so, sid). The audio files are inside the repository.
+
+STEPS
+1. Check what is installed: git, Node.js (need 20 or newer), npm, Docker Desktop
+   (is the engine running? `docker info`). Tell me what is missing and how to install
+   it on my operating system, then wait for me before continuing if something is missing.
+2. Get the code:
+   - If a folder `new-track1` already exists here: cd into it, `git fetch origin`,
+     `git checkout samuel`, `git pull origin samuel`.
+   - Otherwise: `git clone https://github.com/newal-dev/new-track1.git`, cd new-track1,
+     `git checkout samuel`.
+   Show me `git log --oneline -3`.
+3. Check the audio: for each folder in public/audio (en, am, om, ti, so, sid) count the
+   .mp3 files (expect 88 each) and list any file smaller than 2 KB (expect none).
+4. Check ports 3000 and 8080 are free. If something else is using them, tell me what
+   it is and ask me before stopping anything.
+5. Install and run the automated tests:
+   - `npm ci`
+   - `npm test`  (expect 95 passing)
+   - `npx playwright install chromium`
+   - `npm run test:a11y`  (expect 27 passed; it starts its own servers)
+   - `npm run contrast`  (expect 75 of 75 pairs pass)
+   Give me the pass/fail numbers, and for every failure the test name and error.
+6. Start the app: `docker compose up --build -d` (or, without Docker: `npm start` and,
+   in a second terminal, `npm run demo`). Wait until
+   http://localhost:3000/v1/health returns {"ok":true,...}.
+7. Check these URLs respond with HTTP 200 and tell me the result for each:
+   http://localhost:8080/            (demo partner site)
+   http://localhost:8080/savanna.html
+   http://localhost:3000/widget.js
+   http://localhost:3000/audio/am/welcome.mp3
+   http://localhost:3000/audio/sid/welcome.mp3
+   http://localhost:3000/v1/jobs?format=jsonld
+   http://localhost:3000/demo/lms
+   http://localhost:3000/openapi.yaml
+8. Finish with a short report: what works, what failed (with errors), anything I need
+   to do by hand. Then tell me to open http://localhost:8080 in Chrome and follow
+   sections 3 to 8 of the testing guide for the hands-on tests. Leave the app running.
+   When I say I am done, stop it with `docker compose down`.</pre>
+
+<h2>3. Audio test (20 min, one person per language)</h2>
+<p>Laptop, Chrome or Edge, volume up. Native speakers are the most valuable here.</p>
+<ol>
+  <li>Open http://localhost:8080. The first page asks "Which language would you like to use?" and is read aloud after you press any key or tap.</li>
+  <li>Choose your language: English, አማርኛ, Afaan Oromoo, ትግርኛ, Soomaali or Sidaamu Afoo.</li>
+  <li>"Would you like this page to be read aloud?" is spoken. Press <strong>Yes</strong>.</li>
+  <li>Go through every page of <strong>Join the programme</strong>, <strong>Apply for a job</strong> and <strong>For employers</strong> (top menu). On each page check:
+    <ul>
+      <li>you hear it, in your language (silence or the wrong language is a bug);</li>
+      <li>the spoken words match the screen;</li>
+      <li>pronunciation is understandable (write down words that sound wrong);</li>
+      <li>after reading you hear "Speak now", a beep, and a <strong>Listening</strong> banner appears.</li>
+    </ul></li>
+  <li><strong>Tab test:</strong> press Tab and Shift+Tab. Each choice is read as number, name and "selected" or "not selected".</li>
+  <li>Press <strong>Escape</strong>: all sound stops at once.</li>
+  <li>Native speakers: also check the <strong>written</strong> text. All non-English text is a draft.</li>
+</ol>
+<div class='note'><strong>Known, do not report:</strong> job titles in the job list are read by the device voice, so they can be silent in Ethiopian languages. The support and adjustment pages are long (40–60 seconds) because they read every choice. <strong>Sidaamu Afoo</strong> is a rough first draft waiting for native review; two Sidama clips (closing date hint, "did not understand") drop the letter v. Please do report wrong Sidama words: that review is exactly what is needed.</div>
+
+<h2>4. Voice answers (10 min, Chrome or Edge)</h2>
+<ol>
+  <li>Choose a language, press Yes to read aloud, and allow the microphone.</li>
+  <li>After the beep, answer with a number ("two"), a choice name, or a command: Next, Back, Skip, Read aloud, Stop.</li>
+  <li>On the last page say "Yes" to submit.</li>
+  <li>Write down what was misunderstood. Afaan Oromoo, Tigrinya and Sidama usually have no browser speech recognition: typing is expected there.</li>
+</ol>
+
+<h2>5. Keyboard only (10 min)</h2>
+<p>Do not touch the mouse. Use Tab, Shift+Tab, arrow keys, Space, Enter, Escape.</p>
+<ul class='checks'>
+  <li><span class='box'></span>Complete all three forms.</li>
+  <li><span class='box'></span>The focus is always clearly visible.</li>
+  <li><span class='box'></span>Next with an empty answer shows an error and moves the focus to the field.</li>
+  <li><span class='box'></span>On the review page, "Yes, submit" without ticking the consent box shows an error and sends nothing.</li>
+</ul>
+
+<h2>6. Screen readers (15 min each, the most important test)</h2>
+<p>Do the sign-up, ideally with our co-designer, <strong>without helping</strong>. Note where they hesitate and whether they finish.</p>
+<ul>
+  <li><strong>NVDA + Chrome (Windows):</strong> free from nvaccess.org. Every question, hint, choice and error should be read.</li>
+  <li><strong>TalkBack (Android):</strong> phone on the same Wi-Fi as the laptop; open <code>http://&lt;laptop-IP&gt;:8080</code> (find the IP with <code>ipconfig</code>). The microphone does not work over plain http on a phone: type instead.</li>
+  <li>Record each session with <code>docs/manual-test-script.md</code>: device, versions, finished yes/no, time, problems. These results go into section 1.2 of <code>docs/WCAG-2.2-AA-Report.md</code> and are required to pass the judging gate.</li>
+</ul>
+
+<h2>7. Everything else (15 min)</h2>
+<table>
+  <thead><tr><th>Test</th><th>How</th><th>Expected</th></tr></thead>
+  <tbody>
+    <tr><td>Zoom 200% and 400%</td><td>Ctrl and +</td><td>No sideways scrolling, nothing cut off</td></tr>
+    <tr><td>Sound off</td><td>Mute, choose Yes to read aloud</td><td>Captions show every spoken line</td></tr>
+    <tr><td>Colours</td><td>Colours menu, try all six</td><td>Readable; header and footer follow; remembered after reload</td></tr>
+    <tr><td>Draft</td><td>Answer two questions, reload</td><td>"Welcome back"; Continue keeps the answers</td></tr>
+    <tr><td>Offline</td><td>F12, Network, Offline, then submit</td><td>"You are offline… saved"; back online, it is sent</td></tr>
+    <tr><td>Language switch</td><td>Top language links while filling in</td><td>Language changes, answers kept</td></tr>
+    <tr><td>Ethiopian calendar</td><td>Employer form, closing date</td><td>13 months incl. Pagume; "Not sure" works</td></tr>
+    <tr><td>Receipt</td><td>Finish a form</td><td>Receipt code and today's Ethiopian date</td></tr>
+    <tr><td>Savanna-style page</td><td>http://localhost:8080/savanna.html</td><td>Form works inside a course page</td></tr>
+    <tr><td>LTI 1.3</td><td>http://localhost:3000/demo/lms, click a button</td><td>Form opens; the Amharic button opens Amharic</td></tr>
+    <tr><td>Job data</td><td>http://localhost:3000/v1/jobs?format=jsonld</td><td>JobPosting data; a job you posted appears</td></tr>
+    <tr><td>SMS</td><td>Sign up with a phone number, open http://localhost:3000/demo/sms-inbox</td><td>A message with a masked number</td></tr>
+    <tr><td>Cheap phone</td><td>Open on a low-cost Android</td><td>Fits the screen, loads in reasonable time</td></tr>
+  </tbody>
+</table>
+
+<h2>8. Report problems</h2>
+<p>One row per problem, or open a GitHub issue. Say if it <strong>blocks finishing the form</strong> or is <strong>minor</strong>.</p>
+<table>
+  <thead><tr><th style='width:18%'>Where (page, step)</th><th style='width:10%'>Language</th><th style='width:18%'>Device, browser, screen reader</th><th>What happened</th><th style='width:18%'>Expected</th><th style='width:9%'>Blocks?</th></tr></thead>
+  <tbody>
+    <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>
+  </tbody>
+</table>
+</body>
+</html>

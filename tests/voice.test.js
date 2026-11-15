@@ -6,7 +6,7 @@ import fs from 'node:fs';
 let src = fs.readFileSync(new URL('../public/db-form.js', import.meta.url), 'utf8');
 src = src.replace("customElements.define('db-form', DbForm);", 'globalThis.__D = DbForm; globalThis.__F = FLOWS;');
 globalThis.HTMLElement = class { attachShadow() { return {}; } };
-globalThis.window = globalThis;
+globalThis.window = globalThis; globalThis.customElements = { get: () => null, define() {} };
 globalThis.SpeechRecognition = function () {};
 (0, eval)(src.replace(/^const /gm, 'var ').replace(/^class DbForm/m, 'var DbForm = class DbForm'));
 const D = globalThis.__D, F = globalThis.__F;

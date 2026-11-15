@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang='en' data-theme='auto'>
+<head>
+<meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>Week 1: Getting started · Digital Skills 101 (Savanna-style course page, demo)</title>
+<link rel='stylesheet' href='site.css'>
+<style>
+  /* A learning-platform course page: sidebar of lessons, lesson content, the plug-in inside the lesson. */
+  .course{display:grid;gap:var(--s6);grid-template-columns:minmax(0,1fr)}
+  @media (min-width:60rem){.course{grid-template-columns:16rem minmax(0,1fr);gap:var(--s7)}}
+  .lessons h2{font-family:var(--font-ui);font-size:.8125rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);margin-bottom:var(--s3)}
+  .lessons ol{list-style:none;margin:0;padding:0;display:grid;gap:2px;border-left:2px solid var(--line)}
+  .lessons a,.lessons span{display:flex;gap:var(--s2);align-items:center;min-height:44px;padding:var(--s2) var(--s3);color:var(--ink-2);text-decoration:none;margin-left:-2px;border-left:2px solid transparent}
+  .lessons a:hover{color:var(--ink);border-left-color:var(--line-strong)}
+  .lessons a[aria-current=page]{color:var(--ink);font-weight:700;border-left-color:var(--accent);background:var(--accent-soft)}
+  .lessons .locked{color:var(--ink-2)}
+  .lessons small{margin-left:auto;font-size:.8125rem}
+  .crumbs ol{list-style:none;display:flex;flex-wrap:wrap;gap:var(--s2);margin:0 0 var(--s4);padding:0;font-size:.9375rem;color:var(--ink-2)}
+  .crumbs li+li::before{content:'/';margin-right:var(--s2);color:var(--line-strong)}
+  .lesson{display:grid;gap:var(--s5)}
+  .lesson>header{display:grid;gap:var(--s3);max-width:40rem}
+  .meta{display:flex;flex-wrap:wrap;gap:var(--s2) var(--s5);font-size:.9375rem;color:var(--ink-2)}
+  .task{border-top:1px solid var(--line);padding-top:var(--s5);display:grid;gap:var(--s4)}
+  .task h2{font-size:1.375rem}
+  .how{max-width:40rem;font-size:.9375rem;color:var(--ink-2)}
+</style>
+<script src='site.js'></script>
+</head>
+<body>
+<a class='skip' href='#task'>Skip to the task</a>
+<header class='site'>
+  <div class='wrap top'>
+    <a class='brand' href='savanna.html'>
+      <svg width='40' height='40' viewBox='0 0 56 56' aria-hidden='true' focusable='false'><rect x='6' y='10' width='44' height='36' rx='4' fill='none' stroke='currentColor' stroke-width='4'/><path d='M6 20h44' stroke='currentColor' stroke-width='4'/></svg>
+      <span><strong>Learning platform</strong><small>Savanna-style course page, made for the demo</small></span>
+    </a>
+    <nav class='util' aria-label='Account'>
+      <ul><li><a href='index.html'>Back to the partner site</a></li></ul>
+    </nav>
+  </div>
+</header>
+
+<main id='main' class='wrap'>
+  <nav class='crumbs' aria-label='Breadcrumb'><ol><li>Digital Skills 101</li><li>Week 1</li><li aria-current='page'>Getting started</li></ol></nav>
+  <div class='course'>
+    <nav class='lessons' aria-label='Lessons in this course'>
+      <h2>Week 1</h2>
+      <ol>
+        <li><a href='savanna.html' aria-current='page'>Getting started <small>Now</small></a></li>
+        <li><span class='locked'>Using a keyboard <small>Next</small></span></li>
+        <li><span class='locked'>Finding work online <small>Later</small></span></li>
+      </ol>
+    </nav>
+    <article class='lesson' aria-labelledby='lesson-h'>
+      <header>
+        <h1 id='lesson-h'>Getting started</h1>
+        <p class='lead'>Before the first class, tell us how to reach you and what support would help. It takes about 3 minutes.</p>
+        <p class='meta'><span>One question at a time</span><span>Type or speak</span><span>Six languages</span></p>
+      </header>
+      <section class='task' id='task' tabindex='-1' aria-labelledby='task-h'>
+        <h2 id='task-h'>Join the course</h2>
+        <db-onboarding api='http://localhost:3000/v1' audio='http://localhost:3000/audio' partner='Digital Skills 101' sw='db-sw.js'></db-onboarding>
+        <p class='how'>This lesson page is the host. The form above is the same plug-in as on the partner site, added with one script tag and one element. In a real learning platform it can also be launched with LTI 1.3: see the <a href='http://localhost:3000/demo/lms'>demo LMS</a>.</p>
+      </section>
+    </article>
+  </div>
+</main>
+
+<footer class='site'>
+  <div class='wrap'>
+    <div class='small'>
+      <p>Not the real Savanna. A stand-in course page to show the plug-in inside a learning platform.</p>
+      <p><a href='http://localhost:3000/lti/config.json'>LTI tool configuration</a></p>
+    </div>
+  </div>
+</footer>
+<script src='http://localhost:3000/widget.js'></script>
+</body>
+</html>

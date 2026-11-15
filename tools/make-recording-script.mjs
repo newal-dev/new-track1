@@ -6,7 +6,7 @@ import fs from 'fs';
 let src = fs.readFileSync('public/db-form.js', 'utf8');
 src = src.replace("customElements.define('db-form', DbForm);", 'globalThis.__D = DbForm; globalThis.__F = FLOWS; globalThis.__UI = UI; globalThis.__L = LANGS;');
 globalThis.HTMLElement = class { attachShadow() { return {}; } };
-globalThis.window = globalThis; globalThis.SpeechRecognition = function () {};
+globalThis.window = globalThis; globalThis.SpeechRecognition = function () {}; globalThis.customElements = { get: () => null, define() {} };
 (0, eval)(src.replace(/^const /gm, 'var ').replace(/^class DbForm/m, 'var DbForm = class DbForm'));
 const D = globalThis.__D, F = globalThis.__F, UI = globalThis.__UI, LANGS = globalThis.__L;
 const ALL = LANGS.map(x => x.id);
@@ -20,6 +20,7 @@ const NWL = {
   om: ['Tokko', 'Lama', 'Sadii', 'Afur', 'Shan', 'Jaha', 'Torba', 'Saddeet'],
   ti: ['ሓደ', 'ክልተ', 'ሰለስተ', 'ኣርባዕተ', 'ሓሙሽተ', 'ሽዱሽተ', 'ሸውዓተ', 'ሸሞንተ'],
   so: ['Kow', 'Laba', 'Saddex', 'Afar', 'Shan', 'Lix', 'Toddoba', 'Siddeed'],
+  sid: ['Mitto', 'Lame', 'Sase', 'Shoole', 'Onte', 'Lee', 'Lamala', 'Sette'],
 };
 
 // Every clip: id, what it is, which languages need it (default: all), text per language.
@@ -33,8 +34,9 @@ add('welcome', 'Welcome page (after they said Yes to read aloud)', l => { const 
 for (const flow of ['signup', 'job', 'employer']) {
   F[flow].steps.forEach((st, i) => { if (!st.dyn) add(st.id, `${flow} flow, question ${i + 1}`, l => mk(flow, l, i).pageText(st), { opt: !!st.optional }); });
 }
-for (const [id, what] of [['errNeed', 'Error: question not answered'], ['errBad', 'Error: phone number or email not valid'], ['errFail', 'Error: could not send'], ['unclear', 'Voice answer not understood'], ['noneSel', 'Nothing chosen yet'], ['idle', 'Nothing heard'], ['sayWelcome', 'Welcome page: say Start'], ['reviewAsk', 'Review page: do you want to submit?'], ['heardGeneric', 'Spoken answer received (used when the device has no voice)'], ['choseA', 'Confirmation, first part ("You chose")'], ['choseB', 'Confirmation, last part']]) {
-  const k = { errNeed: 'need', errBad: 'bad', errFail: 'fail' }[id] || id;
+for (const [id, what] of [['errNeed', 'Error: question not answered'], ['errBad', 'Error: phone number or email not valid'], ['errFail', 'Error: could not send'], ['unclear', 'Voice answer not understood'], ['noneSel', 'Nothing chosen yet'], ['idle', 'Nothing heard'], ['sayWelcome', 'Welcome page: say Start'], ['reviewAsk', 'Review page: do you want to submit?'], ['heardGeneric', 'Spoken answer received (used when the device has no voice)'], ['choseA', 'Confirmation, first part ("You chose")'], ['choseB', 'Confirmation, last part'], ['errConsentNeed', 'Error: consent box not ticked'], ['errDateBad', 'Error: date has no month'], ['draftH', 'Welcome back (answers kept on this device)'], ['queued', 'Offline: answers saved on the device, sent later'], ['sentLater', 'Saved answers were sent'], ['tapToHear', 'Press a key or tap to hear the questions']]) {
+  const k = { errNeed: 'need', errBad: 'bad', errFail: 'fail', errConsentNeed: 'consentNeed', errDateBad: 'dateBad' }[id] || id;
+  if (id === 'draftH') { add(id, what, l => [u('draftH', l), u('draftP', l), u('draftGo', l), u('restart', l)].join(' ')); continue; }
   add(id, what, l => u(k, l));
 }
 for (let n = 1; n <= 8; n++) add('n' + n, 'Number ' + n + ' (used in the confirmation)', l => NWL[l][n - 1]);
@@ -45,10 +47,11 @@ add('speakNow', 'Said just before the microphone opens (then a beep)', l => u('s
 add('sel', 'Focus: a choice that is ticked', l => u('sel', l));
 add('unsel', 'Focus: a choice that is not ticked', l => u('unsel', l));
 add('langName', 'Focus: a language button, in that language', l => LANGS.find(x => x.id === l).name);
-for (const k of ['next', 'back', 'skip', 'read', 'speak', 'readToMe', 'stopRead', 'send', 'noChange', 'restart', 'change', 'start', 'startVoice', 'raYes', 'raNo']) add('b_' + k, `Focus: the "${UI[k].en}" button`, l => u(k, l));
+for (const k of ['next', 'back', 'skip', 'read', 'speak', 'readToMe', 'stopRead', 'send', 'noChange', 'restart', 'change', 'start', 'startVoice', 'raYes', 'raNo', 'draftGo']) add('b_' + k, `Focus: the "${UI[k].en}" button`, l => u(k, l));
 for (const flow of ['signup', 'job', 'employer']) {
   for (const st of F[flow].steps) {
-    if (st.dyn) continue;
+    // The job question's own text is a clip; the job titles change, so the device voice reads them.
+    if (st.dyn) { add('q_' + st.id, `Job page: the question "${st.q.en}" (the job titles are read by the device voice)`, l => st.q[l] || st.q.en); continue; }
     if (st.type === 'text') add('q_' + st.id, `Focus: the answer box of "${st.q.en}"`, l => st.q[l] || st.q.en);
     (st.options || []).forEach(([k, t]) => add('o_' + st.id + '_' + k, `Focus: choice "${t.en}" (question ${st.id})`, l => t[l] || t.en));
   }
@@ -66,11 +69,12 @@ This file tells you exactly what each audio clip must say. It is **generated** f
 ## Languages and voices
 | Language | Code | Folder | Voice |
 |---|---|---|---|
-| English | \`en\` | \`public/audio/en/\` | The device voice (every phone and laptop has one). Clips are optional. |
+| English | \`en\` | \`public/audio/en/\` | Generated clips (\`facebook/mms-tts-eng\`), so English sounds like the other four languages; the device voice if a clip is missing. |
 | አማርኛ Amharic | \`am\` | \`public/audio/am/\` | **Generated clips** (Meta MMS, \`facebook/mms-tts-amh\`). Few devices have an Amharic voice. |
 | Afaan Oromoo | \`om\` | \`public/audio/om/\` | Generated clips (\`facebook/mms-tts-orm\`); the device voice if a clip is missing. |
 | ትግርኛ Tigrinya | \`ti\` | \`public/audio/ti/\` | Generated clips (\`facebook/mms-tts-tir\`); the device voice if a clip is missing. |
 | Soomaali Somali | \`so\` | \`public/audio/so/\` | Generated clips (\`facebook/mms-tts-som\`); the device voice if a clip is missing. |
+| Sidaamu Afoo Sidama | \`sid\` | \`public/audio/sid/\` | Generated clips (\`facebook/mms-tts-sid\`). The text is a rough draft: a native speaker must correct the SID block first. |
 
 When a clip is missing **and** the device has no voice for the language, the plugin says in English "This device has no voice for this language…" so a blind person knows why, and it still listens for their answer.
 
@@ -79,7 +83,7 @@ When a clip is missing **and** the device has no voice for the language, the plu
 2. Open https://colab.research.google.com, choose **New notebook**.
 3. Optional but faster: **Runtime, Change runtime type, T4 GPU**.
 4. Open \`tools/colab_generate_audio.py\`, copy **all** of it, paste it into the first cell, and press Run. The first run downloads the voice models (a few minutes).
-5. When it finishes, \`audio.zip\` downloads. Unzip it **into \`public/audio/\`**, so you get for example \`public/audio/am/fullName.mp3\`.
+5. When it finishes, \`audio.zip\` downloads. **Delete the old clips** in \`public/audio/en/\`, \`am/\`, \`om/\`, \`ti/\` and \`so/\` (keep the \`.gitkeep\` files), then unzip it **into \`public/audio/\`**, so you get for example \`public/audio/am/fullName.mp3\`.
 6. Test: open the demo page, choose a language, choose Yes, read aloud, and listen to every page.
 7. A native speaker must listen to every clip. If a word is wrong, fix the text in \`public/db-form.js\` (not here), then repeat from step 1.
 
@@ -110,7 +114,7 @@ When a clip is missing **and** the device has no voice for the language, the plu
 
 ## Not recorded (they change each time)
 - **review** (the first part of the last page): reads out the person's own answers. Only \`reviewFix\` is a clip.
-- **role** (job flow): the list of jobs depends on the person's filter and on jobs employers add.
+- **role** (job flow): the list of jobs depends on the person's filter and on jobs employers add. Only the question (\`q_role\`) and the numbers are clips.
 - The exact words a person typed or said. The device voice reads them back when it has a voice for the language; otherwise \`heardGeneric\` is played.
 
 ## Checklist
@@ -128,10 +132,16 @@ fs.writeFileSync('RECORDING_SCRIPT.md', md);
 
 // The Colab script: the template below with the clip text built in.
 const tpl = fs.readFileSync('tools/colab_template.py', 'utf8');
-if (!tpl.includes('__CLIPS_JSON__')) throw new Error('tools/colab_template.py must contain __CLIPS_JSON__');
-const json = JSON.stringify(clips, null, 1);
-if (json.includes("'''")) throw new Error("Clip text must not contain ''' (it would break the Python file)");
-fs.writeFileSync('tools/colab_generate_audio.py', tpl.replace('__CLIPS_JSON__', json));
+if (!tpl.includes('__CLIPS_JSON__') || !tpl.includes('__LANGS__')) throw new Error('tools/colab_template.py must contain __CLIPS_JSON__ and __LANGS__');
+const writePy = (file, langs, only = {}) => {
+  const pick = Object.fromEntries(langs.map(l => [l, only[l] ? Object.fromEntries(only[l].map(id => [id, clips[l][id]])) : clips[l]]));
+  const json = JSON.stringify(pick, null, 1);
+  if (json.includes("'''")) throw new Error("Clip text must not contain ''' (it would break the Python file)");
+  fs.writeFileSync(file, tpl.replace('__LANGS__', JSON.stringify(langs)).replace('__CLIPS_JSON__', json));
+};
+writePy('tools/colab_generate_audio.py', ALL);
+// Only the newest language, plus the English language-page question (it now names Sidama): no need to remake the other clips.
+writePy('tools/colab_generate_audio_sid.py', ['sid', 'en'], { en: ['langAsk'] });
 
 if (process.argv.includes('--json')) console.log(JSON.stringify(clips, null, 2));
-else console.log(`Wrote RECORDING_SCRIPT.md and tools/colab_generate_audio.py: ${total} clips (${ALL.map(l => l + ' ' + count(l)).join(', ')})`);
+else console.log(`Wrote RECORDING_SCRIPT.md, tools/colab_generate_audio.py (all) and tools/colab_generate_audio_sid.py (sid + en/langAsk): ${total} clips (${ALL.map(l => l + ' ' + count(l)).join(', ')})`);

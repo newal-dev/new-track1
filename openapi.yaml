@@ -1,82 +1,285 @@
 openapi: 3.0.3
 info:
   title: Inclusive Access API
-  version: 1.0.0
-  description: Backend for the db-form plugin. Demo only - no authentication, in-memory storage.
+  version: 2.0.0
+  license: { name: MIT, url: https://opensource.org/licenses/MIT }
+  description: |
+    Backend for the Inclusive Access plug-in (`<db-onboarding>`, `<db-career-gateway>`, `<db-form>`), loaded with
+    `<script src='https://YOUR-HOST/widget.js'></script>`. Level 2 of the integration: partners may build their own
+    interface on these routes. Level 3: schema.org/JobPosting output and an LTI 1.3 launch.
+
+    **Privacy.** Nothing is stored without `consent.given = true`. Support needs are stored only when
+    `consent.scope` includes `support`, in a separate store that no route returns. Job-seekers' work needs are
+    never sent: the plug-in filters jobs on the device. Unknown fields are dropped. Each submission returns a
+    receipt that lets the person withdraw consent and delete the record. Storage is in memory (demo).
+
+    ## Keyboard and ARIA support (the plug-in that calls this API)
+    Every route here is used by an interface that works fully with a keyboard and screen readers (NVDA, TalkBack).
+    A partner building its own interface on this API must keep the same behaviour:
+
+    | Key | Action |
+    |---|---|
+    | Tab / Shift+Tab | Move between choices and buttons. While read-aloud is on, the focused control is spoken in the chosen language: number, name, "selected"/"not selected". |
+    | Arrow keys | Move between options in a radio group; change a date select. |
+    | Space | Tick or untick a checkbox; press a button. |
+    | Enter | Submit the current question (Next). Ignored while an input method (Ge'ez keyboard) is composing. |
+    | Escape | Stop all speech and listening immediately. |
+
+    | Pattern | ARIA and HTML used |
+    |---|---|
+    | One question per screen | `<fieldset>` + `<legend id='h' tabindex='-1'>`; focus moves to the legend on every new screen. |
+    | Choices | Native `<input type='radio'/'checkbox'>` inside `<label>`; selected state shown by tick icon and border, never colour alone. |
+    | Text answers | `aria-labelledby='h'`, `aria-describedby='hint err'`, `aria-invalid='true'` on error, `lang` and `dir='auto'`. |
+    | Errors (422 from this API, or local checks) | `role='alert'` box with icon and text; focus moves to the field. Error `code` and `field` in the response let a custom UI do the same. |
+    | Status | `role='status'` live region for "Sending…", "Listening", "Saved on this device". |
+    | Language buttons | `role='group'`, `aria-pressed`, each button has `lang`. |
+    | Captions | Visible caption box of everything spoken (deaf and hard-of-hearing users); `aria-hidden` because screen-reader users hear it already. |
+    | Timing | No time limits anywhere (WCAG 2.2.1). |
+    Full details: README.md, section "Keyboard and ARIA", and docs/WCAG-2.2-AA-Report.md.
+  x-accessibility:
+    standard: WCAG 2.2 AA
+    report: docs/WCAG-2.2-AA-Report.md
+    keyboard: [Tab, Shift+Tab, Arrow keys, Space, Enter, Escape]
+    aria: [role=alert, role=status, role=group, aria-pressed, aria-invalid, aria-describedby, aria-labelledby, aria-current, lang]
+    timeouts: none
+externalDocs:
+  description: README (install, keyboard and ARIA, privacy, build vs reuse)
+  url: https://github.com/newal-dev/new-track1#readme
 servers:
   - url: http://localhost:3000
+tags:
+  - { name: health }
+  - { name: jobs, description: Public job list; also schema.org/JobPosting }
+  - { name: submissions, description: 'Learner registration, job applications, employer job posts' }
+  - { name: consent, description: 'Consent receipts, withdrawal and audit log' }
+  - { name: lti, description: LTI 1.3 launch (Level 3) }
 paths:
   /v1/health:
     get:
+      tags: [health]
       summary: Check the server is up
       responses:
-        '200': { description: OK }
+        '200':
+          description: OK
+          content: { application/json: { schema: { type: object, properties: { ok: { type: boolean }, consentVersion: { type: string, example: '2026-11-15' } } } } }
   /v1/jobs:
     get:
-      summary: List jobs and the accommodations each offers
+      tags: [jobs]
+      summary: List jobs and the workplace adjustments each offers
+      description: Contains only what employers published. Filtering by a learner's needs happens on the learner's device, so no filter parameter exists.
+      parameters:
+        - { name: format, in: query, schema: { type: string, enum: [jsonld] }, description: '`jsonld` returns schema.org/JobPosting (same as Accept: application/ld+json)' }
       responses:
         '200':
-          description: Array of jobs
+          description: Jobs
           content:
-            application/json:
-              schema:
-                type: array
-                items: { $ref: '#/components/schemas/Job' }
+            application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Job' } } }
+            application/ld+json: { schema: { $ref: '#/components/schemas/JobPostingGraph' } }
+  /v1/jobs/{id}:
+    get:
+      tags: [jobs]
+      summary: One job
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+        - { name: format, in: query, schema: { type: string, enum: [jsonld] } }
+      responses:
+        '200':
+          description: The job
+          content:
+            application/json: { schema: { $ref: '#/components/schemas/Job' } }
+            application/ld+json: { schema: { $ref: '#/components/schemas/JobPosting' } }
+        '404': { $ref: '#/components/responses/NotFound' }
   /v1/learners:
     post:
-      summary: Submit a registration (fullName required)
-      requestBody: { $ref: '#/components/requestBodies/Form' }
+      tags: [submissions]
+      summary: Register a learner (onboarding)
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/LearnerIn' } } }
       responses:
         '201': { $ref: '#/components/responses/Created' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '413': { $ref: '#/components/responses/BadRequest' }
         '422': { $ref: '#/components/responses/Invalid' }
   /v1/applications:
     post:
-      summary: Submit a job application (role required)
-      requestBody: { $ref: '#/components/requestBodies/Form' }
+      tags: [submissions]
+      summary: Apply for a job (career gateway)
+      description: Work needs are never accepted here; send them and they are dropped.
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/ApplicationIn' } } }
       responses:
         '201': { $ref: '#/components/responses/Created' }
         '422': { $ref: '#/components/responses/Invalid' }
   /v1/employer/jobs:
     post:
-      summary: Post a job and its accommodations (job required, offers optional list)
-      requestBody: { $ref: '#/components/requestBodies/Form' }
+      tags: [submissions]
+      summary: Post a job and the workplace adjustments it offers
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/EmployerJobIn' } } }
       responses:
         '201': { $ref: '#/components/responses/Created' }
         '422': { $ref: '#/components/responses/Invalid' }
+  /v1/records/{id}:
+    delete:
+      tags: [consent]
+      summary: Withdraw consent and delete the record (answers and support needs)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: X-Receipt, in: header, required: true, schema: { type: string }, description: Receipt returned at submission }
+      responses:
+        '204': { description: Deleted. The consent log keeps only the withdrawal time. }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /v1/consents:
+    get:
+      tags: [consent]
+      summary: Consent audit log for the partner (no names, contacts or answers)
+      description: Protected with `Authorization Bearer ADMIN_TOKEN` when the server has ADMIN_TOKEN set.
+      responses:
+        '200': { description: Log, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ConsentRecord' } } } } }
+        '401': { $ref: '#/components/responses/NotFound' }
+  /v1/consents/{id}:
+    get:
+      tags: [consent]
+      summary: One consent record, for the person who holds the receipt
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: X-Receipt, in: header, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Record, content: { application/json: { schema: { $ref: '#/components/schemas/ConsentRecord' } } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /lti/config.json:
+    get: { tags: [lti], summary: Tool configuration to register in an LMS, responses: { '200': { description: JSON configuration } } }
+  /lti/jwks.json:
+    get: { tags: [lti], summary: The tool's public keys (RS256), responses: { '200': { description: JWK set } } }
+  /lti/login:
+    get:
+      tags: [lti]
+      summary: OIDC third-party login initiation (also accepts POST form)
+      parameters:
+        - { name: iss, in: query, required: true, schema: { type: string } }
+        - { name: login_hint, in: query, required: true, schema: { type: string } }
+        - { name: client_id, in: query, schema: { type: string } }
+        - { name: target_link_uri, in: query, schema: { type: string } }
+        - { name: lti_message_hint, in: query, schema: { type: string } }
+      responses:
+        '302': { description: "Redirect to the platform's authorisation URL with scope=openid, response_type=id_token, response_mode=form_post, prompt=none, state, nonce" }
+        '400': { $ref: '#/components/responses/BadRequest' }
+  /lti/launch:
+    post:
+      tags: [lti]
+      summary: Resource link launch (verifies the id_token and opens the plug-in)
+      description: Checks signature (platform JWKS), issuer, audience, expiry, nonce (single use), state, message type LtiResourceLinkRequest, version 1.3.0 and deployment. Uses only the locale and the custom `flow` claim; the learner's name and email are not used.
+      requestBody:
+        required: true
+        content: { application/x-www-form-urlencoded: { schema: { type: object, required: [id_token, state], properties: { id_token: { type: string }, state: { type: string } } } } }
+      responses:
+        '200': { description: HTML page with the plug-in }
+        '401': { description: 'Launch refused (lti_bad_state, lti_bad_token, lti_bad_nonce, lti_bad_message, lti_bad_deployment)' }
 components:
   schemas:
+    Consent:
+      type: object
+      required: [given, scope]
+      properties:
+        given: { type: boolean, enum: [true] }
+        scope: { type: array, items: { type: string, enum: [answers, support] }, description: '"answers" is required; "support" is a separate, optional agreement' }
+        version: { type: string, example: '2026-11-15' }
+        lang: { type: string, enum: [en, am, om, ti, so] }
+        partner: { type: string, maxLength: 120 }
+        at: { type: string, format: date-time }
+    LearnerIn:
+      type: object
+      required: [fullName, consent]
+      properties:
+        fullName: { type: string, maxLength: 120 }
+        contact: { type: string, maxLength: 120, description: 'Phone (10 digits starting with 0, or 251 + 9 digits) or email' }
+        idRoute: { type: string, enum: [kebele, refugee, other, refer], description: 'How the person will show who they are. No document number is collected; "refer" = no ID, referred by a partner' }
+        support: { type: array, items: { type: string, enum: [screenreader, large, voice, sign, simple, human] }, description: 'Stored only with consent scope "support", never returned' }
+        consent: { $ref: '#/components/schemas/Consent' }
+    ApplicationIn:
+      type: object
+      required: [role, consent]
+      properties:
+        role: { type: string, maxLength: 160 }
+        why: { type: string, maxLength: 1000 }
+        consent: { $ref: '#/components/schemas/Consent' }
+    EmployerJobIn:
+      type: object
+      required: [job, consent]
+      properties:
+        job: { type: string, maxLength: 160 }
+        offers: { type: array, items: { $ref: '#/components/schemas/Offer' } }
+        closes: { type: string, format: date, description: Gregorian date; the plug-in asks in the Ethiopian calendar and converts }
+        org: { type: string, maxLength: 120 }
+        consent: { $ref: '#/components/schemas/Consent' }
+    Offer: { type: string, enum: [stepfree, reader, interp, hours, remote] }
     Job:
       type: object
       properties:
         id: { type: integer }
         title: { type: string }
-        titleAm: { type: string, description: Optional Amharic title }
-        offers: { type: array, items: { type: string } }
+        titles: { type: object, description: 'Title per language (en, am, om, ti, so)', additionalProperties: { type: string } }
+        offers: { type: array, items: { $ref: '#/components/schemas/Offer' } }
+        org: { type: string }
+        datePosted: { type: string, format: date }
+        validThrough: { type: string, format: date }
+    JobPosting:
+      type: object
+      description: schema.org/JobPosting
+      properties:
+        '@context': { type: string, example: https://schema.org }
+        '@type': { type: string, example: JobPosting }
+        title: { type: string }
+        description: { type: string }
+        datePosted: { type: string }
+        validThrough: { type: string }
+        hiringOrganization: { type: object }
+        jobLocation: { type: object }
+        jobLocationType: { type: string, example: TELECOMMUTE }
+        jobBenefits: { type: string, description: The workplace adjustments offered }
+    JobPostingGraph:
+      type: object
+      properties:
+        '@context': { type: string }
+        '@graph': { type: array, items: { $ref: '#/components/schemas/JobPosting' } }
+    ConsentRecord:
+      type: object
+      properties:
+        id: { type: string }
+        flow: { type: string, enum: [signup, job, employer] }
+        scope: { type: array, items: { type: string } }
+        version: { type: string }
+        lang: { type: string }
+        partner: { type: string }
+        at: { type: string, format: date-time }
+        withdrawnAt: { type: string, format: date-time, nullable: true }
     Error:
       type: object
       properties:
         error:
           type: object
           properties:
-            code: { type: string }
+            code: { type: string, enum: [validation_failed, consent_required, not_found, bad_json, too_large, unauthorised, lti_unknown_platform] }
             message: { type: string }
-  requestBodies:
-    Form:
-      required: true
-      content:
-        application/json:
-          schema: { type: object, additionalProperties: true }
+            field: { type: string, description: The field to move focus to in a custom interface }
   responses:
     Created:
-      description: Created
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              id: { type: string }
+      description: Stored
+      content: { application/json: { schema: { type: object, properties: { id: { type: string, format: uuid }, receipt: { type: string } } } } }
     Invalid:
-      description: Validation failed
+      description: Validation failed or consent missing
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Error' }
+          examples:
+            required: { value: { error: { code: validation_failed, message: fullName is required, field: fullName } } }
+            consent: { value: { error: { code: consent_required, message: 'consent.given must be true and consent.scope must include "answers"', field: consent } } }
+    BadRequest:
+      description: Body could not be read or is too large
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    NotFound:
+      description: Not found (or wrong receipt)
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
