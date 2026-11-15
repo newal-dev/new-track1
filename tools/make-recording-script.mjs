@@ -6,7 +6,7 @@ import fs from 'fs';
 let src = fs.readFileSync('public/db-form.js', 'utf8');
 src = src.replace("customElements.define('db-form', DbForm);", 'globalThis.__D = DbForm; globalThis.__F = FLOWS; globalThis.__UI = UI; globalThis.__L = LANGS;');
 globalThis.HTMLElement = class { attachShadow() { return {}; } };
-globalThis.window = globalThis; globalThis.SpeechRecognition = function () {};
+globalThis.window = globalThis; globalThis.SpeechRecognition = function () {}; globalThis.customElements = { get: () => null, define() {} };
 (0, eval)(src.replace(/^const /gm, 'var ').replace(/^class DbForm/m, 'var DbForm = class DbForm'));
 const D = globalThis.__D, F = globalThis.__F, UI = globalThis.__UI, LANGS = globalThis.__L;
 const ALL = LANGS.map(x => x.id);
@@ -33,8 +33,9 @@ add('welcome', 'Welcome page (after they said Yes to read aloud)', l => { const 
 for (const flow of ['signup', 'job', 'employer']) {
   F[flow].steps.forEach((st, i) => { if (!st.dyn) add(st.id, `${flow} flow, question ${i + 1}`, l => mk(flow, l, i).pageText(st), { opt: !!st.optional }); });
 }
-for (const [id, what] of [['errNeed', 'Error: question not answered'], ['errBad', 'Error: phone number or email not valid'], ['errFail', 'Error: could not send'], ['unclear', 'Voice answer not understood'], ['noneSel', 'Nothing chosen yet'], ['idle', 'Nothing heard'], ['sayWelcome', 'Welcome page: say Start'], ['reviewAsk', 'Review page: do you want to submit?'], ['heardGeneric', 'Spoken answer received (used when the device has no voice)'], ['choseA', 'Confirmation, first part ("You chose")'], ['choseB', 'Confirmation, last part']]) {
-  const k = { errNeed: 'need', errBad: 'bad', errFail: 'fail' }[id] || id;
+for (const [id, what] of [['errNeed', 'Error: question not answered'], ['errBad', 'Error: phone number or email not valid'], ['errFail', 'Error: could not send'], ['unclear', 'Voice answer not understood'], ['noneSel', 'Nothing chosen yet'], ['idle', 'Nothing heard'], ['sayWelcome', 'Welcome page: say Start'], ['reviewAsk', 'Review page: do you want to submit?'], ['heardGeneric', 'Spoken answer received (used when the device has no voice)'], ['choseA', 'Confirmation, first part ("You chose")'], ['choseB', 'Confirmation, last part'], ['errConsentNeed', 'Error: consent box not ticked'], ['errDateBad', 'Error: date has no month'], ['draftH', 'Welcome back (answers kept on this device)'], ['queued', 'Offline: answers saved on the device, sent later'], ['sentLater', 'Saved answers were sent'], ['tapToHear', 'Press a key or tap to hear the questions']]) {
+  const k = { errNeed: 'need', errBad: 'bad', errFail: 'fail', errConsentNeed: 'consentNeed', errDateBad: 'dateBad' }[id] || id;
+  if (id === 'draftH') { add(id, what, l => [u('draftH', l), u('draftP', l), u('draftGo', l), u('restart', l)].join(' ')); continue; }
   add(id, what, l => u(k, l));
 }
 for (let n = 1; n <= 8; n++) add('n' + n, 'Number ' + n + ' (used in the confirmation)', l => NWL[l][n - 1]);
@@ -45,10 +46,11 @@ add('speakNow', 'Said just before the microphone opens (then a beep)', l => u('s
 add('sel', 'Focus: a choice that is ticked', l => u('sel', l));
 add('unsel', 'Focus: a choice that is not ticked', l => u('unsel', l));
 add('langName', 'Focus: a language button, in that language', l => LANGS.find(x => x.id === l).name);
-for (const k of ['next', 'back', 'skip', 'read', 'speak', 'readToMe', 'stopRead', 'send', 'noChange', 'restart', 'change', 'start', 'startVoice', 'raYes', 'raNo']) add('b_' + k, `Focus: the "${UI[k].en}" button`, l => u(k, l));
+for (const k of ['next', 'back', 'skip', 'read', 'speak', 'readToMe', 'stopRead', 'send', 'noChange', 'restart', 'change', 'start', 'startVoice', 'raYes', 'raNo', 'draftGo']) add('b_' + k, `Focus: the "${UI[k].en}" button`, l => u(k, l));
 for (const flow of ['signup', 'job', 'employer']) {
   for (const st of F[flow].steps) {
-    if (st.dyn) continue;
+    // The job question's own text is a clip; the job titles change, so the device voice reads them.
+    if (st.dyn) { add('q_' + st.id, `Job page: the question "${st.q.en}" (the job titles are read by the device voice)`, l => st.q[l] || st.q.en); continue; }
     if (st.type === 'text') add('q_' + st.id, `Focus: the answer box of "${st.q.en}"`, l => st.q[l] || st.q.en);
     (st.options || []).forEach(([k, t]) => add('o_' + st.id + '_' + k, `Focus: choice "${t.en}" (question ${st.id})`, l => t[l] || t.en));
   }
@@ -110,7 +112,7 @@ When a clip is missing **and** the device has no voice for the language, the plu
 
 ## Not recorded (they change each time)
 - **review** (the first part of the last page): reads out the person's own answers. Only \`reviewFix\` is a clip.
-- **role** (job flow): the list of jobs depends on the person's filter and on jobs employers add.
+- **role** (job flow): the list of jobs depends on the person's filter and on jobs employers add. Only the question (\`q_role\`) and the numbers are clips.
 - The exact words a person typed or said. The device voice reads them back when it has a voice for the language; otherwise \`heardGeneric\` is played.
 
 ## Checklist

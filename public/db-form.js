@@ -1,12 +1,44 @@
 /* Inclusive Access plugin: one script, one tag.
-   <script src='https://YOUR-HOST/db-form.js'></script>
-   <db-form flow='signup' lang='en' api='https://YOUR-HOST/v1'></db-form>
+   <script src='https://YOUR-HOST/widget.js'></script>      (widget.js and db-form.js are the same file)
+   <db-onboarding api='https://YOUR-HOST/v1'></db-onboarding>         sign-up (onboarding)
+   <db-career-gateway api='https://YOUR-HOST/v1'></db-career-gateway> job search and application
+   <db-form flow='employer' api='https://YOUR-HOST/v1'></db-form>     any flow (the original tag)
+   partner: name shown in the consent question.  sw: path of the partner's one-line service worker (offline).  asr: browser | off | a name registered with DbForm.registerASR().  fonts='no': do not load the local fonts.  jsonld='no': do not add schema.org/JobPosting to the page.
    flow: signup | job | employer.  lang: en | am | om | ti | so (anything else falls back to en).  lang-ask='no': skip the first page that asks for the language (shown in English by default).  theme: auto | standard | dark | contrast | rg | by (the person's own choice in the Colours menu wins).  CSS hooks on <db-form>: --db-accent, --db-font.  hide: optional comma list of question ids to leave out, e.g. hide='idRoute,support' (fullName, role and job cannot be hidden).  audio: optional base URL of recorded .mp3 files (BASE/en|am|om|ti|so/QUESTIONID.mp3).  Events: db-complete, db-error.
    Amharic text is a DRAFT: have a native speaker check every string before submitting.
    Afaan Oromoo (om), Tigrinya (ti) and Somali (so) text is a machine-assisted DRAFT: every line marked // VERIFY_NATIVE must be reviewed by a native speaker. */
 // Everything below is block-scoped so its names (LANGS, UI, T, ...) never clash with the host page's own scripts.
 {
+// The script's own address: fonts and the service worker are loaded from the same server.
+const SRC = (typeof document !== 'undefined' && document.currentScript && document.currentScript.src) || '';
 const T = (x, l) => (x && x.en ? (x[l] || x.en) : x);
+
+// ---- Ethiopian calendar: 12 months of 30 days + Pagumē (5 days, 6 in the year before a Gregorian leap year) ----
+// Julian Day Number arithmetic (Beyene-Kudlek). Dates are handled in UTC so the time zone never shifts the day.
+const EC_OFF = 1723856, J70 = 2440588;
+const ecLeap = y => y % 4 === 3;
+const ecDays = (y, m) => (m < 13 ? 30 : ecLeap(y) ? 6 : 5);
+const toEC = (g = new Date()) => {
+  const j = Math.floor(Date.UTC(g.getUTCFullYear(), g.getUTCMonth(), g.getUTCDate()) / 864e5) + J70, r = (j - EC_OFF) % 1461, n = r % 365 + 365 * Math.floor(r / 1460);
+  return { y: 4 * Math.floor((j - EC_OFF) / 1461) + Math.floor(r / 365) - Math.floor(r / 1460), m: Math.floor(n / 30) + 1, d: n % 30 + 1 };
+};
+const fromEC = (y, m, d) => new Date((EC_OFF + 365 + 365 * (y - 1) + Math.floor(y / 4) + 30 * m + d - 31 - J70) * 864e5);
+// Month names. om, ti and so: VERIFY_NATIVE. Somali speakers mostly use the Gregorian calendar, so the transliteration is shown.
+const EC_MONTHS = {
+  en: ['Meskerem', 'Tikimt', 'Hidar', 'Tahsas', 'Tir', 'Yekatit', 'Megabit', 'Miyazya', 'Ginbot', 'Sene', 'Hamle', 'Nehase', 'Pagume'],
+  am: ['መስከረም', 'ጥቅምት', 'ኅዳር', 'ታኅሣሥ', 'ጥር', 'የካቲት', 'መጋቢት', 'ሚያዝያ', 'ግንቦት', 'ሰኔ', 'ሐምሌ', 'ነሐሴ', 'ጳጉሜን'],
+  om: ['Fulbaana', 'Onkoloolessa', 'Sadaasa', 'Muddee', 'Amajjii', 'Guraandhala', 'Bitootessa', 'Eebila', 'Caamsaa', 'Waxabajjii', 'Adoolessa', 'Hagayya', 'Qaammee'],
+  ti: ['መስከረም', 'ጥቅምቲ', 'ሕዳር', 'ታሕሳስ', 'ጥሪ', 'ለካቲት', 'መጋቢት', 'ሚያዝያ', 'ግንቦት', 'ሰነ', 'ሓምለ', 'ነሓሰ', 'ጳጉሜ'],
+  so: ['Meskerem', 'Tikimt', 'Hidar', 'Tahsas', 'Tir', 'Yekatit', 'Megabit', 'Miyazya', 'Ginbot', 'Sene', 'Hamle', 'Nehase', 'Pagume'],
+};
+const ecText = (e, l) => `${e.d ? e.d + ' ' : ''}${(EC_MONTHS[l] || EC_MONTHS.en)[e.m - 1]} ${e.y}`;
+const isoOf = d => d.toISOString().slice(0, 10);
+
+// ---- Speech recognition router: 'browser' (Web Speech API) by default; a partner can register a self-hosted recogniser. ----
+// A factory gets (bcp47Lang, element) and returns an object with start(), abort() and onresult / onerror / onend, like SpeechRecognition.
+const ASR = {
+  browser: lang => { const R = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition); if (!R) return null; const r = new R(); r.lang = lang; r.interimResults = false; return r; },
+};
 const o = (k, en, am, om, ti, so) => [k, { en, am, om, ti, so }];
 
 // Supported languages. sr = speech recognition locale; tts = prefixes that match a device voice (2- and 3-letter codes).
@@ -110,6 +142,30 @@ const UI = {
   choseB: { en: 'Say Next to continue, or choose again.', am: 'ለመቀጠል «ቀጥል» ይበሉ ወይም እንደገና ይምረጡ።', om: "Itti fufuuf Itti fufi jedhi, ykn ammas filadhu.", ti: "ንምቕጻል «ቀጽል» በሉ፣ ወይ ደጊምኩም ምረጹ።", so: "Dheh Xiga si aad u sii socoto, ama mar kale dooro." }, // VERIFY_NATIVE
   heardGeneric: { en: 'We heard your answer. It is shown on the screen. Say Next to continue, or say your answer again.', am: 'መልስዎን ሰምተናል። በማያ ገጹ ላይ ይታያል። ለመቀጠል «ቀጥል» ይበሉ ወይም መልስዎን እንደገና ይናገሩ።', om: "Deebii kee dhageenyeerra. Iskiriinii irratti mul'ata. Itti fufuuf Itti fufi jedhi, ykn deebii kee ammas jedhi.", ti: "መልስኹም ሰሚዕና። ኣብ ስክሪን ይርአ ኣሎ። ንምቕጻል «ቀጽል» በሉ፣ ወይ መልስኹም ደጊምኩም በሉ።", so: "Waan maqalnay jawaabtaada. Waxay ka muuqataa shaashadda. Dheh Xiga si aad u sii socoto, ama mar kale dheh jawaabtaada." }, // VERIFY_NATIVE
   fail: { en: 'We could not send your answers. Nothing is lost. Please try again.', am: 'መልሶችዎን መላክ አልቻልንም። ምንም አልጠፋም። እባክዎ እንደገና ይሞክሩ።', om: "Deebii kee erguu hin dandeenye. Homtuu hin badne. Maaloo irra deebi'ii yaali.", ti: "መልስታትኩም ክንሰድድ ኣይከኣልናን። ዋላ ሓንቲ ኣይጠፍአን። በጃኹም ደጊምኩም ፈትኑ።", so: "Ma aanaan diri karin jawaabahaaga. Waxba ma lumin. Fadlan mar kale isku day." }, // VERIFY_NATIVE
+  // Consent: nothing leaves the device until the person agrees. Support choices need their own, separate agreement.
+  consentH: { en: 'Your agreement', am: 'የእርስዎ ፈቃድ', om: "Hayyama kee", ti: "ፍቓድኩም", so: "Oggolaanshahaaga" }, // VERIFY_NATIVE
+  consentSend: { en: 'I agree to send these answers to {p}.', am: 'እነዚህን መልሶች ለ{p} ለመላክ እስማማለሁ።', om: "Deebii kana gara {p} erguuf nan walii gala.", ti: "ነዚ መልስታት ናብ {p} ክለኣኽ እሰማማዕ።", so: "Waan ku raacsanahay in jawaabahan loo diro {p}." }, // VERIFY_NATIVE
+  consentSupport: { en: 'Also share my support choices with the organisers, so they can prepare help. If you leave this empty, your support choices are not sent.', am: 'የእገዛ ምርጫዎቼንም እገዛ እንዲያዘጋጁ ለአዘጋጆቹ አጋራ። ይህን ባዶ ከተዉት የእገዛ ምርጫዎችዎ አይላኩም።', om: "Filannoo deeggarsa koos qindeessitootaaf qoodi, akka gargaarsa qopheessaniif. Kana duwwaa yoo dhiifte, filannoon deeggarsa kee hin ergamu.", ti: "ምርጫታት ደገፈይ እውን ንኣወሃሃድቲ ኣካፍል፣ ሓገዝ ምእንቲ ከዳልዉ። እዚ ባዶ እንተ ገዲፍኩምዎ ምርጫታት ደገፍኩም ኣይለኣኽን።", so: "Sidoo kale la wadaag doorashooyinka taageerada qabanqaabiyayaasha, si ay caawimaad u diyaariyaan. Haddii aad tan banaan ka tagto, doorashooyinkaaga taageerada lama diro." }, // VERIFY_NATIVE
+  consentNote: { en: 'Nothing is sent until you agree. After sending, you get a receipt code to ask for your answers to be deleted.', am: 'እስኪስማሙ ድረስ ምንም አይላክም። ከላኩ በኋላ መልሶችዎ እንዲሰረዙ ለመጠየቅ የደረሰኝ ኮድ ያገኛሉ።', om: "Hanga ati walii galtutti homtuu hin ergamu. Erga ergitee booda, deebiin kee akka haqamu gaafachuuf koodii ragaa ni argatta.", ti: "ክሳብ እትሰማምዑ ዋላ ሓንቲ ኣይለኣኽን። ድሕሪ ምልኣኽ፣ መልስታትኩም ክድምሰሱ ንምሕታት ኮድ ቅብሊት ትረኽቡ።", so: "Waxba lama diro ilaa aad oggolaato. Kadib markaad dirto, waxaad heli doontaa koodh rasiid ah si aad u codsato in jawaabahaaga la tirtiro." }, // VERIFY_NATIVE
+  consentNeed: { en: 'Please tick the box to agree before sending, or press Back.', am: 'ከመላክዎ በፊት ለመስማማት ሳጥኑን ምልክት ያድርጉ፤ ወይም ተመለስ ይጫኑ።', om: "Maaloo osoo hin ergin dura walii galuuf saanduqa mallattoo godhi, ykn Duubatti tuqi.", ti: "በጃኹም ቅድሚ ምልኣኽ ንምስምማዕ ነቲ ሳንዱቕ ምልክት ግበሩ፣ ወይ «ተመለስ» ጠውቑ።", so: "Fadlan calaamadee sanduuqa si aad u oggolaato ka hor intaadan dirin, ama riix Dib u noqo." }, // VERIFY_NATIVE
+  org: { en: 'the organisers of this website', am: 'የዚህ ድረ-ገጽ አዘጋጆች', om: "qindeessitoota marsariitii kanaa", ti: "ኣወሃሃድቲ እዚ መርበብ", so: "qabanqaabiyayaasha boggan" }, // VERIFY_NATIVE
+  receipt: { en: 'Your receipt code is {r}. Keep it if you may want your answers deleted later.', am: 'የደረሰኝ ኮድዎ {r} ነው። መልሶችዎ በኋላ እንዲሰረዙ ሊፈልጉ ከቻሉ ይያዙት።', om: "Koodiin ragaa kee {r} dha. Booda deebiin kee akka haqamu barbaaduu yoo dandeesse qabadhu.", ti: "ኮድ ቅብሊትኩም {r} እዩ። ደሓር መልስታትኩም ክድምሰሱ ክትደልዩ እንተ ኽኢልኩም ሓዝዎ።", so: "Koodhkaaga rasiidka waa {r}. Hayso haddii aad hadhow rabto in jawaabahaaga la tirtiro." }, // VERIFY_NATIVE
+  // Drafts and offline: answers are kept on this device and sent when the connection comes back.
+  draftH: { en: 'Welcome back', am: 'እንኳን ደህና ተመለሱ', om: "Baga nagaan deebitan", ti: "እንቋዕ ብደሓን ተመለስኩም", so: "Ku soo dhawoow mar kale" }, // VERIFY_NATIVE
+  draftP: { en: 'Your answers from last time are kept on this device.', am: 'ካለፈው ጊዜ መልሶችዎ በዚህ መሣሪያ ላይ ተቀምጠዋል።', om: "Deebiin kee yeroo darbe meeshaa kana irratti kuufameera.", ti: "መልስታትኩም ካብ ዝሓለፈ ግዜ ኣብዚ መሳርሒ ተዓቂቦም ኣለዉ።", so: "Jawaabahaagii hore waxay ku kaydsan yihiin qalabkan." }, // VERIFY_NATIVE
+  draftGo: { en: 'Continue where I stopped', am: 'ካቆምኩበት ቀጥል', om: "Iddoon dhaabe irraa itti fufi", ti: "ካብ ዝኣቋረጽኩዎ ቀጽል", so: "Ka sii wad halkii aan ku joogsaday" }, // VERIFY_NATIVE
+  queued: { en: 'You are offline. Your answers are saved on this device and will be sent when you are back online.', am: 'ከመስመር ውጭ ነዎት። መልሶችዎ በዚህ መሣሪያ ላይ ተቀምጠዋል፤ መስመር ላይ ሲመለሱ ይላካሉ።', om: "Ati toora ala jirta. Deebiin kee meeshaa kana irratti kuufameera, yeroo toora irratti deebitu ni ergama.", ti: "ካብ መስመር ወጻኢ ኢኹም። መልስታትኩም ኣብዚ መሳርሒ ተዓቂቦም ኣለዉ፣ ናብ መስመር ምስ ተመለስኩም ክለኣኹ እዮም።", so: "Khadka kama jirtid. Jawaabahaaga waxay ku kaydsan yihiin qalabkan, waxaana la diri doonaa markaad khadka ku soo noqoto." }, // VERIFY_NATIVE
+  sentLater: { en: 'Your saved answers have now been sent.', am: 'የተቀመጡት መልሶችዎ አሁን ተልከዋል።', om: "Deebiin kee kuufame amma ergameera.", ti: "እቶም ዝተዓቀቡ መልስታትኩም ሕጂ ተላኢኾም።", so: "Jawaabahaagii kaydsanaa hadda waa la diray." }, // VERIFY_NATIVE
+  tapToHear: { en: 'Press any key or tap the screen to hear the questions.', am: 'ጥያቄዎቹን ለመስማት ማንኛውንም ቁልፍ ይጫኑ ወይም ማያውን ይንኩ።', om: "Gaaffilee dhaga'uuf qabduu kamiyyuu tuqi ykn iskiriinii tuqi.", ti: "ሕቶታት ንምስማዕ ዝኾነ መጠወቒ ጠውቑ ወይ ስክሪን ተንክፉ።", so: "Riix fure kasta ama taabo shaashadda si aad u maqasho su'aalaha." }, // VERIFY_NATIVE
+  // Ethiopian calendar
+  today: { en: 'Today is {e} in the Ethiopian calendar ({g}).', am: 'ዛሬ በኢትዮጵያ አቆጣጠር {e} ነው ({g})።', om: "Har'a akka lakkoofsa Itoophiyaatti {e} ({g}).", ti: "ሎሚ ብኣቆጻጽራ ኢትዮጵያ {e} እዩ ({g})።", so: "Maanta waa {e} sida kalandarka Itoobiya ({g})." }, // VERIFY_NATIVE
+  day: { en: 'Day', am: 'ቀን', om: "Guyyaa", ti: "መዓልቲ", so: "Maalin" }, // VERIFY_NATIVE
+  month: { en: 'Month', am: 'ወር', om: "Ji'a", ti: "ወርሒ", so: "Bil" }, // VERIFY_NATIVE
+  year: { en: 'Year (Ethiopian)', am: 'ዓመት (ዓ.ም.)', om: "Bara (Itoophiyaa)", ti: "ዓመት (ዓ.ም.)", so: "Sanad (Itoobiya)" }, // VERIFY_NATIVE
+  notSure: { en: 'Not sure', am: 'እርግጠኛ አይደለሁም', om: "Hin beeku", ti: "ርግጸኛ ኣይኮንኩን", so: "Ma hubo" }, // VERIFY_NATIVE
+  about: { en: 'about', am: 'በግምት', om: "tilmaamaan", ti: "ብግምት", so: "qiyaas ahaan" }, // VERIFY_NATIVE
+  dateBad: { en: 'Please choose a month, or set day and year to Not sure to skip the date.', am: 'እባክዎ ወር ይምረጡ፤ ወይም ቀኑን ለመዝለል ቀንና ዓመትን «እርግጠኛ አይደለሁም» ያድርጉ።', om: "Maaloo ji'a filadhu, ykn guyyaa fi bara 'Hin beeku' godhi.", ti: "በጃኹም ወርሒ ምረጹ፣ ወይ መዓልትን ዓመትን «ርግጸኛ ኣይኮንኩን» ግበሩ።", so: "Fadlan dooro bil, ama maalinta iyo sanadka ka dhig 'Ma hubo'." }, // VERIFY_NATIVE
+  noMatch: { en: 'No job offers everything you chose, so all jobs are shown.', am: 'የመረጡትን ሁሉ የሚያቀርብ ሥራ የለም፤ ስለዚህ ሁሉም ሥራዎች ይታያሉ።', om: "Hojiin waan filatte hunda dhiyeessu hin jiru, kanaaf hojiiwwan hundi ni mul'atu.", ti: "ዝመረጽኩምዎ ኩሉ ዘቕርብ ስራሕ የለን፣ ስለዚ ኩሎም ስራሓት ይርኣዩ።", so: "Ma jirto shaqo bixisa waxa aad dooratay oo dhan, sidaa darteed dhammaan shaqooyinka waa la soo bandhigay." }, // VERIFY_NATIVE
 };
 
 const WORK = [
@@ -175,6 +231,9 @@ const FLOWS = {
     { id: 'offers',
       q: { en: 'Which adjustments can this job offer?', am: 'ይህ ሥራ ምን ዓይነት ማስተካከያዎችን ማቅረብ ይችላል?', om: "Hojiin kun mijeessuu akkamii dhiyeessuu danda'a?", ti: "እዚ ስራሕ እንታይ ምትዕርራያት ከቕርብ ይኽእል?", so: "Waa maxay hagaajinta ay shaqadani bixin karto?" }, // VERIFY_NATIVE
       type: 'checkbox', optional: true, options: WORK },
+    { id: 'closes', novoice: true, optional: true, type: 'ecdate',
+      q: { en: 'When do applications close?', am: 'ማመልከቻ መቼ ይዘጋል?', om: "Iyyannoon yoom cufama?", ti: "ምዝገባ ማመልከቻ መዓስ ይዕጾ?", so: "Goormaa la xirayaa codsiyada?" }, // VERIFY_NATIVE
+      hint: { en: 'Optional. Ethiopian calendar. If you only know the month, choose Not sure for the day.', am: 'አማራጭ ነው። በኢትዮጵያ አቆጣጠር። ወሩን ብቻ ካወቁ ለቀኑ «እርግጠኛ አይደለሁም» ይምረጡ።', om: "Dirqama miti. Lakkoofsa Itoophiyaa. Ji'a qofa yoo beekte, guyyaaf 'Hin beeku' filadhu.", ti: "ግዴታ ኣይኮነን። ብኣቆጻጽራ ኢትዮጵያ። ወርሒ ጥራይ እንተ ፈሊጥኩም፣ ንመዓልቲ «ርግጸኛ ኣይኮንኩን» ምረጹ።", so: "Ikhtiyaari. Kalandarka Itoobiya. Haddii aad bisha oo keliya taqaanno, maalinta u dooro 'Ma hubo'." } }, // VERIFY_NATIVE
   ] },
 };
 
@@ -306,10 +365,25 @@ dl.review{margin:var(--s4) 0 0;border-top:1px solid var(--line)}
 .after{margin-top:var(--s4)}
 .done{display:flex;flex-direction:column;gap:var(--s3);padding:var(--s4) 0}
 .done svg{color:var(--accent)}
+.done .receipt{font-family:ui-monospace,Consolas,monospace;font-weight:700;letter-spacing:.04em}
+.when{color:var(--ink-2);font-size:.9375em}
+.note{padding:var(--s3);border-left:4px solid var(--accent);background:var(--accent-soft);color:var(--ink)}
+/* consent: two separate checkboxes, the second only for support choices */
+fieldset.consent{margin-top:var(--s5);padding:var(--s4);border:var(--bw) solid var(--line-strong);border-radius:var(--r2)}
+fieldset.consent legend{font-size:1.0625em;padding:0 var(--s2);margin-bottom:var(--s2)}
+.consent .opt{margin-top:var(--s2)}
+.consent .opt span{flex:1}
+.consent p{font-size:.9375em;color:var(--ink-2);margin-top:var(--s3)}
+/* Ethiopian date: three labelled selects */
+.ecd{display:grid;grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr));gap:var(--s3)}
+.ecd label{display:flex;flex-direction:column;gap:var(--s1);font-size:.9375em;font-weight:700;color:var(--ink-2)}
+select{font:inherit;font-weight:400;min-height:52px;padding:.5rem .6rem;border:var(--bw) solid var(--line-strong);border-radius:var(--r1);background:var(--surface);color:var(--ink)}
+select:hover{border-color:var(--ink)}
+select[aria-invalid=true]{border-color:var(--error);border-width:3px}
 
-@media (max-width:30rem){section{padding:var(--s4);border-radius:0;border-left:0;border-right:0}.disp .panel{right:auto;left:0}}
+@media (max-width:30rem){section{position:relative;padding:var(--s4);border-radius:0;border-left:0;border-right:0}details.disp{position:static}.disp .panel{left:var(--s4);right:var(--s4);width:auto}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-@media (forced-colors:active){button,.opt,input[type=text],.cap,.err,details.disp summary{border:2px solid CanvasText}.opt:has(input:checked){outline:3px solid Highlight}.track i{background:Highlight}}
+@media (forced-colors:active){button,.opt,input[type=text],select,.cap,.err,details.disp summary{border:2px solid CanvasText}.opt:has(input:checked){outline:3px solid Highlight}.track i{background:Highlight}}
 `;
 
 // ---- Icons: 24px line icons, stroke = currentColor, always aria-hidden next to a text label ----------------------
@@ -383,17 +457,97 @@ const YES = ['አዎ', 'አዎን', 'ይሁን', 'yes', 'yeah', 'yep', 'ok', 'ok
 const NO = ['አይ', 'አይደለም', 'አልፈልግም', 'አያስፈልግም', 'no', 'nope',
   'lakki', 'lakkii', 'miti', 'ኣይፋል', 'ኣይፋልን', 'maya', 'mayo']; // om ti so, VERIFY_NATIVE
 const HASV = () => window.SpeechRecognition || window.webkitSpeechRecognition;
+const DRAFT_DAYS = 7;
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (x) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (x) { /* storage blocked or full: the form still works */ } },
+  del(k) { try { localStorage.removeItem(k); } catch (x) { /* ignore */ } },
+};
+const QUEUE = 'db-form-queue';
+const CONSENT_VERSION = '2026-11-15';
+// An Ethiopian date the person chose, with "Not sure" filled in: no day = last day of the month (approximate),
+// no year = the next time that month comes round.
+const ecResolve = v => {
+  const now = toEC(), y = v.y || (v.m >= now.m ? now.y : now.y + 1);
+  return { y, m: v.m, d: Math.min(v.d || ecDays(y, v.m), ecDays(y, v.m)) };
+};
+
+// Local fonts (SIL OFL), from the widget's own server. @font-face does not work inside a shadow root, so it goes in the host page,
+// once. unicode-range: the Ethiopic font (75 kB) only downloads when Ge'ez text is shown.
+function loadFonts() {
+  if (typeof document === 'undefined' || !SRC || document.getElementById('db-form-fonts')) return;
+  const b = new URL('fonts/', SRC).href, ff = (fam, file, w, range) => `@font-face{font-family:'${fam}';src:url(${b}${file}) format('woff2');font-weight:${w};font-display:swap${range ? ';unicode-range:' + range : ''}}`;
+  const eth = 'U+030E,U+1200-1399,U+2D80-2DDE,U+AB01-AB2E', lat = 'U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2212,U+FEFF,U+FFFD';
+  const st = document.createElement('style'); st.id = 'db-form-fonts';
+  st.textContent = [ff('Atkinson Hyperlegible', 'atkinson-hyperlegible-latin-400-normal.woff2', 400, lat), ff('Atkinson Hyperlegible', 'atkinson-hyperlegible-latin-700-normal.woff2', 700, lat),
+    ff('Noto Sans Ethiopic', 'noto-sans-ethiopic-ethiopic-400-normal.woff2', 400, eth), ff('Noto Sans Ethiopic', 'noto-sans-ethiopic-ethiopic-700-normal.woff2', 700, eth)].join('\n');
+  document.head.appendChild(st);
+}
+
+// Answers that could not be sent (offline) wait here and are sent when the connection comes back.
+async function flushQueue(el) {
+  const q = store.get(QUEUE) || [], keep = [];
+  if (!q.length || (typeof navigator !== 'undefined' && navigator.onLine === false)) return;
+  for (const it of q) {
+    try {
+      const r = await fetch(it.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(it.body) });
+      // 4xx will never succeed, so it is dropped; the person was told when they sent it.
+      if (r.status >= 500) keep.push(it);
+      else if (el) el.dispatchEvent(new CustomEvent('db-sent', { detail: { ok: r.ok, flow: it.flow }, bubbles: true, composed: true }));
+    } catch (x) { keep.push(it); }
+  }
+  if (keep.length) store.set(QUEUE, keep); else store.del(QUEUE);
+  if (el && keep.length < q.length) el.say(el.u('sentLater'));
+}
 
 class DbForm extends HTMLElement {
   // The design system, for host pages and the design-system proof page: one source of truth for tokens, themes and icons.
   static get design() { return { THEMES, TOKENS, SWATCH, CSS, ICONS: P, svg }; }
-  constructor() { super(); this.r = this.attachShadow({ mode: 'open' }); this.i = 0; this.a = {}; this.err = ''; this.done = false; this.moved = false; this.vok = false; this.pref = {}; this.jobs = null; this.welcome = false; this.vm = false; this.rm = false; this.cp = false; this.aud = null; this.ra = 0; this.manual = false; this.rec = null; this.vrec = null; this.vno = false; this.vtries = 0; this.tok = 0; this.rs = 0; this.fromReview = false; this.noticed = false; this.hide = []; }
+  // Ethiopian calendar helpers, for host pages and tests.
+  static get calendar() { return { toEC, fromEC, ecDays, ecLeap, ecText, months: EC_MONTHS }; }
+  // Plug in a different speech recogniser (for example a self-hosted one). Use it with asr='name' on the tag.
+  static registerASR(name, factory) { if (name && typeof factory === 'function' && name !== 'off') ASR[name] = factory; }
+  // Send any answers saved while offline now (also runs automatically when the connection returns).
+  static flushQueue(el) { return flushQueue(el); }
+  static get observedAttributes() { return ['lang', 'theme']; }
+  static flow = 'signup';
+  constructor() { super(); this.r = this.attachShadow({ mode: 'open' }); this.i = 0; this.a = {}; this.err = ''; this.done = false; this.moved = false; this.vok = false; this.pref = {}; this.jobs = null; this.welcome = false; this.vm = false; this.rm = false; this.cp = false; this.aud = null; this.ra = 0; this.manual = false; this.rec = null; this.vrec = null; this.vno = false; this.vtries = 0; this.tok = 0; this.rs = 0; this.fromReview = false; this.noticed = false; this.hide = []; this.consent = { a: false, s: false }; }
+  // A host page can change the language or theme at any time (for example from its own nav) without losing answers.
+  attributeChangedCallback(n, o, v) {
+    if (!this.f || o === v) return;
+    if (n === 'lang' && LANG_RE.test(v || '') && v !== this.l) {
+      if (this.lp) return this.chooseLang(v);
+      if (!this.welcome && !this.done) this.keep(this.steps[this.i]);
+      this.l = v; this.err = ''; this.moved = true; this.draw();
+    }
+    if (n === 'theme' && THEMES.includes(v) && !this.userTheme) { this.theme = v; const s = this.r.querySelector('section'); if (s) s.dataset.theme = v; }
+  }
+  // Speech recognition goes through the router (asr attribute). null = none available.
+  recog(lang) { const n = this.getAttribute('asr') || 'browser'; if (n === 'off') return null; return (ASR[n] || ASR.browser)(lang, this); }
+  canHear() { const n = this.getAttribute && this.getAttribute('asr'); if (n === 'off') return false; if (n && ASR[n] && n !== 'browser') return true; return !!HASV(); }
+  get draftKey() { return 'db-form-draft:' + (this.getAttribute('flow') || this.constructor.flow); }
+  saveDraft() {
+    if (this.done || this.welcome || !Object.keys(this.a).length) return;
+    store.set(this.draftKey, { v: 1, a: this.a, i: this.i, l: this.l, pref: this.pref, at: Date.now() });
+  }
+  dropDraft() { store.del(this.draftKey); this.draft = null; }
   connectedCallback() {
-    this.f = FLOWS[this.getAttribute('flow')] || FLOWS.signup; this.l = LANG_RE.test(this.getAttribute('lang') || '') ? this.getAttribute('lang') : 'en';
+    if (this.f) { window.addEventListener('online', this.onOnline); return; } // moved within the page: keep the current state
+    if (this.getAttribute('fonts') !== 'no') loadFonts();
+    const sw = this.getAttribute('sw');
+    if (sw && typeof navigator !== 'undefined' && navigator.serviceWorker) navigator.serviceWorker.register(sw).catch(() => { /* drafts still work without it */ });
+    const d = store.get(this.draftKey);
+    this.draft = d && d.v === 1 && Date.now() - d.at < DRAFT_DAYS * 864e5 ? d : null;
+    if (d && !this.draft) this.dropDraft();
+    this.onOnline = () => flushQueue(this);
+    window.addEventListener('online', this.onOnline);
+    flushQueue(this);
+    this.f = FLOWS[this.getAttribute('flow')] || FLOWS[this.constructor.flow] || FLOWS.signup; this.l = LANG_RE.test(this.getAttribute('lang') || '') ? this.getAttribute('lang') : 'en';
     this.welcome = true;
     // Language page first, in English. A site that already knows the language can skip it with lang-ask='no'.
     this.lp = this.getAttribute('lang-ask') !== 'no';
     let saved = null; try { saved = localStorage.getItem('db-form-theme'); } catch (x) { /* storage blocked */ }
+    this.userTheme = THEMES.includes(saved);
     this.theme = THEMES.includes(saved) ? saved : THEMES.includes(this.getAttribute('theme')) ? this.getAttribute('theme') : 'auto';
     if (this.lp) this.l = 'en';
     this.hide = (this.getAttribute('hide') || '').split(',').map(x => x.trim()).filter(x => x && !['fullName', 'role', 'job'].includes(x));
@@ -409,19 +563,30 @@ class DbForm extends HTMLElement {
     // Tab / Shift+Tab: read the newly focused control aloud, in the chosen language.
     this.r.addEventListener('focusin', e => { if (Date.now() - (this.kbd || 0) < 600) this.readFocus(e.target); });
     // Space on a checkbox changes it without moving focus: read the new state.
-    this.r.addEventListener('change', e => { if (e.target.name === 'f' && e.target.type === 'checkbox' && Date.now() - (this.kbd || 0) < 600) this.readFocus(e.target); });
+    this.r.addEventListener('change', e => { if ((e.target.type === 'checkbox' || e.target.tagName === 'SELECT') && Date.now() - (this.kbd || 0) < 600) this.readFocus(e.target); });
     // Typing with an input method (Ge'ez, Keyman, phone keyboards): Enter that ends a composition must not submit the form.
     this.r.addEventListener('compositionstart', () => { this.composing = true; });
     this.r.addEventListener('compositionend', () => { this.composedAt = Date.now(); this.composing = false; });
     const api = this.getAttribute('api');
-    if (this.f.steps.some(s => s.dyn) && api) fetch(api + '/jobs').then(r => r.json()).then(j => { this.jobs = j; }).catch(() => {}).finally(() => this.draw());
+    if (this.f.steps.some(s => s.dyn) && api) {
+      fetch(api + '/jobs').then(r => r.json()).then(j => { this.jobs = Array.isArray(j) ? j : null; }).catch(() => {}).finally(() => this.draw());
+      // schema.org/JobPosting for search engines and job boards: the employer's published jobs only, never the learner's needs.
+      if (this.getAttribute('jsonld') !== 'no' && !document.getElementById('db-jobposting'))
+        fetch(api + '/jobs?format=jsonld').then(r => (r.ok ? r.text() : '')).then(t => {
+          if (!t || document.getElementById('db-jobposting')) return;
+          const s = document.createElement('script'); s.type = 'application/ld+json'; s.id = 'db-jobposting'; s.textContent = t; document.head.appendChild(s);
+        }).catch(() => {});
+    }
     else this.draw();
   }
+  disconnectedCallback() { if (this.onOnline) window.removeEventListener('online', this.onOnline); this.halt(); }
   get steps() { return this.f.steps.filter(s => !(s.skip && s.skip(this.a)) && !this.hide.includes(s.id)).map(s => s.dyn ? this.dyn(s) : s); }
   dyn(s) {
     if (!this.jobs) return { ...s, type: 'text' };
-    const need = this.a.needs || [], ok = this.jobs.filter(j => need.every(n => j.offers.includes(n)));
-    return { ...s, type: 'radio', options: (ok.length ? ok : this.jobs).map(j => [j.title, { en: j.title, am: j.titleAm }]) };
+    // The private filter runs here, on the device: the needs are never sent. If nothing fits, say so and show every job.
+    const need = this.a.needs || [], ok = this.jobs.filter(j => need.every(n => (j.offers || []).includes(n)));
+    const hint = need.length && !ok.length ? UI.noMatch : s.hint;
+    return { ...s, hint, type: 'radio', options: (ok.length ? ok : this.jobs).map(j => [j.title, { en: j.title, ...(j.titles || {}), ...(j.titleAm ? { am: j.titleAm } : {}) }]) };
   }
   u(k, v) { let t = T(UI[k], this.l); for (const x in v) t = t.replace('{' + x + '}', v[x]); return t; }
   sl() { return LANG(this.l).sr; }
@@ -429,8 +594,25 @@ class DbForm extends HTMLElement {
   vmatch(v, l = this.l) { const c = v.lang.toLowerCase(); return LANG(l).tts.some(p => c === p || c.startsWith(p + '-') || c.startsWith(p + '_')); }
   // Folder for recorded clips. Only supported languages ever reach the URL.
   al() { return LANG_RE.test(this.l) ? this.l : 'en'; }
+  readDate() { const v = k => { const e = this.r.querySelector('#ec' + k); return e ? +e.value || 0 : 0; }; return { y: v('y'), m: v('m'), d: v('d') }; }
+  partner() { return this.getAttribute('partner') || this.u('org'); }
+  todayText() {
+    const g = new Date(), u = new Date(Date.UTC(g.getFullYear(), g.getMonth(), g.getDate()));
+    let gs; try { gs = u.toLocaleDateString(this.l === 'en' ? 'en-GB' : this.l + '-ET', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }); } catch (x) { gs = isoOf(u); }
+    return this.u('today', { e: ecText(toEC(u), this.l), g: gs });
+  }
+  dateHTML(v) {
+    v = v && typeof v === 'object' ? v : {};
+    const cur = toEC(), inv = this.err ? " aria-invalid='true'" : '', o = (val, txt, sel) => `<option value='${val}'${sel ? ' selected' : ''}>${esc(txt)}</option>`;
+    const days = [o(0, this.u('notSure'), !v.d), ...Array.from({ length: 30 }, (x, k) => o(k + 1, k + 1, v.d === k + 1))].join('');
+    const months = [o(0, this.u('notSure'), !v.m), ...(EC_MONTHS[this.l] || EC_MONTHS.en).map((m, k) => o(k + 1, m, v.m === k + 1))].join('');
+    const years = [o(0, this.u('notSure'), !v.y), ...[cur.y, cur.y + 1, cur.y + 2].map(y => o(y, y, v.y === y))].join('');
+    const sel = (id, k, opts) => `<label for='ec${id}'>${this.u(k)}<select id='ec${id}' aria-describedby='hint err'${inv}>${opts}</select></label>`;
+    return `<div class='ecd' role='group' aria-labelledby='h'>${sel('d', 'day', days)}${sel('m', 'month', months)}${sel('y', 'year', years)}</div><p class='when'>${esc(this.todayText())}</p>`;
+  }
   keep(s) {
     if (!s) return;
+    if (s.type === 'ecdate') { this.a[s.id] = this.readDate(); return; }
     const f = this.r.querySelector('#f');
     if (f) { this.a[s.id] = f.value.normalize('NFC'); return; }
     const c = [...this.r.querySelectorAll('input[name=f]:checked')].map(x => x.value);
@@ -438,6 +620,7 @@ class DbForm extends HTMLElement {
   }
 
   show(x) {
+    if (x.type === 'ecdate') { const v = this.a[x.id]; if (!v || !v.m) return this.u('skipped'); const r = ecResolve(v); return (v.d && v.y ? '' : this.u('about') + ' ') + ecText(r, this.l); }
     const v = this.a[x.id], nm = k => T((x.options.find(p => p[0] === k) || [])[1], this.l);
     const t = Array.isArray(v) ? v.map(nm).join(', ') : (x.options && v ? nm(v) : v);
     return t || this.u('skipped');
@@ -445,14 +628,26 @@ class DbForm extends HTMLElement {
 
   field(s, n) {
     const v = this.a[s.id] || (s.type === 'checkbox' ? [] : '');
-    const inp = s.type === 'text'
+    const inp = s.type === 'ecdate' ? this.dateHTML(this.a[s.id]) : s.type === 'text'
       ? `<input id='f' type='text' value='${esc(v)}' aria-labelledby='h' aria-describedby='hint err' ${this.err ? "aria-invalid='true'" : ''} lang='${this.l}' dir='auto' ${INPUT_HINTS[s.id] || "autocomplete='off' spellcheck='false'"}>`
       : `<div class='opts'>${s.options.map(([k, t]) => `<label class='opt'><input type='${s.type}' name='f' value='${esc(k)}' ${[].concat(v).includes(k) ? 'checked' : ''}>${this.pref.simple && P[k] ? `<span class='pic'>${I(k, 28)}</span>` : ''}<span>${esc(T(t, this.l))}</span><span class='tick'>${I('check', 20)}</span></label>`).join('')}</div>`;
-    const mic = HASV() && !s.novoice ? `<button type='button' data-mic class='mic'><span class='lab'>${I('mic')}${this.u('speak')}</span><span class='lvl' aria-hidden='true'><i></i><i></i><i></i><i></i></span></button>` : '';
+    const mic = this.canHear() && !s.novoice ? `<button type='button' data-mic class='mic'><span class='lab'>${I('mic')}${this.u('speak')}</span><span class='lvl' aria-hidden='true'><i></i><i></i><i></i><i></i></span></button>` : '';
     return `<form novalidate><p class='step'><span>${esc(this.u('of', { n: this.i + 1, t: n }))}</span></p><div class='track' aria-hidden='true'><i style='width:${Math.round((this.i + 1) / n * 100)}%'></i></div>
       <fieldset><legend id='h' tabindex='-1'>${esc(T(s.q, this.l))}</legend><p id='hint'>${esc(T(s.hint, this.l))}</p>${mic}${inp}
       ${this.errHTML()}</fieldset>
       <div class='row'><button class='p' data-next>${this.u('next')}${I('next', 20)}</button>${s.optional ? `<button type='button' data-skip>${this.u('skip')}</button>` : ''}${this.i ? `<button type='button' data-back>${I('back', 20)}${this.u('back')}</button>` : ''}<button type='button' class='q' data-read>${I('speaker', 20)}${this.u('read')}</button></div></form>`;
+  }
+
+  // Consent, on the review page: required to send; support choices need a second, separate tick.
+  consentHTML() {
+    const bad = this.err && this.errKey === 'consentNeed', sup = this.f === FLOWS.signup && (this.a.support || []).length;
+    const box = (k, text, extra = '') => `<label class='opt'><input type='checkbox' data-consent='${k}' ${this.consent[k] ? 'checked' : ''} ${extra}><span>${esc(text)}</span><span class='tick'>${I('check', 20)}</span></label>`;
+    return `<fieldset class='consent'><legend>${this.u('consentH')}</legend>${box('a', this.u('consentSend', { p: this.partner() }), "id='cons'" + (bad ? " aria-invalid='true' aria-describedby='err'" : ''))}${sup ? box('s', this.u('consentSupport')) : ''}<p>${this.u('consentNote')}</p></fieldset>`;
+  }
+  resume() {
+    const d = this.draft; if (!d) return this.startForm(false);
+    this.stopRA(); this.a = d.a || {}; this.pref = d.pref || {}; this.draft = null; this.welcome = false;
+    this.i = Math.max(0, Math.min(+d.i || 0, this.steps.length)); this.moved = true; this.draw();
   }
 
   // Error box: icon + text (never colour alone). Empty = hidden, but it stays in the page so role=alert announces changes.
@@ -468,22 +663,26 @@ class DbForm extends HTMLElement {
   welcomeHTML() {
     if (this.lp) return this.langHTML();
     if (this.ra < 2) return `<div class='head'>${LOGO}<h2 id='h' tabindex='-1'>${this.u(this.ra ? 'raAgain' : 'raAsk')}</h2>${this.ra ? '' : `<p>${this.u('raHint')}</p>`}</div>${this.ra ? '' : `<p class='privacy'>${this.u('raPrivacy')}</p>`}<div class='row'><button type='button' class='p big' data-ra='y'>${I('speaker')}${this.u('raYes')}</button><button type='button' class='big' data-ra='n'>${this.u('raNo')}</button></div>`;
+    if (this.draft) return `<div class='head'>${LOGO}<h2 id='h' tabindex='-1'>${this.u('draftH')}</h2><p>${this.u('draftP')}</p></div>
+      <div class='row'><button type='button' class='p big' data-resume>${this.u('draftGo')}${I('next', 20)}</button><button type='button' class='big' data-start='t' data-fresh>${this.u('restart')}</button>
+      ${this.rm ? `<button type='button' class='big' data-stoprm>${I('stop')}${this.u('stopRead')}</button>` : `<button type='button' class='big' data-rm>${I('speaker')}${this.u('readToMe')}</button>`}</div>`;
     return `<div class='head'>${LOGO}<h2 id='h' tabindex='-1'>${this.u('welcomeH')}</h2><p>${this.u('welcomeP')}</p></div>
       <div class='row'><button type='button' class='p big' data-start='t'>${this.u('start')}${I('next', 20)}</button>
-      ${HASV() ? `<button type='button' class='big' data-start='v'>${I('mic')}${this.u('startVoice')}</button>` : ''}
+      ${this.canHear() ? `<button type='button' class='big' data-start='v'>${I('mic')}${this.u('startVoice')}</button>` : ''}
       ${this.rm ? `<button type='button' class='big' data-stoprm>${I('stop')}${this.u('stopRead')}</button>` : `<button type='button' class='big' data-rm>${I('speaker')}${this.u('readToMe')}</button>`}</div>`;
   }
 
   pageText(s, noErr) {
-    const l = this.l, n = k => this.u(k), v = this.rm && HASV(), err = this.err && !noErr ? this.err + ' ' : '';
+    const l = this.l, n = k => this.u(k), v = this.rm && this.canHear(), err = this.err && !noErr ? this.err + ' ' : '';
     const j = a => a.filter(Boolean).map(x => (/[.?!።]$/.test(x) ? x : x + '.')).join(' ');
-    if (this.done) return n('thanks');
+    if (this.done) return j([n(this.queued ? 'queued' : 'thanks'), this.receipt ? this.u('receipt', { r: this.receipt.split('').join(' ') }) : '']);
     if (this.lp) return UI.langAsk.en;
+    if (this.welcome && this.draft) return j([n('draftH'), n('draftP'), n('draftGo'), n('restart')]);
     if (this.welcome) return j([n('welcomeH'), n('welcomeP'), n('start'), n('startVoice'), n('readToMe'), v ? n('sayWelcome') : '']);
     if (!s) {
       if (this.rs) return err + n('reviewFix');
       const rv = this.steps.filter(x => !x.local);
-      return err + j([n('review'), ...rv.map((x, k) => (k + 1) + ': ' + T(x.q, l) + ': ' + this.show(x)), n('reviewAsk')]);
+      return err + j([n('review'), ...rv.map((x, k) => (k + 1) + ': ' + T(x.q, l) + ': ' + this.show(x)), this.u('consentSend', { p: this.partner() }), n('reviewAsk')]);
     }
     const opts = (s.options || []).map((p, i) => (v ? (i + 1) + ': ' : '') + T(p[1], l));
     const f = this.i ? '' : '1', ins = !v ? '' : s.novoice ? n('sayType') : s.type === 'text' ? n('sayText' + f) : n('sayChoose' + f) + (s.optional ? ' ' + n('saySkip') : '');
@@ -530,6 +729,10 @@ class DbForm extends HTMLElement {
     const d = el.dataset, s = this.welcome ? null : this.steps[this.i];
     if (d.pick || d.lang) { const x = LANG(d.pick || d.lang); return [it('langName', x.name, x.id)]; }
     if (d.ra) return [it(d.ra === 'y' ? 'b_raYes' : 'b_raNo', this.u(d.ra === 'y' ? 'raYes' : 'raNo'))];
+    if ('fresh' in d) return [it('b_restart', this.u('restart'))];
+    if ('resume' in d) return [it('b_draftGo', this.u('draftGo'))];
+    if (d.consent) return [it(null, el.closest('label').querySelector('span').textContent), it(el.checked ? 'sel' : 'unsel', this.u(el.checked ? 'sel' : 'unsel'))];
+    if (el.tagName === 'SELECT') { const lab = el.closest('label'); return [it(null, lab ? lab.firstChild.textContent : ''), it(null, el.selectedOptions[0] ? el.selectedOptions[0].textContent : '')]; }
     if (d.start) return [it(d.start === 'v' ? 'b_startVoice' : 'b_start', this.u(d.start === 'v' ? 'startVoice' : 'start'))];
     if (el.name === 'f' && s && s.options) {
       const n = s.options.findIndex(p => p[0] === el.value);
@@ -579,9 +782,8 @@ class DbForm extends HTMLElement {
   }
 
   hearLang() {
-    const R = HASV();
-    if (!R || this.manual || !this.lp) return;
-    const rec = new R(); rec.lang = 'en-US'; rec.interimResults = false;
+    if (this.manual || !this.lp) return;
+    const rec = this.recog('en-US'); if (!rec) return;
     let fin = false;
     rec.onresult = e => { fin = true; const id = this.pickLang(e.results[0][0].transcript); if (id) this.chooseLang(id); else this.say(UI.langNone.en); };
     rec.onerror = e => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { fin = true; this.say(UI.micblocked.en); } };
@@ -605,9 +807,8 @@ class DbForm extends HTMLElement {
   }
 
   hear() {
-    const R = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!R || this.manual || this.ra > 1) return;
-    const rec = new R(); rec.lang = this.sl(); rec.interimResults = false;
+    if (this.manual || this.ra > 1) return;
+    const rec = this.recog(this.sl()); if (!rec) return;
     let fin = false;
     const finish = a => { if (!fin) { fin = true; this.raDone(a); } };
     rec.onresult = e => finish(this.ans(e.results[0][0].transcript));
@@ -644,12 +845,13 @@ class DbForm extends HTMLElement {
     if (this.moved) this.halt();
     const st = this.steps, s = st[this.i];
     let b;
-    if (this.done) b = `<div class='done'>${CHECK}<h2 id='h' tabindex='-1'>${this.u('thanks')}</h2></div>`;
+    if (this.done) b = `<div class='done'>${CHECK}<h2 id='h' tabindex='-1'>${this.u(this.queued ? 'queued' : 'thanks')}</h2>${this.receipt ? `<p>${this.u('receipt', { r: `<span class='receipt'>${esc(this.receipt)}</span>` })}</p>` : ''}<p class='when'>${esc(this.todayText())}</p></div>`;
     else if (this.welcome) b = this.welcomeHTML();
     else if (!s) {
       const rv = st.map((x, n) => [x, n]).filter(([x]) => !x.local);
       b = `<h2 id='h' tabindex='-1'>${this.u('review')}</h2><dl class='review'>${rv.map(([x, n], k) =>
         `<div class='item'><dt>${k + 1}. ${esc(T(x.q, this.l))}</dt><dd><span>${esc(this.show(x))}</span><button type='button' data-edit='${n}'>${this.u('change')}<span class='sr'> ${k + 1}</span></button></dd></div>`).join('')}</dl>
+      ${this.consentHTML()}
       <p class='after'>${this.u(this.rs ? 'reviewFix' : 'reviewAsk')}</p>
       ${this.errHTML()}
       <div class='row'><button type='button' class='p big' data-send>${I('check')}${this.u('send')}</button>${this.rs ? '' : `<button type='button' class='big' data-nochange>${this.u('noChange')}</button>`}<button type='button' class='big' data-restart>${this.u('restart')}</button><button type='button' data-back>${I('back', 20)}${this.u('back')}</button></div>`;
@@ -666,7 +868,17 @@ class DbForm extends HTMLElement {
     const cap = `<div class='cap' id='cap' data-state='idle' aria-hidden='true'><span class='ic'></span><div><span class='k'></span><span class='t'></span></div><span class='lvl'><i></i><i></i><i></i><i></i></span></div>`;
     this.r.innerHTML = `<style>${CSS}</style><section lang='${this.l}' data-theme='${this.theme || 'auto'}'${this.pref.large ? " style='font-size:1.375rem'" : ''}><div class='bar'>${langs}${disp}</div>${tools}${cap}<p class='status' id='live' role='status'></p>${b}</section>`;
     this.bind(s);
-    if (!this.said) { this.said = true; setTimeout(() => { if (this.lp) this.askLang(); else if (this.welcome) this.askRA(); else this.say(this.u('intro')); }, 800); }
+    if (!this.said) {
+      this.said = true;
+      const go = ms => setTimeout(() => { if (this.lp) this.askLang(); else if (this.welcome) this.askRA(); else this.say(this.u('intro')); }, ms);
+      const ua = typeof navigator !== 'undefined' && navigator.userActivation, ev = ['keydown', 'pointerdown'];
+      if (ua && !ua.hasBeenActive) {
+        const once = () => { ev.forEach(t => document.removeEventListener(t, once, true)); go(150); };
+        ev.forEach(t => document.addEventListener(t, once, true));
+        this.say(this.lp ? UI.tapToHear.en : this.u('tapToHear'));
+      } else go(800);
+    }
+    this.saveDraft();
     this.vtries = 0;
     const quiet = this.quiet; this.quiet = false;
     if (this.rm && this.moved && !quiet) this.readPage(s, this.done ? null : () => this.listenAnswer());
@@ -707,20 +919,27 @@ class DbForm extends HTMLElement {
     this.r.querySelectorAll('[data-pick]').forEach(b => b.addEventListener('click', () => this.chooseLang(b.dataset.pick)));
     this.r.querySelectorAll('[data-ra]').forEach(b => b.addEventListener('click', () => { this.stopRA(); this.raDone(b.dataset.ra); }));
     on('[data-send]', () => this.send());
-    this.r.querySelectorAll('[data-start]').forEach(b => b.addEventListener('click', () => this.startForm(b.dataset.start === 'v')));
+    on('[data-resume]', () => this.resume());
+    this.r.querySelectorAll('[data-consent]').forEach(x => x.addEventListener('change', () => {
+      this.consent[x.dataset.consent] = x.checked;
+      if (x.dataset.consent === 'a' && x.checked && this.errKey === 'consentNeed') { this.err = ''; this.errKey = ''; const e = this.r.querySelector('#err'); if (e) e.textContent = ''; x.removeAttribute('aria-invalid'); }
+    }));
+    this.r.querySelectorAll('[data-start]').forEach(b => b.addEventListener('click', () => { if (b.hasAttribute('data-fresh')) { this.dropDraft(); this.a = {}; this.i = 0; } this.startForm(b.dataset.start === 'v'); }));
     this.r.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => this.edit(+b.dataset.edit)));
     on('[data-nochange]', () => { this.rs = 1; this.moved = true; this.draw(); });
     on('[data-restart]', () => this.restart());
-    if (this.moved) (this.err && q('input') ? q('input') : q('#h')).focus();
+    // After an error, focus the answer itself (never the hidden Colours radios), else the page heading.
+    if (this.moved) ((this.err && (this.errKey === 'consentNeed' ? q('#cons') : s ? q('#f, input[name=f], #ecm') : null)) || q('#h')).focus();
   }
 
   next(s) {
-    const c = [...this.r.querySelectorAll('input:checked')].map(x => x.value);
-    const v = s.type === 'text' ? this.r.querySelector('#f').value.normalize('NFC').trim() : s.type === 'radio' ? (c[0] || '') : c;
-    const empty = !v || !v.length;
+    const c = [...this.r.querySelectorAll('input[name=f]:checked')].map(x => x.value); // only this question's choices, never the Colours radios
+    const v = s.type === 'ecdate' ? this.readDate() : s.type === 'text' ? this.r.querySelector('#f').value.normalize('NFC').trim() : s.type === 'radio' ? (c[0] || '') : c;
+    const empty = s.type === 'ecdate' ? !(v.m || v.d || v.y) : !v || !v.length;
     this.err = ''; this.errKey = '';
     if (empty && !s.optional) { this.err = this.u('need'); this.errKey = 'need'; }
     else if (!empty && s.check && !s.check(v)) { this.err = this.u(s.bad); this.errKey = s.bad; }
+    else if (!empty && s.type === 'ecdate' && !v.m) { this.err = this.u('dateBad'); this.errKey = 'dateBad'; }
     this.a[s.id] = v; this.moved = true;
     if (s.id === 'prefs') this.pref = { large: v.includes('large'), simple: v.includes('simple') };
     if (!this.err) this.advance();
@@ -806,7 +1025,7 @@ class DbForm extends HTMLElement {
 
   // Start listening for the answer to the page that was just read aloud.
   listenAnswer() {
-    if (!HASV() || this.vno || this.done || this.welcome && this.ra < 2) return;
+    if (!this.canHear() || this.vno || this.done || this.welcome && this.ra < 2) return;
     const cur = this.steps[this.i];
     if (cur && cur.novoice) return;
     this.cue(() => this.listen(true));
@@ -818,7 +1037,11 @@ class DbForm extends HTMLElement {
 
   // Read the current page. An error is read first, from its own recorded clip, so it is heard even without a device voice.
   readPage(s, cb) {
-    const id = this.done ? 'done' : this.welcome ? 'welcome' : s ? s.id : this.rs ? 'reviewFix' : 'review';
+    if (s && s.id === 'role' && s.options && !this.err) {
+      const l = this.l;
+      return this.playList([{ l, id: 'q_role', t: T(s.q, l) }, ...s.options.flatMap((p, k) => [{ l, id: 'n' + (k + 1), t: String(k + 1) }, { l, id: null, t: T(p[1], l) }])], cb);
+    }
+    const id = this.done ? (this.queued ? 'queued' : 'done') : this.welcome ? (this.draft ? 'draftH' : 'welcome') : s ? s.id : this.rs ? 'reviewFix' : 'review';
     const ek = this.err && this.errKey && this.err === this.u(this.errKey) ? 'err' + this.errKey[0].toUpperCase() + this.errKey.slice(1) : null;
     const go = () => this.speak(this.pageText(s, !!ek), id, cb);
     if (ek) this.speak(this.err, ek, go); else go();
@@ -857,14 +1080,14 @@ class DbForm extends HTMLElement {
     const lim = s && s.type === 'text' ? 1 : 3;
     const is = c => w.length > 0 && w.length <= lim && w.some(x => CMD[c].includes(x));
     const again = () => this.readPage(s, () => this.cue(() => this.listen(true)));
-    if (this.welcome) { if (is('start') || is('next')) this.startForm(false); else this.say2(this.u('sayWelcome'), 'sayWelcome'); return; }
+    if (this.welcome) { if (this.draft && is('next')) this.resume(); else if (is('start') || is('next')) { if (this.draft) { this.dropDraft(); this.a = {}; this.i = 0; } this.startForm(false); } else this.say2(this.u('sayWelcome'), 'sayWelcome'); return; }
     if (!s) {
       const rv = this.steps.map((x, n) => [x, n]).filter(([x]) => !x.local), yn = this.ans(raw);
       const num = w.map(x => (/^\d+$/.test(x) ? +x : NUM[x] || 0)).find(n => n >= 1 && n <= rv.length);
       if (w.some(x => CMD.restart.includes(x)) || (w.some(x => CMD.start.includes(x)) && w.some(x => CMD.again.includes(x)))) return this.restart();
       if (is('stop')) return this.stopRead();
       if (num) return this.edit(rv[num - 1][1]);
-      if (is('send') || (!this.rs && yn === 'y')) return this.send();
+      if (is('send') || (!this.rs && yn === 'y')) { (this.consent = this.consent || { a: false, s: false }).a = true; return this.send(); }
       if (!this.rs && yn === 'n') { this.rs = 1; this.moved = true; return this.draw(); }
       if (is('back')) return this.goBack(s);
       if (is('repeat')) return again(this.rs ? 'reviewFix' : 'review');
@@ -891,13 +1114,14 @@ class DbForm extends HTMLElement {
   }
 
   listen(auto) {
-    const R = HASV(), live = this.r.querySelector('#live');
-    if (!R) { live.textContent = this.u('novoice'); return; }
+    const live = this.r.querySelector('#live');
+    if (!this.canHear()) { live.textContent = this.u('novoice'); return; }
     this.stopVoice();
     this.tok++;
     if (window.speechSynthesis) speechSynthesis.cancel();
     if (this.aud) this.aud.pause();
-    const rec = new R(); rec.lang = this.sl(); rec.interimResults = false;
+    const rec = this.recog(this.sl());
+    if (!rec) { live.textContent = this.u('novoice'); return; }
     this.vrec = rec;
     let got = false;
     const mb = this.r.querySelector('.mic'), off = () => { if (mb) mb.classList.remove('on'); if (this.vrec === rec || !this.vrec) this.cap('idle'); };
@@ -919,28 +1143,58 @@ class DbForm extends HTMLElement {
     try { rec.start(); } catch (x) { live.textContent = this.u('novoice') + ' (' + x.name + ')'; }
   }
 
+  // What is sent: only the questions that are not local, plus the consent record. Support choices only with their own consent.
+  payload() {
+    const out = {};
+    this.steps.filter(s => !s.local).forEach(s => {
+      const v = this.a[s.id];
+      if (s.type === 'ecdate') { if (v && v.m) { const r = ecResolve(v); out[s.id] = isoOf(fromEC(r.y, r.m, r.d)); } return; }
+      out[s.id] = v;
+    });
+    if (!this.consent.s) delete out.support;
+    out.consent = { given: true, scope: ['answers', ...(this.consent.s && out.support ? ['support'] : [])], version: CONSENT_VERSION, lang: this.l, partner: this.getAttribute('partner') || '', at: new Date().toISOString() };
+    return out;
+  }
+
   async send() {
     if (this.sending) return;
-    const out = {}; this.steps.filter(s => !s.local).forEach(s => { out[s.id] = this.a[s.id]; });
+    // Nothing leaves the device without the person's agreement.
+    if (!this.consent.a) { this.err = this.u('consentNeed'); this.errKey = 'consentNeed'; this.moved = true; this.draw(); return; }
+    const out = this.payload();
     // Sending state: the button is disabled and says "Sending…" so a second press cannot send twice.
     this.sending = true;
     const btn = this.r.querySelector && this.r.querySelector('[data-send]');
     if (btn) { btn.disabled = true; btn.textContent = this.u('sending'); this.say(this.u('sending')); }
+    const base = this.getAttribute('api'), url = base ? base + this.f.path : null;
     try {
-      const base = this.getAttribute('api');
-      if (base) {
-        const r = await fetch(base + this.f.path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(out) });
-        if (!r.ok) throw new Error(r.status);
+      if (url) {
+        const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(out) });
+        if (!r.ok) throw Object.assign(new Error(String(r.status)), { status: r.status });
+        const j = await r.json().catch(() => ({}));
+        this.receipt = j.receipt || ''; this.recId = j.id || '';
       }
-      this.done = true; this.moved = true; this.err = '';
-      this.dispatchEvent(new CustomEvent('db-complete', { detail: { answers: out }, bubbles: true, composed: true }));
+      this.done = true; this.moved = true; this.err = ''; this.dropDraft();
+      this.dispatchEvent(new CustomEvent('db-complete', { detail: { answers: out, id: this.recId, receipt: this.receipt }, bubbles: true, composed: true }));
     } catch (e) {
-      this.err = this.u('fail'); this.errKey = 'fail';
-      this.dispatchEvent(new CustomEvent('db-error', { bubbles: true, composed: true }));
+      // No connection: keep the answers on the device and send them later. A server answer (4xx/5xx) is shown as an error.
+      if (url && !e.status) {
+        const q = store.get(QUEUE) || []; q.push({ url, body: out, flow: this.getAttribute('flow') || this.constructor.flow, at: Date.now() }); store.set(QUEUE, q);
+        this.done = true; this.queued = true; this.moved = true; this.err = ''; this.dropDraft();
+        this.dispatchEvent(new CustomEvent('db-queued', { bubbles: true, composed: true }));
+      } else {
+        this.err = this.u('fail'); this.errKey = 'fail';
+        this.dispatchEvent(new CustomEvent('db-error', { detail: { status: e.status || 0 }, bubbles: true, composed: true }));
+      }
     }
     this.sending = false;
     this.draw();
   }
 }
-customElements.define('db-form', DbForm);
+// Level 1 tags. All three are the same engine; the two named tags only change the default flow.
+// <db-onboarding> = sign-up, <db-career-gateway> = job search and application. Loading the script twice is harmless.
+class DbOnboarding extends DbForm { static flow = 'signup'; }
+class DbCareerGateway extends DbForm { static flow = 'job'; }
+if (!customElements.get('db-form')) customElements.define('db-form', DbForm);
+if (!customElements.get('db-onboarding')) customElements.define('db-onboarding', DbOnboarding);
+if (!customElements.get('db-career-gateway')) customElements.define('db-career-gateway', DbCareerGateway);
 }

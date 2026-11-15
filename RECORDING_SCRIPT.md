@@ -23,7 +23,7 @@ When a clip is missing **and** the device has no voice for the language, the plu
 7. A native speaker must listen to every clip. If a word is wrong, fix the text in `public/db-form.js` (not here), then repeat from step 1.
 
 ## What to produce
-- **395 files in total**: 79 for `en`, 79 for `am`, 79 for `om`, 79 for `ti`, 79 for `so`.
+- **440 files in total**: 88 for `en`, 88 for `am`, 88 for `om`, 88 for `ti`, 88 for `so`.
 - Format: **mp3**, mono, 64 kbps or lower (small for 3G). The Colab script makes 48 kbps.
 - File name = the **ID** in the first column, plus `.mp3`. Example: `public/audio/am/fullName.mp3`. Use exactly this spelling and capital letters.
 - The plugin loads them from the `audio` attribute: `audio='http://localhost:3000/audio'` (the server serves the `public` folder).
@@ -49,7 +49,7 @@ When a clip is missing **and** the device has no voice for the language, the plu
 
 ## Not recorded (they change each time)
 - **review** (the first part of the last page): reads out the person's own answers. Only `reviewFix` is a clip.
-- **role** (job flow): the list of jobs depends on the person's filter and on jobs employers add.
+- **role** (job flow): the list of jobs depends on the person's filter and on jobs employers add. Only the question (`q_role`) and the numbers are clips.
 - The exact words a person typed or said. The device voice reads them back when it has a voice for the language; otherwise `heardGeneric` is played.
 
 ## Checklist
@@ -69,6 +69,7 @@ When a clip is missing **and** the device has no voice for the language, the plu
 | `why` | job flow, question 3 | no | en, am, om, ti, so |
 | `job` | employer flow, question 1 | no | en, am, om, ti, so |
 | `offers` | employer flow, question 2 | yes (includes "Say Skip") | en, am, om, ti, so |
+| `closes` | employer flow, question 3 | yes (includes "Say Skip") | en, am, om, ti, so |
 | `errNeed` | Error: question not answered | - | en, am, om, ti, so |
 | `errBad` | Error: phone number or email not valid | - | en, am, om, ti, so |
 | `errFail` | Error: could not send | - | en, am, om, ti, so |
@@ -80,6 +81,12 @@ When a clip is missing **and** the device has no voice for the language, the plu
 | `heardGeneric` | Spoken answer received (used when the device has no voice) | - | en, am, om, ti, so |
 | `choseA` | Confirmation, first part ("You chose") | - | en, am, om, ti, so |
 | `choseB` | Confirmation, last part | - | en, am, om, ti, so |
+| `errConsentNeed` | Error: consent box not ticked | - | en, am, om, ti, so |
+| `errDateBad` | Error: date has no month | - | en, am, om, ti, so |
+| `draftH` | Welcome back (answers kept on this device) | - | en, am, om, ti, so |
+| `queued` | Offline: answers saved on the device, sent later | - | en, am, om, ti, so |
+| `sentLater` | Saved answers were sent | - | en, am, om, ti, so |
+| `tapToHear` | Press a key or tap to hear the questions | - | en, am, om, ti, so |
 | `n1` | Number 1 (used in the confirmation) | - | en, am, om, ti, so |
 | `n2` | Number 2 (used in the confirmation) | - | en, am, om, ti, so |
 | `n3` | Number 3 (used in the confirmation) | - | en, am, om, ti, so |
@@ -109,6 +116,7 @@ When a clip is missing **and** the device has no voice for the language, the plu
 | `b_startVoice` | Focus: the "Start with voice" button | - | en, am, om, ti, so |
 | `b_raYes` | Focus: the "Yes, read aloud" button | - | en, am, om, ti, so |
 | `b_raNo` | Focus: the "No, thank you" button | - | en, am, om, ti, so |
+| `b_draftGo` | Focus: the "Continue where I stopped" button | - | en, am, om, ti, so |
 | `o_prefs_large` | Focus: choice "Larger text" (question prefs) | - | en, am, om, ti, so |
 | `o_prefs_simple` | Focus: choice "Pictures next to choices" (question prefs) | - | en, am, om, ti, so |
 | `q_fullName` | Focus: the answer box of "What is your full name?" | - | en, am, om, ti, so |
@@ -128,6 +136,7 @@ When a clip is missing **and** the device has no voice for the language, the plu
 | `o_needs_interp` | Focus: choice "Sign language interpreter" (question needs) | - | en, am, om, ti, so |
 | `o_needs_hours` | Focus: choice "Flexible hours" (question needs) | - | en, am, om, ti, so |
 | `o_needs_remote` | Focus: choice "Work from home" (question needs) | - | en, am, om, ti, so |
+| `q_role` | Job page: the question "Which job are you applying for?" (the job titles are read by the device voice) | - | en, am, om, ti, so |
 | `q_why` | Focus: the answer box of "Why do you want this job?" | - | en, am, om, ti, so |
 | `q_job` | Focus: the answer box of "What is the job title?" | - | en, am, om, ti, so |
 | `o_offers_stepfree` | Focus: choice "Step-free workplace" (question offers) | - | en, am, om, ti, so |
@@ -430,6 +439,28 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Waa maxay hagaajinta ay shaqadani bixin karto? 1: Goob shaqo oo aan jaranjaro lahayn. 2: Qalab ku habboon akhriyaha shaashadda. 3: Turjubaan luqadda calaamadaha. 4: Saacado dabacsan. 5: Ka shaqeyn guriga. Dheh lambarka ama magaca doorashadaada. Dheh Xiga si aad u sii socoto, Dib u noqo si aad dib ugu noqoto, ama Akhri si aad mar kale u maqasho. Dheh Ka bood si aad su'aashan uga boodo.
 
+### `closes`: employer flow, question 3
+
+**English** → `public/audio/en/closes.mp3`
+
+> When do applications close? Optional. Ethiopian calendar. If you only know the month, choose Not sure for the day. Please type your answer in the box. Then press Enter, or press the Next button.
+
+**አማርኛ (draft, must be checked)** → `public/audio/am/closes.mp3`
+
+> ማመልከቻ መቼ ይዘጋል? አማራጭ ነው። በኢትዮጵያ አቆጣጠር። ወሩን ብቻ ካወቁ ለቀኑ «እርግጠኛ አይደለሁም» ይምረጡ። እባክዎ መልስዎን በሳጥኑ ውስጥ ይጻፉ። ከዚያ Enter ወይም «ቀጥል» የሚለውን ቁልፍ ይጫኑ።
+
+**Afaan Oromoo (draft, VERIFY_NATIVE)** → `public/audio/om/closes.mp3`
+
+> Iyyannoon yoom cufama? Dirqama miti. Lakkoofsa Itoophiyaa. Ji'a qofa yoo beekte, guyyaaf 'Hin beeku' filadhu. Maaloo deebii kee saanduqa keessatti barreessi. Achiis Enter ykn qabduu Itti fufi tuqi.
+
+**ትግርኛ (draft, VERIFY_NATIVE)** → `public/audio/ti/closes.mp3`
+
+> ምዝገባ ማመልከቻ መዓስ ይዕጾ? ግዴታ ኣይኮነን። ብኣቆጻጽራ ኢትዮጵያ። ወርሒ ጥራይ እንተ ፈሊጥኩም፣ ንመዓልቲ «ርግጸኛ ኣይኮንኩን» ምረጹ። በጃኹም መልስኹም ኣብቲ ሳንዱቕ ጽሓፉ። ድሕሪኡ Enter ወይ «ቀጽል» ዝብል መጠወቒ ጠውቑ።
+
+**Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/closes.mp3`
+
+> Goormaa la xirayaa codsiyada? Ikhtiyaari. Kalandarka Itoobiya. Haddii aad bisha oo keliya taqaanno, maalinta u dooro 'Ma hubo'. Fadlan ku qor jawaabtaada sanduuqa. Kadib riix Enter, ama riix badhanka Xiga.
+
 ### `errNeed`: Error: question not answered
 
 **English** → `public/audio/en/errNeed.mp3`
@@ -671,6 +702,138 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/choseB.mp3`
 
 > Dheh Xiga si aad u sii socoto, ama mar kale dooro.
+
+### `errConsentNeed`: Error: consent box not ticked
+
+**English** → `public/audio/en/errConsentNeed.mp3`
+
+> Please tick the box to agree before sending, or press Back.
+
+**አማርኛ (draft, must be checked)** → `public/audio/am/errConsentNeed.mp3`
+
+> ከመላክዎ በፊት ለመስማማት ሳጥኑን ምልክት ያድርጉ፤ ወይም ተመለስ ይጫኑ።
+
+**Afaan Oromoo (draft, VERIFY_NATIVE)** → `public/audio/om/errConsentNeed.mp3`
+
+> Maaloo osoo hin ergin dura walii galuuf saanduqa mallattoo godhi, ykn Duubatti tuqi.
+
+**ትግርኛ (draft, VERIFY_NATIVE)** → `public/audio/ti/errConsentNeed.mp3`
+
+> በጃኹም ቅድሚ ምልኣኽ ንምስምማዕ ነቲ ሳንዱቕ ምልክት ግበሩ፣ ወይ «ተመለስ» ጠውቑ።
+
+**Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/errConsentNeed.mp3`
+
+> Fadlan calaamadee sanduuqa si aad u oggolaato ka hor intaadan dirin, ama riix Dib u noqo.
+
+### `errDateBad`: Error: date has no month
+
+**English** → `public/audio/en/errDateBad.mp3`
+
+> Please choose a month, or set day and year to Not sure to skip the date.
+
+**አማርኛ (draft, must be checked)** → `public/audio/am/errDateBad.mp3`
+
+> እባክዎ ወር ይምረጡ፤ ወይም ቀኑን ለመዝለል ቀንና ዓመትን «እርግጠኛ አይደለሁም» ያድርጉ።
+
+**Afaan Oromoo (draft, VERIFY_NATIVE)** → `public/audio/om/errDateBad.mp3`
+
+> Maaloo ji'a filadhu, ykn guyyaa fi bara 'Hin beeku' godhi.
+
+**ትግርኛ (draft, VERIFY_NATIVE)** → `public/audio/ti/errDateBad.mp3`
+
+> በጃኹም ወርሒ ምረጹ፣ ወይ መዓልትን ዓመትን «ርግጸኛ ኣይኮንኩን» ግበሩ።
+
+**Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/errDateBad.mp3`
+
+> Fadlan dooro bil, ama maalinta iyo sanadka ka dhig 'Ma hubo'.
+
+### `draftH`: Welcome back (answers kept on this device)
+
+**English** → `public/audio/en/draftH.mp3`
+
+> Welcome back Your answers from last time are kept on this device. Continue where I stopped Start again
+
+**አማርኛ (draft, must be checked)** → `public/audio/am/draftH.mp3`
+
+> እንኳን ደህና ተመለሱ ካለፈው ጊዜ መልሶችዎ በዚህ መሣሪያ ላይ ተቀምጠዋል። ካቆምኩበት ቀጥል እንደገና ጀምር
+
+**Afaan Oromoo (draft, VERIFY_NATIVE)** → `public/audio/om/draftH.mp3`
+
+> Baga nagaan deebitan Deebiin kee yeroo darbe meeshaa kana irratti kuufameera. Iddoon dhaabe irraa itti fufi Irra deebi'ii jalqabi
+
+**ትግርኛ (draft, VERIFY_NATIVE)** → `public/audio/ti/draftH.mp3`
+
+> እንቋዕ ብደሓን ተመለስኩም መልስታትኩም ካብ ዝሓለፈ ግዜ ኣብዚ መሳርሒ ተዓቂቦም ኣለዉ። ካብ ዝኣቋረጽኩዎ ቀጽል ደጊምካ ጀምር
+
+**Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/draftH.mp3`
+
+> Ku soo dhawoow mar kale Jawaabahaagii hore waxay ku kaydsan yihiin qalabkan. Ka sii wad halkii aan ku joogsaday Dib u bilow
+
+### `queued`: Offline: answers saved on the device, sent later
+
+**English** → `public/audio/en/queued.mp3`
+
+> You are offline. Your answers are saved on this device and will be sent when you are back online.
+
+**አማርኛ (draft, must be checked)** → `public/audio/am/queued.mp3`
+
+> ከመስመር ውጭ ነዎት። መልሶችዎ በዚህ መሣሪያ ላይ ተቀምጠዋል፤ መስመር ላይ ሲመለሱ ይላካሉ።
+
+**Afaan Oromoo (draft, VERIFY_NATIVE)** → `public/audio/om/queued.mp3`
+
+> Ati toora ala jirta. Deebiin kee meeshaa kana irratti kuufameera, yeroo toora irratti deebitu ni ergama.
+
+**ትግርኛ (draft, VERIFY_NATIVE)** → `public/audio/ti/queued.mp3`
+
+> ካብ መስመር ወጻኢ ኢኹም። መልስታትኩም ኣብዚ መሳርሒ ተዓቂቦም ኣለዉ፣ ናብ መስመር ምስ ተመለስኩም ክለኣኹ እዮም።
+
+**Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/queued.mp3`
+
+> Khadka kama jirtid. Jawaabahaaga waxay ku kaydsan yihiin qalabkan, waxaana la diri doonaa markaad khadka ku soo noqoto.
+
+### `sentLater`: Saved answers were sent
+
+**English** → `public/audio/en/sentLater.mp3`
+
+> Your saved answers have now been sent.
+
+**አማርኛ (draft, must be checked)** → `public/audio/am/sentLater.mp3`
+
+> የተቀመጡት መልሶችዎ አሁን ተልከዋል።
+
+**Afaan Oromoo (draft, VERIFY_NATIVE)** → `public/audio/om/sentLater.mp3`
+
+> Deebiin kee kuufame amma ergameera.
+
+**ትግርኛ (draft, VERIFY_NATIVE)** → `public/audio/ti/sentLater.mp3`
+
+> እቶም ዝተዓቀቡ መልስታትኩም ሕጂ ተላኢኾም።
+
+**Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/sentLater.mp3`
+
+> Jawaabahaagii kaydsanaa hadda waa la diray.
+
+### `tapToHear`: Press a key or tap to hear the questions
+
+**English** → `public/audio/en/tapToHear.mp3`
+
+> Press any key or tap the screen to hear the questions.
+
+**አማርኛ (draft, must be checked)** → `public/audio/am/tapToHear.mp3`
+
+> ጥያቄዎቹን ለመስማት ማንኛውንም ቁልፍ ይጫኑ ወይም ማያውን ይንኩ።
+
+**Afaan Oromoo (draft, VERIFY_NATIVE)** → `public/audio/om/tapToHear.mp3`
+
+> Gaaffilee dhaga'uuf qabduu kamiyyuu tuqi ykn iskiriinii tuqi.
+
+**ትግርኛ (draft, VERIFY_NATIVE)** → `public/audio/ti/tapToHear.mp3`
+
+> ሕቶታት ንምስማዕ ዝኾነ መጠወቒ ጠውቑ ወይ ስክሪን ተንክፉ።
+
+**Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/tapToHear.mp3`
+
+> Riix fure kasta ama taabo shaashadda si aad u maqasho su'aalaha.
 
 ### `n1`: Number 1 (used in the confirmation)
 
@@ -1310,6 +1473,28 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Maya, mahadsanid
 
+### `b_draftGo`: Focus: the "Continue where I stopped" button
+
+**English** → `public/audio/en/b_draftGo.mp3`
+
+> Continue where I stopped
+
+**አማርኛ (draft, must be checked)** → `public/audio/am/b_draftGo.mp3`
+
+> ካቆምኩበት ቀጥል
+
+**Afaan Oromoo (draft, VERIFY_NATIVE)** → `public/audio/om/b_draftGo.mp3`
+
+> Iddoon dhaabe irraa itti fufi
+
+**ትግርኛ (draft, VERIFY_NATIVE)** → `public/audio/ti/b_draftGo.mp3`
+
+> ካብ ዝኣቋረጽኩዎ ቀጽል
+
+**Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/b_draftGo.mp3`
+
+> Ka sii wad halkii aan ku joogsaday
+
 ### `o_prefs_large`: Focus: choice "Larger text" (question prefs)
 
 **English** → `public/audio/en/o_prefs_large.mp3`
@@ -1727,6 +1912,28 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/o_needs_remote.mp3`
 
 > Ka shaqeyn guriga
+
+### `q_role`: Job page: the question "Which job are you applying for?" (the job titles are read by the device voice)
+
+**English** → `public/audio/en/q_role.mp3`
+
+> Which job are you applying for?
+
+**አማርኛ (draft, must be checked)** → `public/audio/am/q_role.mp3`
+
+> የትኛውን ሥራ እየጠየቁ ነው?
+
+**Afaan Oromoo (draft, VERIFY_NATIVE)** → `public/audio/om/q_role.mp3`
+
+> Hojii kamiif iyyachaa jirta?
+
+**ትግርኛ (draft, VERIFY_NATIVE)** → `public/audio/ti/q_role.mp3`
+
+> ንኣየናይ ስራሕ ኢኹም እትሓቱ ዘለኹም?
+
+**Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/q_role.mp3`
+
+> Shaqadee ayaad codsanaysaa?
 
 ### `q_why`: Focus: the answer box of "Why do you want this job?"
 
