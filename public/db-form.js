@@ -265,8 +265,14 @@ const FLOWS = {
         o('large', 'Large text', 'ትልቅ ጽሑፍ', "Barreeffama guddaa", "ዓቢ ጽሑፍ", "Qoraal weyn"), // VERIFY_NATIVE
         o('voice', 'I prefer to speak my answers', 'መልሶቼን በድምፅ መናገር እመርጣለሁ', "Deebii koo dubbachuu nan filadha", "መልስታተይ ብድምጺ ክዛረብ እመርጽ", "Waxaan doorbidaa inaan ku hadlo jawaabahayga"), // VERIFY_NATIVE
         o('sign', 'Ethiopian Sign Language interpreter', 'የኢትዮጵያ ምልክት ቋንቋ አስተርጓሚ', "Hiikaa Afaan Mallattoo Itoophiyaa", "ተርጓሚ ቋንቋ ምልክት ኢትዮጵያ", "Turjubaan Luqadda Calaamadaha Itoobiya"), // VERIFY_NATIVE
+        // Added 15 Nov from the Technical Guide's support list. The Amharic of these four is a draft too: VERIFY_NATIVE.
+        o('captions', 'Captions on videos', 'በቪዲዮዎች ላይ የጽሑፍ ትርጉም', "Barreeffama viidiyoo irratti", "ኣብ ቪድዮታት ጽሑፍ", "Qoraal ku qoran muuqaallada"), // VERIFY_NATIVE
+        o('interp', 'An interpreter in my language', 'በቋንቋዬ አስተርጓሚ', "Hiikaa afaan kootiin", "ብቋንቋየ ተርጓሚ", "Turjubaan ku hadla luqaddayda"), // VERIFY_NATIVE
+        o('time', 'More time for tests and tasks', 'ለፈተናና ለተግባራት ተጨማሪ ጊዜ', "Qormaataa fi hojiif yeroo dabalataa", "ንፈተናታትን ዕማማትን ተወሳኺ ግዜ", "Waqti dheeraad ah oo imtixaannada iyo hawlaha"), // VERIFY_NATIVE
         o('simple', 'Simple words and pictures', 'ቀላል ቃላትና ሥዕሎች', "Jechoota salphaa fi fakkiiwwan", "ቀለልቲ ቃላትን ስእልታትን", "Erayo fudud iyo sawirro"), // VERIFY_NATIVE
-        o('human', 'Please call me to help', 'እባክዎ ደውለው ያግዙኝ', "Maaloo na gargaaruuf natti bilbilaa", "በጃኹም ደዊልኩም ሓግዙኒ", "Fadlan ii soo wac si aad ii caawiso")] }, // VERIFY_NATIVE
+        o('human', 'Please call me to help', 'እባክዎ ደውለው ያግዙኝ', "Maaloo na gargaaruuf natti bilbilaa", "በጃኹም ደዊልኩም ሓግዙኒ", "Fadlan ii soo wac si aad ii caawiso"), // VERIFY_NATIVE
+        // As easy to choose as any other: it clears the other choices, and nothing about support is sent.
+        o('prefer', 'Prefer not to say', 'መናገር አልፈልግም', "Dubbachuu hin barbaadu", "ክገልጽ ኣይደልን", "Ma doonayo inaan sheego")], exclusive: 'prefer' }, // VERIFY_NATIVE
   ] },
   job: { path: '/applications', steps: [
     { id: 'needs', local: true,
@@ -431,7 +437,7 @@ const SID = {
   opt: {
     prefs: { large: 'Lowo borro', simple: 'Doorshu gaxa misilla' },
     idRoute: { kebele: 'Qebeele eeshsha woy paaspoorte', refugee: 'Baqatu woy higgaanchu eeshsha', other: 'Wole bortaje', refer: 'Eeshsha diafi\'rino. Jaala dirijjiteenni hoolisi\'e' },
-    support: { screenreader: 'Leellisaancho nabbawaancho horoonsi\'reemmo', large: 'Lowo borro', voice: 'Dawaro qaalinke hasaawa doorreemmo', sign: 'Itiyoophiyu Malaatu Afoo turjimaancho', simple: 'Shota qaalla nna misilla', human: 'Ikkitinni kaa\'lo daafira silki xa\'mi' },
+    support: { screenreader: 'Leellisaancho nabbawaancho horoonsi\'reemmo', large: 'Lowo borro', voice: 'Dawaro qaalinke hasaawa doorreemmo', sign: 'Itiyoophiyu Malaatu Afoo turjimaancho', captions: 'Viidiyoo aana borro', interp: 'Afoo\'yanni turjimaancho', time: 'Fayyimmaranna loosora roore yanna', simple: 'Shota qaalla nna misilla', human: 'Ikkitinni kaa\'lo daafira silki xa\'mi', prefer: 'Kulla dihasi\'reemmo' },
   },
   work: { stepfree: 'Gadu dinokki loosu bayicho', reader: 'Leellisaancho nabbawaanchora coyi\'nanno uduunnicho', interp: 'Malaatu afoo turjimaancho', hours: 'Soorramanno loosu saate', remote: 'Mineenni loosa' },
 };
@@ -630,6 +636,8 @@ const P = {
   remote: "<path d='M3 11l9-7 9 7M5 9.5V20h14V9.5M10 20v-6h4v6'/>",
 };
 P.reader = P.screenreader; P.interp = P.sign;
+P.captions = "<rect x='3' y='5' width='18' height='14' rx='2'/><path d='M10 10.5a2 2 0 1 0 0 3M17 10.5a2 2 0 1 0 0 3'/>";
+P.time = "<circle cx='12' cy='12' r='9'/><path d='M12 7v5l3 2'/>";
 const I = (k, s) => svg(P[k], s);
 const LOGO = `<svg class='logo' width='44' height='44' viewBox='0 0 56 56' aria-hidden='true' focusable='false'><circle cx='28' cy='12' r='8' fill='currentColor'/><path d='M6 22c14 0 20 8 22 26C26 30 20 24 6 22zM50 22c-14 0-20 8-22 26 2-18 8-24 22-26z' fill='currentColor' opacity='.75'/></svg>`;
 const CHECK = svg("<circle cx='12' cy='12' r='10'/><path d='M7 12.5l3.2 3.2L17 9'/>", 56);
@@ -643,6 +651,7 @@ const NUM = {
   'ሓደ': 1, 'ክልተ': 2, 'ሰለስተ': 3, 'ኣርባዕተ': 4, 'ሓሙሽተ': 5, 'ሽዱሽተ': 6, 'ሸውዓተ': 7, 'ሸሞንተ': 8, // ti, VERIFY_NATIVE
   kow: 1, hal: 1, laba: 2, saddex: 3, afar: 4, lix: 6, toddoba: 7, siddeed: 8, // so (shan = 5 is shared with om), VERIFY_NATIVE
   mitto: 1, lame: 2, sase: 3, shoole: 4, onte: 5, lee: 6, lamala: 7, sette: 8, // sid, VERIFY_NATIVE
+  nine: 9, ten: 10, 'ዘጠኝ': 9, 'አሥር': 10, 'አስር': 10, '፱': 9, '፲': 10, sagal: 9, kudhan: 10, 'ትሽዓተ': 9, 'ዓሰርተ': 10, sagaal: 9, toban: 10, honse: 9, tonne: 10, // VERIFY_NATIVE (om ti so sid)
 };
 const NUM1 = { won: 1, to: 2, too: 2, for: 4 };
 // Ordinals ("the first one"): English, and Amharic stems (አንደኛ, ሁለተኛ ...; the ending is cut off by numOf).
@@ -956,7 +965,7 @@ class DbForm extends HTMLElement {
 
   // Consent, on the review page: required to send; support choices need a second, separate tick.
   consentHTML() {
-    const bad = this.err && this.errKey === 'consentNeed', sup = this.f === FLOWS.signup && (this.a.support || []).length;
+    const bad = this.err && this.errKey === 'consentNeed', sup = this.f === FLOWS.signup && this.supportChosen().length;
     const box = (k, text, extra = '') => `<label class='opt'><input type='checkbox' data-consent='${k}' ${this.consent[k] ? 'checked' : ''} ${extra}><span>${esc(text)}</span><span class='tick'>${I('check', 20)}</span></label>`;
     return `<fieldset class='consent'><legend>${this.u('consentH')}</legend>${box('a', this.u('consentSend', { p: this.partner() }), "id='cons'" + (bad ? " aria-invalid='true' aria-describedby='err'" : ''))}${sup ? box('s', this.u('consentSupport')) : ''}<p>${this.u('consentNote')}</p></fieldset>`;
   }
@@ -1310,6 +1319,7 @@ class DbForm extends HTMLElement {
     const cap = `<div class='cap' id='cap' data-state='idle' aria-hidden='true'><span class='ic'></span><div><span class='k'></span><span class='t'></span></div><span class='lvl'><i></i><i></i><i></i><i></i></span></div>`;
     this.r.innerHTML = `<style>${CSS}</style><section lang='${this.l}' data-theme='${this.theme || 'auto'}'${this.sizeStyle()}><div class='bar'>${langs}${disp}</div>${keys}${tools}${cap}<p class='status' id='live' role='status'></p>${b}</section>`;
     this.bind(s);
+    if (s && !this.welcome && !this.done) this.emit('step', { step: this.i + 1, of: st.length, id: s.id });
     if (!this.said) {
       this.said = true;
       const go = ms => setTimeout(() => { if (this.lp) this.askLang(); else if (this.welcome) this.askRA(); else this.say(this.u('intro')); }, ms);
@@ -1325,6 +1335,14 @@ class DbForm extends HTMLElement {
     const quiet = this.quiet; this.quiet = false;
     if (this.rm && this.moved && !quiet) this.readPage(s, this.done ? null : () => this.listenAnswer());
     else if (this.err && this.moved && !quiet && (this.vm || this.usedRead)) this.readErr();
+  }
+
+  // Events named as in the organisers' data contract: db-signup:step / :done / :support (db-job:…, db-employer:… for the
+  // other flows). They bubble out of the shadow DOM, like db-complete.
+  emit(name, detail) {
+    if (typeof this.dispatchEvent !== 'function') return;
+    const flow = this.getAttribute('flow') || this.constructor.flow;
+    this.dispatchEvent(new CustomEvent('db-' + flow + ':' + name, { detail, bubbles: true, composed: true }));
   }
 
   // Colour theme: the person's own choice (saved on this device) wins over the site's theme attribute.
@@ -1377,6 +1395,7 @@ class DbForm extends HTMLElement {
     on('[data-stoprm]', () => { if (this.welcome && this.ra < 2) { this.stopRA(); this.say(this.u('stopped')); } else this.stopRead(); });
     this.r.querySelectorAll('input[name=th]').forEach(x => x.addEventListener('change', () => this.setTheme(x.value)));
     this.r.querySelectorAll('input[name=ts]').forEach(x => x.addEventListener('change', () => this.setSize(+x.value)));
+    if (s && s.exclusive) this.r.querySelectorAll('input[name=f]').forEach(x => x.addEventListener('change', () => this.exclusive(s, x)));
     this.r.querySelectorAll('[data-pick]').forEach(b => b.addEventListener('click', () => this.chooseLang(b.dataset.pick)));
     this.r.querySelectorAll('[data-ra]').forEach(b => b.addEventListener('click', () => { this.stopRA(); this.raDone(b.dataset.ra); }));
     on('[data-send]', () => this.send());
@@ -1560,6 +1579,14 @@ class DbForm extends HTMLElement {
     go();
   }
 
+  // "Prefer not to say": choosing it clears the other choices; choosing another clears it. changed = the box just changed.
+  exclusive(s, changed) {
+    const ex = s && s.exclusive; if (!ex || !changed || !changed.checked) return;
+    this.r.querySelectorAll('input[name=f]').forEach(x => { if (x !== changed && (changed.value === ex || x.value === ex)) x.checked = false; });
+  }
+  // Support choices that mean something to send ("prefer not to say" is not one).
+  supportChosen() { return (this.a.support || []).filter(x => x !== 'prefer'); }
+
   // Act on what the person said.
   heard(raw) {
     this.vtries = 0;
@@ -1585,7 +1612,7 @@ class DbForm extends HTMLElement {
       if (is('send') || (!this.rs && yn === 'y')) {
         tick('a');
         // Support needs are sent only with their own agreement, by voice too: ask separately before sending.
-        if (this.f === FLOWS.signup && (this.a.support || []).length && !(this.consent && this.consent.s)) { this.sup = 1; return this.say2(this.u('askSupport'), 'askSupport'); }
+        if (this.f === FLOWS.signup && this.supportChosen().length && !(this.consent && this.consent.s)) { this.sup = 1; return this.say2(this.u('askSupport'), 'askSupport'); }
         return this.send();
       }
       if (!this.rs && yn === 'n') { this.rs = 1; this.moved = true; return this.draw(); }
@@ -1613,7 +1640,7 @@ class DbForm extends HTMLElement {
     if (!hit.length) return this.say2(this.u('unclear'), 'unclear');
     const ins = [...this.r.querySelectorAll('input[name=f]')];
     if (s.type === 'radio') ins.forEach((el, n) => { el.checked = n === hit[0]; });
-    else hit.forEach(n => { ins[n].checked = !ins[n].checked; });
+    else hit.forEach(n => { ins[n].checked = !ins[n].checked; this.exclusive(s, ins[n]); });
     const sel = ins.map((el, n) => (el.checked ? T(s.options[n][1], this.l) : null)).filter(Boolean);
     const nums = ins.map((el, n) => (el.checked ? 'n' + (n + 1) : null)).filter(Boolean), m = sel.length ? this.u('chose', { x: sel.join(', ') }) : this.u('noneSel');
     this.say(m); this.seq(sel.length ? ['choseA', ...nums, 'choseB'] : ['noneSel'], m, () => this.cue(() => this.listen(true)));
@@ -1657,7 +1684,8 @@ class DbForm extends HTMLElement {
       if (s.type === 'ecdate') { if (v && v.m) { const r = ecResolve(v); out[s.id] = isoOf(fromEC(r.y, r.m, r.d)); } return; }
       out[s.id] = v;
     });
-    if (!this.consent.s) delete out.support;
+    if (Array.isArray(out.support)) out.support = out.support.filter(x => x !== 'prefer');
+    if (!this.consent.s || !(out.support || []).length) delete out.support;
     out.consent = { given: true, scope: ['answers', ...(this.consent.s && out.support ? ['support'] : [])], version: CONSENT_VERSION, lang: this.l, partner: this.getAttribute('partner') || '', at: new Date().toISOString() };
     return out;
   }
@@ -1681,6 +1709,10 @@ class DbForm extends HTMLElement {
       }
       this.done = true; this.moved = true; this.err = ''; this.dropDraft();
       this.dispatchEvent(new CustomEvent('db-complete', { detail: { answers: out, id: this.recId, receipt: this.receipt }, bubbles: true, composed: true }));
+      // The organisers' data contract (Technical Guide, Track 1): profile and support in two separate events.
+      const { support, consent, ...profile } = out;
+      this.emit('done', { profile: { ...profile, language: this.l }, id: this.recId, receipt: this.receipt, voiceNotes: [] });
+      if (support && support.length) this.emit('support', { support });
     } catch (e) {
       // No connection: keep the answers on the device and send them later. A server answer (4xx/5xx) is shown as an error.
       if (url && !e.status) {

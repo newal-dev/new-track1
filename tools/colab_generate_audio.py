@@ -67,7 +67,8 @@ KEY_WORDS = r"\b(Tab|Shift|Space|Enter|Escape|Esc)\b"
 # "hulate"). Whole phrase -> the Latin spelling the voice model is given instead. Chosen by a native speaker, by ear.
 PRONOUNCE = {
     # Digits chosen by a native Amharic speaker, by ear (15 Nov 2026). ዜሮ, ሁለት, ስምንት, ዘጠኝ keep the romaniser's spelling.
-    "am": {"አንድ": "aand", "ሦስት": "sosst", "አራት": "aratt", "አምስት": "amest", "ስድስት": "sidist", "ሰባት": "sabaat"},
+    "am": {"አንድ": "aand", "ሦስት": "sosst", "አራት": "aratt", "አምስት": "amest", "ስድስት": "sidist", "ሰባት": "sabaat",
+           "አሥር": "asser"},  # አሥር: same pattern as the chosen digits; a native speaker should listen to it
 }
 CLIPS = json.loads(r'''{
  "en": {
@@ -81,7 +82,7 @@ CLIPS = json.loads(r'''{
   "fullName": "What is your full name? The name you use every day is fine. Speak your answer now. Say Next to continue, Back to go back, or Read aloud to hear this again.",
   "contact": "What phone number or email can we use? Only used to contact you about this programme. A phone number has 10 digits and starts with 0. You can say it or type it. Speak your answer now. Say Next to continue, Back to go back, or Read aloud to hear this again.",
   "idRoute": "How would you like to show who you are? 1: Kebele ID or passport. 2: Refugee or returnee ID. 3: Another document. 4: I don't have an ID. Refer me through a partner organisation. Say the number or the name of your choice. Say Next to continue, Back to go back, or Read aloud to hear this again.",
-  "support": "What support would help you? Choose any. You can skip this. No proof needed. Only the organisers see it, and only to prepare help for you. 1: I use a screen reader. 2: Large text. 3: I prefer to speak my answers. 4: Ethiopian Sign Language interpreter. 5: Simple words and pictures. 6: Please call me to help. Say the number or the name of your choice. Say Next to continue, Back to go back, or Read aloud to hear this again. Say Skip to skip this question.",
+  "support": "What support would help you? Choose any. You can skip this. No proof needed. Only the organisers see it, and only to prepare help for you. 1: I use a screen reader. 2: Large text. 3: I prefer to speak my answers. 4: Ethiopian Sign Language interpreter. 5: Captions on videos. 6: An interpreter in my language. 7: More time for tests and tasks. 8: Simple words and pictures. 9: Please call me to help. 10: Prefer not to say. Say the number or the name of your choice. Say Next to continue, Back to go back, or Read aloud to hear this again. Say Skip to skip this question.",
   "needs": "What support do you need at work? Choose any. Private. This stays on your device and is only used to show suitable jobs. 1: Step-free workplace. 2: Screen-reader friendly tools. 3: Sign language interpreter. 4: Flexible hours. 5: Work from home. Say the number or the name of your choice. Say Next to continue, or Read aloud to hear this again. Say Skip to skip this question.",
   "why": "Why do you want this job? A few words are enough. You can speak instead. Speak your answer now. Say Next to continue, Back to go back, or Read aloud to hear this again.",
   "job": "What is the job title? Speak your answer now. Say Next to continue, or Read aloud to hear this again.",
@@ -104,6 +105,7 @@ CLIPS = json.loads(r'''{
   "queued": "You are offline. Your answers are saved on this device and will be sent when you are back online.",
   "sentLater": "Your saved answers have now been sent.",
   "tapToHear": "Press any key or tap the screen to hear the questions.",
+  "n10": "Ten",
   "n0": "Zero",
   "n1": "One",
   "n2": "Two",
@@ -168,8 +170,12 @@ CLIPS = json.loads(r'''{
   "o_support_large": "Large text",
   "o_support_voice": "I prefer to speak my answers",
   "o_support_sign": "Ethiopian Sign Language interpreter",
+  "o_support_captions": "Captions on videos",
+  "o_support_interp": "An interpreter in my language",
+  "o_support_time": "More time for tests and tasks",
   "o_support_simple": "Simple words and pictures",
   "o_support_human": "Please call me to help",
+  "o_support_prefer": "Prefer not to say",
   "q_needs": "What support do you need at work? Choose any.",
   "o_needs_stepfree": "Step-free workplace",
   "o_needs_reader": "Screen-reader friendly tools",
@@ -197,7 +203,7 @@ CLIPS = json.loads(r'''{
   "fullName": "ሙሉ ስምዎ ማነው? በየቀኑ የሚጠቀሙበት ስም በቂ ነው። መልስዎን አሁን ይናገሩ። ለመቀጠል «ቀጥል»፣ ለመመለስ «ተመለስ»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ።",
   "contact": "ልናገኝዎ የምንችልበት ስልክ ቁጥር ወይም ኢሜይል ምንድን ነው? ስለዚህ ፕሮግራም ለማግኘት ብቻ ነው የሚያገለግለው። ስልክ ቁጥር በዜሮ የሚጀምር ባለ አሥር አሃዝ ነው። መናገር ወይም መጻፍ ይችላሉ። መልስዎን አሁን ይናገሩ። ለመቀጠል «ቀጥል»፣ ለመመለስ «ተመለስ»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ።",
   "idRoute": "ማንነትዎን እንዴት ማሳየት ይፈልጋሉ? 1: ቀበሌ መታወቂያ ወይም ፓስፖርት. 2: የስደተኛ ወይም ተመላሽ መታወቂያ. 3: ሌላ ሰነድ. 4: ሰነድ የለኝም። አጋር ድርጅት እንዲያመላክተኝ ይጠይቁ. የምርጫዎን ቁጥር ወይም ስም ይናገሩ። ለመቀጠል «ቀጥል»፣ ለመመለስ «ተመለስ»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ።",
-  "support": "ምን ዓይነት እገዛ ይጠቅምዎታል? የፈለጉትን ይምረጡ። ይህን መዝለል ይችላሉ። ማስረጃ አያስፈልግም። አዘጋጆቹ ብቻ ያዩታል፤ ለእርስዎ እገዛ ለማዘጋጀት ብቻ። 1: ስክሪን ሪደር እጠቀማለሁ. 2: ትልቅ ጽሑፍ. 3: መልሶቼን በድምፅ መናገር እመርጣለሁ. 4: የኢትዮጵያ ምልክት ቋንቋ አስተርጓሚ. 5: ቀላል ቃላትና ሥዕሎች. 6: እባክዎ ደውለው ያግዙኝ. የምርጫዎን ቁጥር ወይም ስም ይናገሩ። ለመቀጠል «ቀጥል»፣ ለመመለስ «ተመለስ»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ። ይህን ጥያቄ ለመዝለል «ዝለል» ይበሉ።",
+  "support": "ምን ዓይነት እገዛ ይጠቅምዎታል? የፈለጉትን ይምረጡ። ይህን መዝለል ይችላሉ። ማስረጃ አያስፈልግም። አዘጋጆቹ ብቻ ያዩታል፤ ለእርስዎ እገዛ ለማዘጋጀት ብቻ። 1: ስክሪን ሪደር እጠቀማለሁ. 2: ትልቅ ጽሑፍ. 3: መልሶቼን በድምፅ መናገር እመርጣለሁ. 4: የኢትዮጵያ ምልክት ቋንቋ አስተርጓሚ. 5: በቪዲዮዎች ላይ የጽሑፍ ትርጉም. 6: በቋንቋዬ አስተርጓሚ. 7: ለፈተናና ለተግባራት ተጨማሪ ጊዜ. 8: ቀላል ቃላትና ሥዕሎች. 9: እባክዎ ደውለው ያግዙኝ. 10: መናገር አልፈልግም. የምርጫዎን ቁጥር ወይም ስም ይናገሩ። ለመቀጠል «ቀጥል»፣ ለመመለስ «ተመለስ»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ። ይህን ጥያቄ ለመዝለል «ዝለል» ይበሉ።",
   "needs": "በሥራ ላይ ምን እገዛ ያስፈልግዎታል? የፈለጉትን ይምረጡ። ሚስጥራዊ ነው። በመሣሪያዎ ላይ ብቻ ይቆያል፤ ተስማሚ ሥራዎችን ለማሳየት ብቻ ነው። 1: ከደረጃ ነፃ የሥራ ቦታ. 2: ለስክሪን ሪደር ተስማሚ መሣሪያዎች. 3: የምልክት ቋንቋ አስተርጓሚ. 4: ተለዋዋጭ የሥራ ሰዓት. 5: ከቤት መሥራት. የምርጫዎን ቁጥር ወይም ስም ይናገሩ። ለመቀጠል «ቀጥል»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ። ይህን ጥያቄ ለመዝለል «ዝለል» ይበሉ።",
   "why": "ይህን ሥራ ለምን ይፈልጋሉ? ጥቂት ቃላት በቂ ናቸው። በድምፅ መናገርም ይችላሉ። መልስዎን አሁን ይናገሩ። ለመቀጠል «ቀጥል»፣ ለመመለስ «ተመለስ»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ።",
   "job": "የሥራው መጠሪያ ምንድን ነው? መልስዎን አሁን ይናገሩ። ለመቀጠል «ቀጥል»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ።",
@@ -220,6 +226,7 @@ CLIPS = json.loads(r'''{
   "queued": "ከመስመር ውጭ ነዎት። መልሶችዎ በዚህ መሣሪያ ላይ ተቀምጠዋል፤ መስመር ላይ ሲመለሱ ይላካሉ።",
   "sentLater": "የተቀመጡት መልሶችዎ አሁን ተልከዋል።",
   "tapToHear": "ጥያቄዎቹን ለመስማት ማንኛውንም ቁልፍ ይጫኑ ወይም ማያውን ይንኩ።",
+  "n10": "አሥር",
   "n0": "ዜሮ",
   "n1": "አንድ",
   "n2": "ሁለት",
@@ -285,8 +292,12 @@ CLIPS = json.loads(r'''{
   "o_support_large": "ትልቅ ጽሑፍ",
   "o_support_voice": "መልሶቼን በድምፅ መናገር እመርጣለሁ",
   "o_support_sign": "የኢትዮጵያ ምልክት ቋንቋ አስተርጓሚ",
+  "o_support_captions": "በቪዲዮዎች ላይ የጽሑፍ ትርጉም",
+  "o_support_interp": "በቋንቋዬ አስተርጓሚ",
+  "o_support_time": "ለፈተናና ለተግባራት ተጨማሪ ጊዜ",
   "o_support_simple": "ቀላል ቃላትና ሥዕሎች",
   "o_support_human": "እባክዎ ደውለው ያግዙኝ",
+  "o_support_prefer": "መናገር አልፈልግም",
   "q_needs": "በሥራ ላይ ምን እገዛ ያስፈልግዎታል? የፈለጉትን ይምረጡ።",
   "o_needs_stepfree": "ከደረጃ ነፃ የሥራ ቦታ",
   "o_needs_reader": "ለስክሪን ሪደር ተስማሚ መሣሪያዎች",
@@ -313,7 +324,7 @@ CLIPS = json.loads(r'''{
   "fullName": "Maqaan kee guutuun eenyu? Maqaan guyyaa guyyaan itti fayyadamtu gahaadha. Amma deebii kee dubbadhu. Itti fufuuf Itti fufi, deebi'uuf Duubatti, ammas dhaga'uuf Sagaleedhaan dubbisi jedhi.",
   "contact": "Lakkoofsa bilbilaa ykn imeelii kamiin si quunnamuu dandeenya? Waa'ee sagantaa kanaa qofa si quunnamuuf. Lakkoofsi bilbilaa dijiitii 10 qaba, 0n jalqaba. Dubbachuu ykn barreessuu dandeessa. Amma deebii kee dubbadhu. Itti fufuuf Itti fufi, deebi'uuf Duubatti, ammas dhaga'uuf Sagaleedhaan dubbisi jedhi.",
   "idRoute": "Eenyummaa kee akkamitti agarsiisuu barbaadda? 1: Waraqaa eenyummaa gandaa ykn paaspoortii. 2: Waraqaa eenyummaa baqataa ykn deebi'aa. 3: Sanada biraa. 4: Waraqaa eenyummaa hin qabu. Karaa dhaabbata michuu naaf ergaa. Lakkoofsa ykn maqaa filannoo keetii jedhi. Itti fufuuf Itti fufi, deebi'uuf Duubatti, ammas dhaga'uuf Sagaleedhaan dubbisi jedhi.",
-  "support": "Deeggarsa akkamii si gargaara? Kamiyyuu filadhu. Irra darbuu dandeessa. Ragaan hin barbaachisu. Qindeessitoota qofatu arga, deeggarsa siif qopheessuuf qofa. 1: Dubbisaa iskiriinii nan fayyadama. 2: Barreeffama guddaa. 3: Deebii koo dubbachuu nan filadha. 4: Hiikaa Afaan Mallattoo Itoophiyaa. 5: Jechoota salphaa fi fakkiiwwan. 6: Maaloo na gargaaruuf natti bilbilaa. Lakkoofsa ykn maqaa filannoo keetii jedhi. Itti fufuuf Itti fufi, deebi'uuf Duubatti, ammas dhaga'uuf Sagaleedhaan dubbisi jedhi. Gaaffii kana irra darbuuf Irra darbi jedhi.",
+  "support": "Deeggarsa akkamii si gargaara? Kamiyyuu filadhu. Irra darbuu dandeessa. Ragaan hin barbaachisu. Qindeessitoota qofatu arga, deeggarsa siif qopheessuuf qofa. 1: Dubbisaa iskiriinii nan fayyadama. 2: Barreeffama guddaa. 3: Deebii koo dubbachuu nan filadha. 4: Hiikaa Afaan Mallattoo Itoophiyaa. 5: Barreeffama viidiyoo irratti. 6: Hiikaa afaan kootiin. 7: Qormaataa fi hojiif yeroo dabalataa. 8: Jechoota salphaa fi fakkiiwwan. 9: Maaloo na gargaaruuf natti bilbilaa. 10: Dubbachuu hin barbaadu. Lakkoofsa ykn maqaa filannoo keetii jedhi. Itti fufuuf Itti fufi, deebi'uuf Duubatti, ammas dhaga'uuf Sagaleedhaan dubbisi jedhi. Gaaffii kana irra darbuuf Irra darbi jedhi.",
   "needs": "Hojii irratti deeggarsa akkamii si barbaachisa? Kamiyyuu filadhu. Dhuunfaa. Kun meeshaa kee irratti hafa, hojii si mijatu agarsiisuuf qofa itti fayyadamna. 1: Bakka hojii gulantaa hin qabne. 2: Meeshaalee dubbisaa iskiriinii waliin hojjetan. 3: Hiikaa afaan mallattoo. 4: Sa'aatii hojii jijjiiramaa. 5: Mana irraa hojjechuu. Lakkoofsa ykn maqaa filannoo keetii jedhi. Itti fufuuf Itti fufi, ammas dhaga'uuf Sagaleedhaan dubbisi jedhi. Gaaffii kana irra darbuuf Irra darbi jedhi.",
   "why": "Hojii kana maaliif barbaadda? Jechoota muraasni gahaadha. Dubbachuus dandeessa. Amma deebii kee dubbadhu. Itti fufuuf Itti fufi, deebi'uuf Duubatti, ammas dhaga'uuf Sagaleedhaan dubbisi jedhi.",
   "job": "Maqaan hojii kanaa maali? Amma deebii kee dubbadhu. Itti fufuuf Itti fufi, ammas dhaga'uuf Sagaleedhaan dubbisi jedhi.",
@@ -336,6 +347,7 @@ CLIPS = json.loads(r'''{
   "queued": "Ati toora ala jirta. Deebiin kee meeshaa kana irratti kuufameera, yeroo toora irratti deebitu ni ergama.",
   "sentLater": "Deebiin kee kuufame amma ergameera.",
   "tapToHear": "Gaaffilee dhaga'uuf qabduu kamiyyuu tuqi ykn iskiriinii tuqi.",
+  "n10": "Kudhan",
   "n0": "Zeeroo",
   "n1": "Tokko",
   "n2": "Lama",
@@ -401,8 +413,12 @@ CLIPS = json.loads(r'''{
   "o_support_large": "Barreeffama guddaa",
   "o_support_voice": "Deebii koo dubbachuu nan filadha",
   "o_support_sign": "Hiikaa Afaan Mallattoo Itoophiyaa",
+  "o_support_captions": "Barreeffama viidiyoo irratti",
+  "o_support_interp": "Hiikaa afaan kootiin",
+  "o_support_time": "Qormaataa fi hojiif yeroo dabalataa",
   "o_support_simple": "Jechoota salphaa fi fakkiiwwan",
   "o_support_human": "Maaloo na gargaaruuf natti bilbilaa",
+  "o_support_prefer": "Dubbachuu hin barbaadu",
   "q_needs": "Hojii irratti deeggarsa akkamii si barbaachisa? Kamiyyuu filadhu.",
   "o_needs_stepfree": "Bakka hojii gulantaa hin qabne",
   "o_needs_reader": "Meeshaalee dubbisaa iskiriinii waliin hojjetan",
@@ -429,7 +445,7 @@ CLIPS = json.loads(r'''{
   "fullName": "ምሉእ ስምኩም መን እዩ? እቲ መዓልታዊ እትጥቀሙሉ ስም ይኣክል። ሕጂ መልስኹም ተዛረቡ። ንምቕጻል «ቀጽል»፣ ንምምላስ «ተመለስ»፣ ደጊምኩም ንምስማዕ «ኣንብበለይ» በሉ።",
   "contact": "ብኣየናይ ቁጽሪ ስልኪ ወይ ኢመይል ክንረኽበኩም ንኽእል? ብዛዕባ እዚ መደብ ንምርካብኩም ጥራይ። ቁጽሪ ስልኪ 10 ኣሃዝ ኣለዎ፣ ብ0 ይጅምር። ክትዛረቡዎ ወይ ክትጽሕፉዎ ትኽእሉ ኢኹም። ሕጂ መልስኹም ተዛረቡ። ንምቕጻል «ቀጽል»፣ ንምምላስ «ተመለስ»፣ ደጊምኩም ንምስማዕ «ኣንብበለይ» በሉ።",
   "idRoute": "መንነትኩም ብኸመይ ከተርእዩ ትደልዩ? 1: መንነት ቀበሌ ወይ ፓስፖርት. 2: መንነት ስደተኛ ወይ ተመላሲ. 3: ካልእ ሰነድ. 4: መንነት የብለይን። ብመሻርኽቲ ትካል ኣመሓላልፉኒ. ቁጽሪ ወይ ስም ምርጫኹም በሉ። ንምቕጻል «ቀጽል»፣ ንምምላስ «ተመለስ»፣ ደጊምኩም ንምስማዕ «ኣንብበለይ» በሉ።",
-  "support": "እንታይ ደገፍ ይሕግዘኩም? ዝኾነ ምረጹ። ክትሓልፍዎ ትኽእሉ ኢኹም። መረጋገጺ ኣየድልን። ኣወሃሃድቲ ጥራይ እዮም ዝርእይዎ፣ ንዓኹም ደገፍ ንምድላው ጥራይ። 1: ስክሪን ሪደር እጥቀም. 2: ዓቢ ጽሑፍ. 3: መልስታተይ ብድምጺ ክዛረብ እመርጽ. 4: ተርጓሚ ቋንቋ ምልክት ኢትዮጵያ. 5: ቀለልቲ ቃላትን ስእልታትን. 6: በጃኹም ደዊልኩም ሓግዙኒ. ቁጽሪ ወይ ስም ምርጫኹም በሉ። ንምቕጻል «ቀጽል»፣ ንምምላስ «ተመለስ»፣ ደጊምኩም ንምስማዕ «ኣንብበለይ» በሉ። ነዚ ሕቶ ንምሕላፍ «ሕለፍ» በሉ።",
+  "support": "እንታይ ደገፍ ይሕግዘኩም? ዝኾነ ምረጹ። ክትሓልፍዎ ትኽእሉ ኢኹም። መረጋገጺ ኣየድልን። ኣወሃሃድቲ ጥራይ እዮም ዝርእይዎ፣ ንዓኹም ደገፍ ንምድላው ጥራይ። 1: ስክሪን ሪደር እጥቀም. 2: ዓቢ ጽሑፍ. 3: መልስታተይ ብድምጺ ክዛረብ እመርጽ. 4: ተርጓሚ ቋንቋ ምልክት ኢትዮጵያ. 5: ኣብ ቪድዮታት ጽሑፍ. 6: ብቋንቋየ ተርጓሚ. 7: ንፈተናታትን ዕማማትን ተወሳኺ ግዜ. 8: ቀለልቲ ቃላትን ስእልታትን. 9: በጃኹም ደዊልኩም ሓግዙኒ. 10: ክገልጽ ኣይደልን. ቁጽሪ ወይ ስም ምርጫኹም በሉ። ንምቕጻል «ቀጽል»፣ ንምምላስ «ተመለስ»፣ ደጊምኩም ንምስማዕ «ኣንብበለይ» በሉ። ነዚ ሕቶ ንምሕላፍ «ሕለፍ» በሉ።",
   "needs": "ኣብ ስራሕ እንታይ ደገፍ የድልየኩም? ዝኾነ ምረጹ። ብሕታዊ እዩ። ኣብ መሳርሒኹም ጥራይ ይጸንሕ፣ ተስማዕቲ ስራሓት ንምርኣይ ጥራይ ይጥቀመሉ። 1: ብዘይ መሳልል ዝኣቶ ቦታ ስራሕ. 2: ምስ ስክሪን ሪደር ዝሰማምዑ መሳርሒታት. 3: ተርጓሚ ቋንቋ ምልክት. 4: ተዓጻጻፊ ሰዓታት ስራሕ. 5: ካብ ገዛ ምስራሕ. ቁጽሪ ወይ ስም ምርጫኹም በሉ። ንምቕጻል «ቀጽል»፣ ደጊምኩም ንምስማዕ «ኣንብበለይ» በሉ። ነዚ ሕቶ ንምሕላፍ «ሕለፍ» በሉ።",
   "why": "ነዚ ስራሕ ስለምንታይ ትደልይዎ? ውሑዳት ቃላት ይኣኽሉ። ብድምጺ እውን ክትዛረቡ ትኽእሉ ኢኹም። ሕጂ መልስኹም ተዛረቡ። ንምቕጻል «ቀጽል»፣ ንምምላስ «ተመለስ»፣ ደጊምኩም ንምስማዕ «ኣንብበለይ» በሉ።",
   "job": "ሽም እቲ ስራሕ እንታይ እዩ? ሕጂ መልስኹም ተዛረቡ። ንምቕጻል «ቀጽል»፣ ደጊምኩም ንምስማዕ «ኣንብበለይ» በሉ።",
@@ -452,6 +468,7 @@ CLIPS = json.loads(r'''{
   "queued": "ካብ መስመር ወጻኢ ኢኹም። መልስታትኩም ኣብዚ መሳርሒ ተዓቂቦም ኣለዉ፣ ናብ መስመር ምስ ተመለስኩም ክለኣኹ እዮም።",
   "sentLater": "እቶም ዝተዓቀቡ መልስታትኩም ሕጂ ተላኢኾም።",
   "tapToHear": "ሕቶታት ንምስማዕ ዝኾነ መጠወቒ ጠውቑ ወይ ስክሪን ተንክፉ።",
+  "n10": "ዓሰርተ",
   "n0": "ዜሮ",
   "n1": "ሓደ",
   "n2": "ክልተ",
@@ -517,8 +534,12 @@ CLIPS = json.loads(r'''{
   "o_support_large": "ዓቢ ጽሑፍ",
   "o_support_voice": "መልስታተይ ብድምጺ ክዛረብ እመርጽ",
   "o_support_sign": "ተርጓሚ ቋንቋ ምልክት ኢትዮጵያ",
+  "o_support_captions": "ኣብ ቪድዮታት ጽሑፍ",
+  "o_support_interp": "ብቋንቋየ ተርጓሚ",
+  "o_support_time": "ንፈተናታትን ዕማማትን ተወሳኺ ግዜ",
   "o_support_simple": "ቀለልቲ ቃላትን ስእልታትን",
   "o_support_human": "በጃኹም ደዊልኩም ሓግዙኒ",
+  "o_support_prefer": "ክገልጽ ኣይደልን",
   "q_needs": "ኣብ ስራሕ እንታይ ደገፍ የድልየኩም? ዝኾነ ምረጹ።",
   "o_needs_stepfree": "ብዘይ መሳልል ዝኣቶ ቦታ ስራሕ",
   "o_needs_reader": "ምስ ስክሪን ሪደር ዝሰማምዑ መሳርሒታት",
@@ -545,7 +566,7 @@ CLIPS = json.loads(r'''{
   "fullName": "Waa maxay magacaaga oo buuxa? Magaca aad maalin walba isticmaasho waa ku filan yahay. Hadda ku hadal jawaabtaada. Dheh Xiga si aad u sii socoto, Dib u noqo si aad dib ugu noqoto, ama Akhri si aad mar kale u maqasho.",
   "contact": "Lambarkee taleefan ama iimayl ayaan isticmaali karnaa? Kaliya si laguula soo xiriiro barnaamijkan. Lambar taleefan wuxuu leeyahay 10 god, wuxuuna ku bilaabmaa 0. Waad dhihi kartaa ama qori kartaa. Hadda ku hadal jawaabtaada. Dheh Xiga si aad u sii socoto, Dib u noqo si aad dib ugu noqoto, ama Akhri si aad mar kale u maqasho.",
   "idRoute": "Sidee baad u rabtaa inaad muujiso cidda aad tahay? 1: Aqoonsiga kebele ama baasaboor. 2: Aqoonsiga qaxootiga ama soo-noqotaha. 3: Dukumenti kale. 4: Ma haysto aqoonsi. Iigu gudbiya hay'ad iskaashi. Dheh lambarka ama magaca doorashadaada. Dheh Xiga si aad u sii socoto, Dib u noqo si aad dib ugu noqoto, ama Akhri si aad mar kale u maqasho.",
-  "support": "Taageero noocee ah ayaa ku caawin lahayd? Dooro mid kasta. Waad ka boodi kartaa. Caddayn looma baahna. Kaliya qabanqaabiyayaashu ayaa arka, si ay kuugu diyaariyaan caawimaad. 1: Waxaan isticmaalaa akhriyaha shaashadda. 2: Qoraal weyn. 3: Waxaan doorbidaa inaan ku hadlo jawaabahayga. 4: Turjubaan Luqadda Calaamadaha Itoobiya. 5: Erayo fudud iyo sawirro. 6: Fadlan ii soo wac si aad ii caawiso. Dheh lambarka ama magaca doorashadaada. Dheh Xiga si aad u sii socoto, Dib u noqo si aad dib ugu noqoto, ama Akhri si aad mar kale u maqasho. Dheh Ka bood si aad su'aashan uga boodo.",
+  "support": "Taageero noocee ah ayaa ku caawin lahayd? Dooro mid kasta. Waad ka boodi kartaa. Caddayn looma baahna. Kaliya qabanqaabiyayaashu ayaa arka, si ay kuugu diyaariyaan caawimaad. 1: Waxaan isticmaalaa akhriyaha shaashadda. 2: Qoraal weyn. 3: Waxaan doorbidaa inaan ku hadlo jawaabahayga. 4: Turjubaan Luqadda Calaamadaha Itoobiya. 5: Qoraal ku qoran muuqaallada. 6: Turjubaan ku hadla luqaddayda. 7: Waqti dheeraad ah oo imtixaannada iyo hawlaha. 8: Erayo fudud iyo sawirro. 9: Fadlan ii soo wac si aad ii caawiso. 10: Ma doonayo inaan sheego. Dheh lambarka ama magaca doorashadaada. Dheh Xiga si aad u sii socoto, Dib u noqo si aad dib ugu noqoto, ama Akhri si aad mar kale u maqasho. Dheh Ka bood si aad su'aashan uga boodo.",
   "needs": "Taageero noocee ah ayaad ugu baahan tahay shaqada? Dooro mid kasta. Gaar ah. Wuxuu ku jiraa qalabkaaga oo kaliya waxaa loo isticmaalaa in lagu tuso shaqooyin ku habboon. 1: Goob shaqo oo aan jaranjaro lahayn. 2: Qalab ku habboon akhriyaha shaashadda. 3: Turjubaan luqadda calaamadaha. 4: Saacado dabacsan. 5: Ka shaqeyn guriga. Dheh lambarka ama magaca doorashadaada. Dheh Xiga si aad u sii socoto, ama Akhri si aad mar kale u maqasho. Dheh Ka bood si aad su'aashan uga boodo.",
   "why": "Maxaad u rabtaa shaqadan? Erayo kooban ayaa ku filan. Waad ku hadli kartaa beddelkeeda. Hadda ku hadal jawaabtaada. Dheh Xiga si aad u sii socoto, Dib u noqo si aad dib ugu noqoto, ama Akhri si aad mar kale u maqasho.",
   "job": "Waa maxay magaca shaqada? Hadda ku hadal jawaabtaada. Dheh Xiga si aad u sii socoto, ama Akhri si aad mar kale u maqasho.",
@@ -568,6 +589,7 @@ CLIPS = json.loads(r'''{
   "queued": "Khadka kama jirtid. Jawaabahaaga waxay ku kaydsan yihiin qalabkan, waxaana la diri doonaa markaad khadka ku soo noqoto.",
   "sentLater": "Jawaabahaagii kaydsanaa hadda waa la diray.",
   "tapToHear": "Riix fure kasta ama taabo shaashadda si aad u maqasho su'aalaha.",
+  "n10": "Toban",
   "n0": "Eber",
   "n1": "Kow",
   "n2": "Laba",
@@ -632,8 +654,12 @@ CLIPS = json.loads(r'''{
   "o_support_large": "Qoraal weyn",
   "o_support_voice": "Waxaan doorbidaa inaan ku hadlo jawaabahayga",
   "o_support_sign": "Turjubaan Luqadda Calaamadaha Itoobiya",
+  "o_support_captions": "Qoraal ku qoran muuqaallada",
+  "o_support_interp": "Turjubaan ku hadla luqaddayda",
+  "o_support_time": "Waqti dheeraad ah oo imtixaannada iyo hawlaha",
   "o_support_simple": "Erayo fudud iyo sawirro",
   "o_support_human": "Fadlan ii soo wac si aad ii caawiso",
+  "o_support_prefer": "Ma doonayo inaan sheego",
   "q_needs": "Taageero noocee ah ayaad ugu baahan tahay shaqada? Dooro mid kasta.",
   "o_needs_stepfree": "Goob shaqo oo aan jaranjaro lahayn",
   "o_needs_reader": "Qalab ku habboon akhriyaha shaashadda",
@@ -660,7 +686,7 @@ CLIPS = json.loads(r'''{
   "fullName": "Wo'mu su'mikki ayeti? Barru barrunni horoonsi'ratto su'mu ikkanno. Xa dawarokki hasaawi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi.",
   "contact": "Hiittoo silki kiiro woy imeelenni dandoonketa? Tenne pirogiraame daafira dandoonketa calla. Silki kiiro tonne kiiro afi'rinohanna zeerotenni hanafanno. Hasaawa woy borreessa dandaatto. Xa dawarokki hasaawi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi.",
   "idRoute": "Ati ayeti ikkitoota hiittoo leellisate hasatto? 1: Qebeele eeshsha woy paaspoorte. 2: Baqatu woy higgaanchu eeshsha. 3: Wole bortaje. 4: Eeshsha diafi'rino. Jaala dirijjiteenni hoolisi'e. Doorshikki kiiro woy su'ma yi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi.",
-  "support": "Hiittoo kaa'lo kaa'lannohe? Ayeeno doori. Tenne darba dandaatto. Ragi dihasiissanno. Qixxeessitooti calla la'anno, kaa'lo qixxeessate calla. 1: Leellisaancho nabbawaancho horoonsi'reemmo. 2: Lowo borro. 3: Dawaro qaalinke hasaawa doorreemmo. 4: Itiyoophiyu Malaatu Afoo turjimaancho. 5: Shota qaalla nna misilla. 6: Ikkitinni kaa'lo daafira silki xa'mi. Doorshikki kiiro woy su'ma yi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi. Tenne xa'mo darbate Darbi yi.",
+  "support": "Hiittoo kaa'lo kaa'lannohe? Ayeeno doori. Tenne darba dandaatto. Ragi dihasiissanno. Qixxeessitooti calla la'anno, kaa'lo qixxeessate calla. 1: Leellisaancho nabbawaancho horoonsi'reemmo. 2: Lowo borro. 3: Dawaro qaalinke hasaawa doorreemmo. 4: Itiyoophiyu Malaatu Afoo turjimaancho. 5: Viidiyoo aana borro. 6: Afoo'yanni turjimaancho. 7: Fayyimmaranna loosora roore yanna. 8: Shota qaalla nna misilla. 9: Ikkitinni kaa'lo daafira silki xa'mi. 10: Kulla dihasi'reemmo. Doorshikki kiiro woy su'ma yi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi. Tenne xa'mo darbate Darbi yi.",
   "needs": "Loosu aana hiittoo kaa'lo hasiissannohe? Ayeeno doori. Ma'nunni. Konne uduunnichokki aana keeshshanno, coyi'nanno loosuwa leellisate calla. 1: Gadu dinokki loosu bayicho. 2: Leellisaancho nabbawaanchora coyi'nanno uduunnicho. 3: Malaatu afoo turjimaancho. 4: Soorramanno loosu saate. 5: Mineenni loosa. Doorshikki kiiro woy su'ma yi. Albisate Albisi, wole macciishshate Qaalinke nabbawi yi. Tenne xa'mo darbate Darbi yi.",
   "why": "Konne loosu mayira hasatto? Shiima qaalla ikkanno. Hasaawa dandaatto. Xa dawarokki hasaawi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi.",
   "job": "Loosu su'mi ayeti? Xa dawarokki hasaawi. Albisate Albisi, wole macciishshate Qaalinke nabbawi yi.",
@@ -683,6 +709,7 @@ CLIPS = json.loads(r'''{
   "queued": "Interneete aana dikiitto. Dawaro keeshshi konne uduunnicho aana agarantino, interneete aana higgitto wote soyamanno.",
   "sentLater": "Agarantino dawaro keeshshi xa soyamino.",
   "tapToHear": "Xa'muwa macciishshate ayee ilkaawa xiiwi woy leellisaancho kaali.",
+  "n10": "Tonne",
   "n0": "Zeero",
   "n1": "Mitto",
   "n2": "Lame",
@@ -748,8 +775,12 @@ CLIPS = json.loads(r'''{
   "o_support_large": "Lowo borro",
   "o_support_voice": "Dawaro qaalinke hasaawa doorreemmo",
   "o_support_sign": "Itiyoophiyu Malaatu Afoo turjimaancho",
+  "o_support_captions": "Viidiyoo aana borro",
+  "o_support_interp": "Afoo'yanni turjimaancho",
+  "o_support_time": "Fayyimmaranna loosora roore yanna",
   "o_support_simple": "Shota qaalla nna misilla",
   "o_support_human": "Ikkitinni kaa'lo daafira silki xa'mi",
+  "o_support_prefer": "Kulla dihasi'reemmo",
   "q_needs": "Loosu aana hiittoo kaa'lo hasiissannohe? Ayeeno doori.",
   "o_needs_stepfree": "Gadu dinokki loosu bayicho",
   "o_needs_reader": "Leellisaancho nabbawaanchora coyi'nanno uduunnicho",
@@ -868,8 +899,18 @@ for lang in LANGS_TO_MAKE:
                     et, em = english_voice(); w = synth(et, em, part.lower())
                 else:
                     fixed = PRONOUNCE.get(lang, {}).get(part.strip(" .,!?።፣"))
-                    s = fixed if fixed else (romanise(part, lang) if needs_latin else part)
+                    if fixed:
+                        s = fixed
+                    elif needs_latin and any(w.strip(" .,!?።፣") in PRONOUNCE.get(lang, {}) for w in part.split()):
+                        # A sentence with one of those words in it (a numbered choice): that word as chosen, the rest romanised.
+                        s = " ".join(PRONOUNCE[lang].get(w.strip(" .,!?።፣")) or romanise(w, lang) for w in part.split())
+                    else:
+                        s = romanise(part, lang) if needs_latin else part
                     s = s.lower()
+                    # Letters this voice has no sound for: the nearest one it has (ቪዲዮ "video" -> "bidiyo", as many say it).
+                    for miss, near in (("v", "b"), ("p", "b")):
+                        if miss not in vocab and near in vocab:
+                            s = s.replace(miss, near)
                     lost = {c for c in s if c != " " and c not in vocab}
                     if lost:
                         dropped.setdefault(lang, {}).setdefault("".join(sorted(lost)), []).append(cid)

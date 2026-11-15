@@ -324,3 +324,27 @@ test('review page by voice: every clip it plays exists, in every language', asyn
     for (const id of new Set(ids)) expect((await request.head(`http://localhost:3000/audio/${l}/${id}.mp3`)).status(), `${l}/${id}.mp3`).toBe(200);
   }
 });
+
+test('outside Savanna: a blank page with no styles at all, only the two lines; the organisers’ events fire', async ({ page }) => {
+  const events = [];
+  await page.exposeFunction('__ev', (t, d) => events.push([t, d]));
+  await page.addInitScript(() => ['db-signup:step', 'db-signup:done', 'db-signup:support'].forEach(t => document.addEventListener(t, e => window.__ev(t, e.detail))));
+  await page.goto('/blank.html');
+  const W = page.locator('db-onboarding');
+  await expect(W.locator('#h')).toHaveText('Which language would you like to use?');
+  await axe(page, 'blank page');
+  await W.locator('[data-pick=en]').click(); await W.locator('[data-ra=n]').click(); await W.locator('[data-start=t]').click();
+  await W.locator('[data-next]').click();
+  await W.locator('#f').fill('Blank Page Tester'); await W.locator('[data-next]').click();
+  await W.locator('#f').fill('0911223344'); await W.locator('[data-next]').click();
+  await W.locator('input[value=refer]').check(); await W.locator('[data-next]').click();
+  await W.locator('input[value=prefer]').check(); await W.locator('[data-next]').click();
+  await expect(W.locator('#h')).toHaveText('Check your answers');
+  await expect(W.locator('[data-consent=s]')).toHaveCount(0); // "prefer not to say": no second consent box, nothing about support sent
+  await W.locator('#cons').check(); await W.locator('[data-send]').click();
+  await expect(W.locator('#h')).toHaveText('Thank you. We received your answers.');
+  expect(events.some(([t, d]) => t === 'db-signup:step' && d.step === 2)).toBe(true);
+  const done = events.find(([t]) => t === 'db-signup:done');
+  expect(done[1].profile.idRoute).toBe('refer'); // no ID: the "refer me" route finishes successfully
+  expect(events.some(([t]) => t === 'db-signup:support')).toBe(false);
+});

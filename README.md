@@ -1,14 +1,22 @@
-# Inclusive Access: accessible onboarding and career gateway plug-in (Track 1)
+# Inclusive Access · Track 1: Accessible onboarding · Team Pixel
 
-A drop-in plug-in that adds accessible **sign-up**, **job search and application**, and an **employer job form** to any website or learning platform, in **English, አማርኛ, Afaan Oromoo, ትግርኛ, Soomaali and Sidaamu Afoo**. It is one script and one HTML tag, not a standalone site. People can type, speak, or have every page read aloud. The keyboard, NVDA and TalkBack are fully supported.
+**Team Pixel:** Newal Elias, Samuel Girma, Nobel Alemayehu, Megdelawit Abraham · **Co-designer:** Tinsae
+**Live:** https://inclusive-access.onrender.com (no login) · **Licence:** [MIT](LICENSE) (the generated voice clips are CC-BY-NC 4.0, see [Libraries and their licences](#libraries-and-their-licences))
+Partner install guide: **[PARTNER_GUIDE.md](PARTNER_GUIDE.md)** · Put it online: **[DEPLOY.md](DEPLOY.md)** · Accessibility: **[CONFORMANCE.md](CONFORMANCE.md)** and the full **[WCAG 2.2 AA report](docs/WCAG-2.2-AA-Report.md)**
 
-- Team: _add names_ · Co-designer: _add name_ · Licence: [MIT](LICENSE). The generated voice clips are CC-BY-NC 4.0, see [Build vs reuse](#build-vs-reuse).
-- Partners: step-by-step installation is in **[PARTNER_GUIDE.md](PARTNER_GUIDE.md)**.
-- Accessibility report: **[docs/WCAG-2.2-AA-Report.md](docs/WCAG-2.2-AA-Report.md)** (summary in [CONFORMANCE.md](CONFORMANCE.md)).
+## What it does
 
-## Run it (judges: about 10 minutes)
+Inclusive Access is a drop-in module that adds an accessible **sign-up**, a **job search and application**, and an **employer job form** to any website or learning platform, Savanna first, with one script tag. People can type, speak their answers, or have every page read aloud, in **English, አማርኛ, Afaan Oromoo, ትግርኛ, Soomaali and Sidaamu Afoo**, with the keyboard, NVDA or TalkBack. It never times out, never demands an ID, keeps support needs private, and sends nothing without the person's consent.
 
-You need **Docker Desktop** (or Node.js 20+ for the second option) and **git**.
+## The main task we tested
+
+**A blind learner with no kebele ID signs up by voice, in Amharic, on a low-cost Android phone, with nobody helping.**
+
+The same engine runs the job application and the employer accommodations form (the career gateway). Results with our co-designer are at the end of [CONFORMANCE.md](CONFORMANCE.md).
+
+## Run it
+
+You need **Docker Desktop** and **git** (or Node.js 20+ instead of Docker).
 
 ```sh
 git clone https://github.com/newal-dev/new-track1.git
@@ -16,127 +24,166 @@ cd new-track1
 docker compose up --build
 ```
 
-Wait until you see `Plugin server on http://localhost:3000`, then open:
+Wait for `Plugin server on http://localhost:3000`, then open:
 
 | Open | What you see |
 |---|---|
-| http://localhost:8080 | Demo partner website with the sign-up form. The nav switches to **Apply for a job** and **For employers** |
-| http://localhost:8080/savanna.html | The same plug-in inside a Savanna-style course page (`<db-onboarding>`) |
-| http://localhost:3000/demo/lms | A built-in learning platform. Each button does a real, signed **LTI 1.3** launch |
+| http://localhost:8080 | Demo partner website with the sign-up form. Its menu switches to **Apply for a job** and **For employers** |
+| http://localhost:8080/blank.html | **The judge's test:** an empty page with no Bootstrap, no Savanna CSS and no styles at all, only the two lines below |
+| http://localhost:8080/savanna.html | The same plug-in inside a Savanna-style course page |
+| http://localhost:3000/docs | **Interactive API documentation** (Swagger UI): try every call in the browser |
+| http://localhost:3000/demo/lms | A built-in learning platform: each button does a real, signed **LTI 1.3** launch |
 | http://localhost:3000/v1/jobs?format=jsonld | Jobs as **schema.org/JobPosting** |
 | http://localhost:3000/demo/sms-inbox | Simulated SMS confirmations (no SMS gateway, no cost) |
-| http://localhost:3000/openapi.yaml | The REST API specification |
 | http://localhost:8080/design-system.html | Design system: tokens, themes, components |
 
-**Without Docker:** `npm ci`, then `npm start` in one terminal and `npm run demo` in another. The URLs are the same.
+- **Without Docker:** `npm ci`, then `npm start` in one terminal and `npm run demo` in another. The addresses are the same.
+- **One server, one address:** the API server also serves the demo partner site at `/site/` (the bare address opens it), so the whole MVP deploys as one container. Step by step for Render's free plan (a `render.yaml` blueprint is included): [DEPLOY.md](DEPLOY.md).
+- **Settings:** all optional for a demo. Copy [`.env.example`](.env.example) to `.env`; `docker compose` passes them on. Never commit a real `.env`.
 
-**Online (one server, one address):** the API server also serves the demo partner site at `/site/` (the bare address opens it), so the whole MVP can be deployed as one container. Step by step for Render's free plan (a `render.yaml` blueprint is included): **[DEPLOY.md](DEPLOY.md)**.
+**Try it in 3 minutes:** open http://localhost:8080 and choose **አማርኛ**. Choose **Yes** to read aloud and listen; press **Escape**, then use only Tab, Space and Enter. Leave the name empty and press Next to hear the error. Reload halfway to see the draft offer. On the review page, tick the consent box and send.
 
 **Run the tests:**
 ```sh
 npm ci
-npm test                       # unit, voice and API tests; no server needed
+npm test                       # 112 unit, voice and API tests; no server needed
 npx playwright install chromium
-npm run test:a11y              # browser tests with axe-core; starts the servers itself
-npm run contrast               # contrast of every colour pair in every theme
+npm run test:a11y              # 31 browser tests with axe-core; starts the servers itself
+npm run contrast               # every colour pair in every theme
+node tools/measure-3g.mjs      # load time on Slow 3G and 3G (servers running)
 ```
 Or everything inside Docker: `docker compose --profile test run --rm tests`.
 
-**Try in 3 minutes:** open http://localhost:8080 and choose **አማርኛ**. Choose **Yes** to read aloud and listen; choose **Stop reading**, then use only Tab, Space and Enter. Leave the name empty and press Next to see the error. Reload halfway to see the draft offer. Finish on the review page, tick the consent box, and send.
+## Install, Level 1: script tag and Web Component
 
-## Add it to a site
-
-**Level 1: script and Web Component.** Paste two lines (details in [PARTNER_GUIDE.md](PARTNER_GUIDE.md)):
 ```html
-<script src='https://YOUR-HOST/widget.js'></script>
+<script src='https://YOUR-HOST/widget.js' defer></script>
 <db-onboarding api='https://YOUR-HOST/v1' audio='https://YOUR-HOST/audio' partner='Your organisation'></db-onboarding>
+<script>
+  document.addEventListener('db-signup:done', e => console.log(e.detail)); // optional: the host decides what to do next
+</script>
 ```
-- `<db-onboarding>` is sign-up and `<db-career-gateway>` is jobs. `<db-form flow='signup|job|employer'>` gives any flow.
-- Everything runs in an open Shadow DOM: the host's CSS cannot break it, and it cannot change the host.
-- Attributes: `api`, `audio`, `partner` (name in the consent question), `lang` (en, am, om, ti, so, sid), `lang-ask='no'`, `theme` (auto, standard, dark, contrast, rg, by), `hide`, `sw` (offline), `asr` (browser, off, or a registered recogniser), `fonts='no'`, `jsonld='no'`.
-- Events: `db-complete`, `db-error`, `db-queued`, `db-sent`, `db-theme`, `db-textsize` (the host can enlarge its whole page with the form; see PARTNER_GUIDE.md section 7). CSS hooks: `--db-accent`, `--db-font`.
-- Size: `widget.js` is about 155 kB uncompressed (under 250 kB). Fonts are fetched only when needed, and the Ethiopic font only when Ge'ez text is shown.
 
-**Level 2: REST API and OpenAPI.** [`openapi.yaml`](openapi.yaml) (OpenAPI 3.0.3, validated). Routes:
-- `GET /v1/health`, `GET /v1/jobs`, `GET /v1/jobs/{id}`
-- `POST /v1/learners`, `POST /v1/applications`, `POST /v1/employer/jobs`
-- `DELETE /v1/records/{id}`, `GET /v1/consents`, `GET /v1/consents/{id}`
+- **Tags:** `<db-onboarding>` is sign-up, `<db-career-gateway>` is job search and application, `<db-form flow='signup|job|employer'>` gives any flow.
+- **Attributes:** `api`, `audio`, `partner` (named in the consent question), `lang` (en, am, om, ti, so, sid), `lang-ask='no'` (skip the language page), `theme` (auto, standard, dark, contrast, rg, by), `hide` (comma list of questions to leave out), `sw` (offline service worker), `asr` (browser, off, or a registered recogniser), `fonts='no'`, `jsonld='no'`.
+- **Events**, all `bubbles` and `composed`:
 
-**Level 3: open standards.**
-- **LTI 1.3:** OIDC login `/lti/login`, launch `/lti/launch`, keys `/lti/jwks.json`, tool configuration `/lti/config.json`. It checks the signature against the platform's keys, plus issuer, audience, expiry, one-time nonce, signed state, message type and version. The launch locale chooses the language; custom `flow` chooses the form. The learner's name and email from the LMS are not used. Launch only: no grade passback or deep linking. To register a real platform, set `LTI_ISSUER`, `LTI_CLIENT_ID`, `LTI_AUTH_URL`, `LTI_JWKS_URL` and `LTI_DEPLOYMENT_ID`.
-- **schema.org/JobPosting:** from the API, and added to the host page as JSON-LD when the job list is shown. It contains only what employers published.
+| Event | `detail` | When |
+|---|---|---|
+| `db-signup:step` | `{ step, of, id }` | each new question (the organisers' data contract; `db-job:step`, `db-employer:step` in the other flows) |
+| `db-signup:done` | `{ profile: { fullName, contact, idRoute, language }, id, receipt, voiceNotes: [] }` | sent, without support needs |
+| `db-signup:support` | `{ support: [...] }` | sent separately, only when the learner agreed to share support needs |
+| `db-complete` | `{ answers, id, receipt }` | sent (all flows) |
+| `db-error`, `db-queued`, `db-sent` | | send failed; saved offline; offline answers sent later |
+| `db-theme`, `db-textsize` | `{ theme }`, `{ scale }` | the learner changed colours or text size: the host can follow, so its menu grows too |
 
-**ALX Savanna.** Savanna is a host like any other: use Level 1 in a page, or Level 3 (LTI 1.3) from the platform. `demo-host/savanna.html` shows the course-page case and `/demo/lms` shows the LTI case. We did not have the Savanna starter pack, so this was **not tested inside the real Savanna**.
+- Everything runs in an open **Shadow DOM**: the host's CSS cannot break it. On the host page it adds only its own `@font-face` declarations (turn off with `fonts='no'`) and, on the job page, the JobPosting data (`jsonld='no'`). No global variables, and no changes to the host's elements or styles. CSS hooks: `--db-accent`, `--db-font`.
+- The host page needs nothing else: no framework, no build step.
 
-## Keyboard and ARIA
+## Install, Level 2: REST API
 
-| Key | What it does |
+[`openapi.yaml`](openapi.yaml) (OpenAPI 3.0.3), interactive at **`/docs`**. JSON in and out; `201` with `{ id, receipt }` on success, `422` with `{ error: { code, message, field } }` for bad input, `404` for not found.
+
+| Call | What it does |
 |---|---|
-| Tab, Shift+Tab | Move down and up through every choice and button, one by one (radio choices too, like checkboxes). With read-aloud on, the focused control is spoken in the chosen language: number, name, and "selected" or "not selected" |
-| Arrow keys | Move between options in a radio group, as usual; change a date select |
-| Space | Tick or untick a checkbox; choose a radio choice; press a button |
-| Enter | On a choice: choose it. On a choice that is already chosen, or in an answer box: go to the next question. Ignored while an input method (Ge'ez, Keyman, phone keyboard) is composing |
-| Escape | Stop all speech and listening at once |
+| `GET /v1/health` | Server status |
+| `GET /v1/jobs`, `GET /v1/jobs/{id}` | Published jobs (`?format=jsonld` for schema.org) |
+| `POST /v1/learners` | Sign-up |
+| `POST /v1/applications` | Job application |
+| `POST /v1/employer/jobs` | Employer job with the adjustments it offers |
+| `GET /v1/records/{id}` + `X-Receipt` | **Export** everything held about one record |
+| `DELETE /v1/records/{id}` + `X-Receipt` | **Delete** it (withdraw consent) |
+| `GET /v1/consents` | Consent log for the partner (`Authorization: Bearer <ADMIN_TOKEN>` when set) |
 
-A **keyboard help strip** at the top of every page says this in the chosen language (Tab: go down, Shift+Tab: go up, Space/Enter: choose, Esc: stop the voice), for keyboard-only, deaf and hard-of-hearing users who cannot hear the spoken instructions.
+One `curl` per call, to paste:
+```sh
+curl http://localhost:3000/v1/health
+curl http://localhost:3000/v1/jobs
+curl -X POST http://localhost:3000/v1/learners -H "Content-Type: application/json" \
+  -d '{"fullName":"Test Learner","contact":"0911000000","idRoute":"refer","consent":{"given":true,"scope":["answers"],"lang":"am"}}'
+curl -X POST http://localhost:3000/v1/applications -H "Content-Type: application/json" \
+  -d '{"role":"Data entry clerk","why":"I like careful work.","consent":{"given":true,"scope":["answers"]}}'
+curl -X POST http://localhost:3000/v1/employer/jobs -H "Content-Type: application/json" \
+  -d '{"job":"Junior web developer","offers":["remote","hours"],"consent":{"given":true,"scope":["answers"]}}'
+curl http://localhost:3000/v1/records/<id> -H "X-Receipt: <receipt>"
+curl -X DELETE http://localhost:3000/v1/records/<id> -H "X-Receipt: <receipt>"
+curl http://localhost:3000/v1/consents -H "Authorization: Bearer <ADMIN_TOKEN>"
+```
 
-| Pattern | Markup |
-|---|---|
-| One question per screen | `<fieldset>` with `<legend id='h' tabindex='-1'>`. Focus moves to the question on every new screen |
-| Choices | Native radio and checkbox inside `<label>`. Selected = tick icon + thicker border, never colour alone |
-| Text answers | `aria-labelledby`, `aria-describedby='hint err'`, `aria-invalid='true'` on error, `lang`, `dir='auto'`, no autocorrect on names |
-| Ethiopian date | Three labelled `<select>`s (day, month, year) in a `role='group'` named by the question; "Not sure" allowed |
-| Errors | `role='alert'` box with icon and text. Focus moves to the field (or to the consent box) |
-| Status | `role='status'` for Sending, Listening, Saved on this device, Reading stopped |
-| Language buttons | `role='group'`, `aria-pressed`, `lang` on each button |
-| Colours and text size menu | `<details>` with a `<fieldset>` of theme radios and a **Text size** group: 100%, 150%, 200%, labelled with the percentage. Both are saved on the device; the host page follows both (`db-theme`, `db-textsize`), so its header, navigation and footer grow with the form |
-| Keyboard help | `<ul aria-label='Keyboard'>` with `<kbd>` keys, in the chosen language |
-| Captions | Visible caption box of everything spoken, and a large Listening banner. `aria-hidden`, because screen-reader users already hear it |
-| Host pages | Skip link, `nav` with `aria-label`, `aria-current` on the current page and language |
+## Install, Level 3: open standards
 
-There are no time limits anywhere. The same information is in [`openapi.yaml`](openapi.yaml) (`info.description` and `x-accessibility`).
+- **LTI 1.3:** OIDC login `/lti/login`, launch `/lti/launch`, keys `/lti/jwks.json`, tool configuration `/lti/config.json`. The launch is checked against the platform's keys, issuer, audience, expiry, one-time nonce, signed state, message type and version. The launch locale chooses the language and the custom `flow` chooses the form; the learner's name and email from the platform are not used. Try it with the built-in platform at `/demo/lms`. To register a real one (Moodle, Canvas, Savanna), set `LTI_ISSUER`, `LTI_CLIENT_ID`, `LTI_AUTH_URL`, `LTI_JWKS_URL` and `LTI_DEPLOYMENT_ID`. Launch only: no grade passback or deep linking.
+- **schema.org/JobPosting:** from the API, and added to the host page as JSON-LD when the job list is shown. It holds only what employers published.
+- **ALX Savanna:** a host like any other: Level 1 in a page, or Level 3 from the platform. `demo-host/savanna.html` shows the course-page case and `/demo/lms` the LTI case.
 
-## Languages, voice and audio
-- The first page asks in English for English only; then each language invites its own speakers in its own voice and by its own name ("ለአማርኛ «አማርኛ» ይበሉ"). People can answer with the English name or their own ("አማርኛ", "Afaan Oromoo", "ትግርኛ", "Soomaali", "Sidaamu Afoo"): people answer as soon as they hear their own language, so after the English question and after each language's invitation there is a beep and a 4-second listening window, with a recogniser that suits that language (Amharic and Tigrinya: Amharic recognition, which writes the Ge'ez names; Somali: Somali; others: English). The recogniser's five best guesses are checked, common mis-hearings and near misses count, and if nothing is understood it asks again in English and Amharic and listens with an Amharic recogniser. The **Amharic** text has been checked by a native speaker. Afaan Oromoo, Tigrinya, Somali and Sidaamu Afoo are still **drafts** until native speakers check them (every line marked `VERIFY_NATIVE`).
-- **Read aloud** plays clips from `public/audio/{en,am,om,ti,so,sid}/` (Meta MMS-TTS, made offline in Google Colab). It falls back to the device voice, and says so when there is none. English uses the device voice.
-- **The review page is spoken in every language**, from short clips: heading, number, question, the chosen option (or "skipped"), a phone number digit by digit, the consent sentence and the question. Only words the person typed (a name) need a voice: the device voice for the language, or else an English voice, with Ge'ez spelled in Latin letters, so it is never silent. The same applies to the consent boxes, colour themes and job titles when they get keyboard focus.
-- To regenerate clips: `npm run recording`, then follow "How to make the clips" in [RECORDING_SCRIPT.md](RECORDING_SCRIPT.md). Every clip the form uses exists for every language (a browser test checks the review page's clips).
-- **Voice input:** after a page is read, the form says "Speak now", beeps, then listens. Answers can be numbers or names, with commands (Next, Back, Skip, Read aloud, Stop) in all six languages. The phone or email question can be spoken too: "zero nine one one…" (in any of the six languages, "double four" works) becomes `0911…`, "abebe at gmail dot com" becomes `abebe@gmail.com`, and it is read back digit by digit before Next. On the review page, saying Yes sends; if support needs were chosen, it then asks separately whether to share them (a second Yes).
-- **Different keyboards:** Ge'ez input methods do not submit early; full-width and Arabic-Indic digits are accepted; switching keyboard layout does not stop the voice.
+## Languages
 
-## Built for Ethiopia
-- Amharic and Tigrinya in Ge'ez script, with local Noto Sans Ethiopic (SIL OFL) and `lang` set on every part.
-- **Ethiopian calendar:** 13 months including Pagumē (5 or 6 days). Employers enter the closing date in the Ethiopian calendar, with "Not sure" for an approximate date; it is converted for JobPosting. The thank-you page shows today's date in both calendars.
-- Ethiopian phone numbers (`09…`, `07…` or `251…`). Four identity routes, including "I don't have an ID. Refer me through a partner". No document numbers are collected.
-- **Cheap phones and 3G:** one 155 kB script, no framework, mp3 clips at 48 kbps that load only when played, and fonts loaded only for the scripts on screen.
-- **Offline:** answers are saved on the device as the person goes, kept for 7 days, and offered again after a reload. A submission made offline is queued and sent when the connection returns. With the partner's one-line service worker (`sw` attribute), the page, widget, fonts, job list and played clips open offline too.
+- **English, አማርኛ, Afaan Oromoo, ትግርኛ, Soomaali, Sidaamu Afoo.** The **Amharic** text has been checked by a native speaker. Afaan Oromoo, Tigrinya, Somali and Sidaamu Afoo are **drafts** until native speakers check them (every such line is marked `VERIFY_NATIVE` in `public/db-form.js`).
+- **The language page** asks in English for English only; then each language invites its own speakers in its own voice and by its own name ("ለአማርኛ «አማርኛ» ይበሉ"). After each invitation there is a beep and a 4-second listening window with a recogniser that suits that language, so people can answer as soon as they hear their own. Own-language names, common mis-hearings and near misses count; if nothing is understood, it asks again in English and Amharic.
+- **Read aloud** plays 715 recorded clips (`public/audio/{en,am,om,ti,so,sid}/`, Meta MMS-TTS, made offline), so it works on phones with no Amharic voice. The review page is put together from short clips (heading, number, question, chosen option, a phone number read back in groups), so it is spoken in every language. Words the person typed (a name) are read by the device voice, or else by an English voice with Ge'ez spelled in Latin letters: never silent. Key names (Tab, Enter, Esc) are said in English, as people know them. The Amharic digits 0 to 9 were chosen by a native speaker, by ear.
+- **Voice input:** after a page is read, the form says "Speak now", beeps, then listens. Answers can be numbers ("two", "ሁለት", "12" for 1 and 2) or names, with commands (Next, Back, Skip, Read aloud, Stop) in all six languages. The phone or email question can be spoken ("zero nine one one…", "abebe at gmail dot com"). Browser speech recognition often has no Afaan Oromoo or Tigrinya: typing always works.
+- **Keyboard and screen readers:** Tab and Shift+Tab visit every choice, Space or Enter chooses, Escape stops the voice; a help strip on every page says so in the chosen language. Details and the ARIA patterns: [docs/WCAG-2.2-AA-Report.md](docs/WCAG-2.2-AA-Report.md).
+- **Adding a language:** add its code to `LANGS` and `LANG_RE` in `public/db-form.js`, a column of text (the Sidama block `SID` shows the pattern: one place, falls back to English line by line), then `npm run recording` and make its clips ([RECORDING_SCRIPT.md](RECORDING_SCRIPT.md)).
+- **Built for Ethiopia:** Ge'ez script with local Noto Sans Ethiopic and `lang` on every part; the **Ethiopian calendar** (13 months including ጳጉሜን, "Not sure" allowed) for job closing dates, converted for JobPosting; Ethiopian phone numbers (`09…`, `07…`, `+251…`, typed or spoken, stored as `+251…`); four identity routes including "I don't have an ID. Refer me through a partner"; Ge'ez input methods never submit early.
 
-## Privacy
-- **Nothing leaves the host without consent.** The review page has a required "I agree to send these answers to {partner}" box. Without it nothing is sent; the server also refuses any submission without `consent.given`.
-- **Support needs are optional and separate.** No proof is asked for. They are sent only if the person ticks a second box, stored apart from the answers, and never returned by any route. Employers never see them.
-- **Job seekers' needs never leave the device.** Jobs are filtered in the browser.
-- **Data minimisation:** the server keeps only the fields each form needs and drops anything else.
-- **Withdrawal:** each submission returns a receipt code; `DELETE /v1/records/{id}` with it erases the answers and support needs. The consent log (`/v1/consents`, optional `ADMIN_TOKEN`) records only what was agreed, when, in which language and for which partner.
-- This is designed to follow the consent, minimisation and erasure principles of Ethiopia's Personal Data Protection Proclamation (No. 1321/2024). This is our reading, not legal advice: please check it.
-- **Voice:** recognition is done by the browser's speech service (Chrome and Edge send audio to their provider). This is explained before any listening starts, and typing always works. `asr='off'` turns voice input off.
-- **Drafts** stay in the browser's local storage on the person's own device. "Start again" deletes them.
-- **Demo limits:** storage is in memory and the API has no login. Add a database and authentication before production.
+## Offline and slow connection
 
-## Build vs reuse
+Measured with `node tools/measure-3g.mjs` on `blank.html` (empty cache, Chrome network throttling), 15 November 2026:
+
+| Connection | First question on screen | Downloaded |
+|---|---|---|
+| Slow 3G (400 kbit/s, 2000 ms latency) | **5.4 s** | 210 kB |
+| 3G (1.6 Mbit/s, 300 ms latency) | **1.1 s** | 211 kB |
+
+- **Size:** `widget.js` is 160 kB, sent **gzip-compressed as 56 kB**. No framework. Fonts load only for the scripts on screen (the Ethiopic font only when Ge'ez is shown). Voice clips are 48 kbit/s mp3 that load only when played.
+- **Offline:** answers are saved on the phone as the person goes (kept 7 days, offered again after a reload). A form sent with no signal is kept on the phone and sent when the connection returns, and the person is told so in words. With the partner's one-line service worker (`sw` attribute), the page, widget, fonts, job list and played clips open offline too. After an update, the offline copy replaces itself.
+
+## Data and privacy
+
+| What | Where | How to see or delete it |
+|---|---|---|
+| Sign-up answers: name, phone or email, identity route (no document numbers) | The server (in memory in this demo) | `GET` / `DELETE /v1/records/{id}` with the receipt the learner gets |
+| Support needs (optional, no proof) | Only with a **second, separate** consent; a separate store; never shown to employers | Same export and delete |
+| "Prefer not to say" | Nowhere: nothing about support is sent | |
+| Job seeker's work needs | **Never leave the phone**: the job filter runs on the device | |
+| Draft answers | The learner's own browser (local storage), 7 days | "Start again" deletes them |
+| Consent record | The server: what was agreed, when, language, partner. No names or answers | `GET /v1/consents` for the partner |
+
+- **Nothing leaves the host without consent:** the review page has a required "I agree to send these answers to {partner}" box, and the server refuses any submission without it. Unknown fields are dropped (minimum data).
+- **Voice:** recognition is done by the browser's speech service (Chrome and Edge send audio to their provider). This is said before any listening starts; typing always works; `asr='off'` turns voice off.
+- Designed around the consent, minimisation and erasure principles of Ethiopia's Personal Data Protection Proclamation No. 1321/2024 (our reading, not legal advice). Use test data only: no real names, phones or documents.
+
+## Cost to run
+
+Rough estimate for **3,000 learners a month**: **about US$5–10 a month** for one small cloud server or container (512 MB of memory is enough); the free tier of several hosts covers a pilot. There are **no per-learner, per-request or paid-API fees**: speech uses the browser, voices are pre-recorded files, and nothing calls a paid service. Data is about 1 kB per sign-up (about 3 MB for 3,000 learners); traffic is about 1–2 MB per learner (the page plus the clips they play), so about 3–6 GB a month. A real database (for example a small managed PostgreSQL) would add its own cost.
+
+## Finished and not finished
+
+**Finished:** the three flows (sign-up, job application, employer form) in six languages; voice input and read-aloud with recorded clips; keyboard, screen-reader, 200% text and colour-theme support; consent, separate support consent, export and deletion; drafts and offline sending; Ethiopian calendar; Level 1, Level 2 (OpenAPI + `/docs`) and Level 3 (LTI 1.3 launch, JobPosting); one-container deployment; 112 unit/API tests, 31 browser tests, 0 axe violations.
+
+**Not finished, honestly:**
+- **Native review** of Afaan Oromoo, Tigrinya, Somali and Sidaamu Afoo (Amharic is checked).
+- **Voice-note fallback** (recording audio where speech-to-text does not work): not built; people type instead.
+- **A partner registering a learner with consent**, and **save and resume by SMS link**: not built (SMS is a simulated inbox for confirmations).
+- **Text in language files** (`en.json`, `am.json`): the text is in tables inside `public/db-form.js`, one block per language, not separate files yet.
+- **Inside the real Savanna:** tested on a Savanna-style page and with LTI 1.3, not inside the live Savanna or the official starter repository.
+- **Production:** storage is in memory, the API has no staff login, and LTI is launch only. Add a database and authentication before real use.
+- **Voices:** the generated clips are non-commercial (CC-BY-NC); commercial use needs human recordings (the file names stay the same).
+
+## Libraries and their licences
+
 | Part | Decision | Licence | Why |
 |---|---|---|---|
-| Form engine, Web Components, calendar, consent, drafts | Built | MIT (ours) | One small file that works as a script tag on any site and on cheap phones; no framework to download |
-| Server | Reuse: Express, cors | MIT | Small, well known, no paid services |
-| LTI 1.3 token checks | Reuse: `jose` | MIT | Correct JWT and JWK handling; no native code |
-| Speech recognition and device voice | Reuse: browser Web Speech API, behind our own router (`asr`) | Built into browsers | No paid API; a self-hosted recogniser can be plugged in |
-| Read-aloud clips (am, om, ti, so) | Reuse: Meta MMS-TTS models, run once in Colab | **CC-BY-NC 4.0 (non-commercial)** | The only free voices for these languages. Commercial use needs human recordings or another voice; file names stay the same |
-| Romanisation for MMS (am, ti) | Reuse: uroman | MIT-style | The Amharic and Tigrinya models expect Latin letters |
-| Fonts | Reuse: Atkinson Hyperlegible, Noto Sans Ethiopic, Source Serif 4 (via fontsource), served locally | SIL OFL 1.1 | Legibility and Ge'ez support with no external font service |
-| Tests | Reuse: Playwright, axe-core | Apache-2.0, MPL-2.0 | Standard browser and accessibility checks |
-| Demo host | Reuse: nginx image | BSD-2-Clause | Shows a real cross-site install |
-| SMS | Built: simulated inbox | MIT (ours) | Shows the SMS path without a paid gateway |
-
-Running costs: one small Node container and static files. No paid API is needed.
+| Form engine, Web Components, calendar, consent, drafts | Built | MIT (ours) | One small file that works as a script tag on any site and on cheap phones |
+| Server | Express, cors, compression | MIT | Small, well known, no paid services |
+| LTI 1.3 token checks | `jose` | MIT | Correct JWT and JWK handling; no native code |
+| API documentation page | Swagger UI (`swagger-ui-dist` 5.17.14 from a CDN) | Apache-2.0 | The standard interactive OpenAPI viewer |
+| Speech recognition and device voice | Browser Web Speech API, behind our own router (`asr`) | Built into browsers | No paid API; a self-hosted recogniser can be plugged in |
+| Read-aloud clips (all six languages) | Meta MMS-TTS models, run once offline | **CC-BY-NC 4.0 (non-commercial)** | The only free voices for these languages |
+| Romanisation for MMS (am, ti) | uroman | MIT-style | The Amharic and Tigrinya voice models expect Latin letters |
+| Fonts | Atkinson Hyperlegible, Noto Sans Ethiopic, Source Serif 4 (fontsource), served locally | SIL OFL 1.1 | Legibility and Ge'ez support with no external font service |
+| Tests | Playwright, axe-core | Apache-2.0, MPL-2.0 | Standard browser and accessibility checks |
+| Demo host | nginx image | BSD-2-Clause | Shows a real cross-site install |
 
 ## Project layout
 ```
@@ -144,17 +191,10 @@ public/db-form.js      the plug-in (also served as /widget.js)
 public/db-sw.js        offline service worker (imported by the partner's one-line file)
 public/audio/          read-aloud clips per language
 public/fonts/          local fonts (OFL)
-server.js              REST API, JobPosting, LTI 1.3, demo LMS, SMS inbox
+server.js              REST API, JobPosting, LTI 1.3, demo LMS, SMS inbox, /docs, the demo site at /site/
 openapi.yaml           API specification
-demo-host/             pretend partner site, Savanna-style page, design system
+demo-host/             partner site, blank page, Savanna-style page, design system
 tests/                 core, voice and API tests (node --test), a11y.spec.js (Playwright + axe)
-tools/                 recording script and Colab generator, contrast check, demo server
-docs/                  WCAG 2.2 AA report, manual test script
+tools/                 recording script and voice generator, contrast check, 3G measurement, demo server
+docs/                  WCAG 2.2 AA report, manual test script, team testing guide
 ```
-
-## Known limitations
-- Not yet tested with NVDA, TalkBack or the co-designer: see section 1.2 of the WCAG report.
-- Afaan Oromoo, Tigrinya, Somali and Sidaamu Afoo translations are drafts until native speakers check them (Amharic is checked).
-- Browser speech recognition often has no Afaan Oromoo or Tigrinya, so people type instead.
-- LTI is launch only. Not tested inside the real Savanna.
-- Storage is in memory and there is no authentication (demo).

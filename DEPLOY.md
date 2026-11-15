@@ -7,6 +7,8 @@ the demo learning platform (LTI 1.3) and the simulated SMS inbox. The bare addre
 |---|---|
 | `https://YOUR-ADDRESS/` | Demo partner site with the sign-up form (same as `/site/`) |
 | `https://YOUR-ADDRESS/site/savanna.html` | The plug-in inside a Savanna-style course page |
+| `https://YOUR-ADDRESS/site/blank.html` | The plug-in alone on an empty page with no styles (the judge's test) |
+| `https://YOUR-ADDRESS/docs` | Interactive API documentation: try every call |
 | `https://YOUR-ADDRESS/demo/lms` | Demo learning platform: signed LTI 1.3 launches |
 | `https://YOUR-ADDRESS/demo/sms-inbox` | Simulated SMS inbox |
 | `https://YOUR-ADDRESS/openapi.yaml` | REST API specification |

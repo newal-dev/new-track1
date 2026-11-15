@@ -67,7 +67,8 @@ KEY_WORDS = r"\b(Tab|Shift|Space|Enter|Escape|Esc)\b"
 # "hulate"). Whole phrase -> the Latin spelling the voice model is given instead. Chosen by a native speaker, by ear.
 PRONOUNCE = {
     # Digits chosen by a native Amharic speaker, by ear (15 Nov 2026). ዜሮ, ሁለት, ስምንት, ዘጠኝ keep the romaniser's spelling.
-    "am": {"አንድ": "aand", "ሦስት": "sosst", "አራት": "aratt", "አምስት": "amest", "ስድስት": "sidist", "ሰባት": "sabaat"},
+    "am": {"አንድ": "aand", "ሦስት": "sosst", "አራት": "aratt", "አምስት": "amest", "ስድስት": "sidist", "ሰባት": "sabaat",
+           "አሥር": "asser"},  # አሥር: same pattern as the chosen digits; a native speaker should listen to it
 }
 CLIPS = json.loads(r'''{
  "sid": {
@@ -79,7 +80,7 @@ CLIPS = json.loads(r'''{
   "fullName": "Wo'mu su'mikki ayeti? Barru barrunni horoonsi'ratto su'mu ikkanno. Xa dawarokki hasaawi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi.",
   "contact": "Hiittoo silki kiiro woy imeelenni dandoonketa? Tenne pirogiraame daafira dandoonketa calla. Silki kiiro tonne kiiro afi'rinohanna zeerotenni hanafanno. Hasaawa woy borreessa dandaatto. Xa dawarokki hasaawi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi.",
   "idRoute": "Ati ayeti ikkitoota hiittoo leellisate hasatto? 1: Qebeele eeshsha woy paaspoorte. 2: Baqatu woy higgaanchu eeshsha. 3: Wole bortaje. 4: Eeshsha diafi'rino. Jaala dirijjiteenni hoolisi'e. Doorshikki kiiro woy su'ma yi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi.",
-  "support": "Hiittoo kaa'lo kaa'lannohe? Ayeeno doori. Tenne darba dandaatto. Ragi dihasiissanno. Qixxeessitooti calla la'anno, kaa'lo qixxeessate calla. 1: Leellisaancho nabbawaancho horoonsi'reemmo. 2: Lowo borro. 3: Dawaro qaalinke hasaawa doorreemmo. 4: Itiyoophiyu Malaatu Afoo turjimaancho. 5: Shota qaalla nna misilla. 6: Ikkitinni kaa'lo daafira silki xa'mi. Doorshikki kiiro woy su'ma yi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi. Tenne xa'mo darbate Darbi yi.",
+  "support": "Hiittoo kaa'lo kaa'lannohe? Ayeeno doori. Tenne darba dandaatto. Ragi dihasiissanno. Qixxeessitooti calla la'anno, kaa'lo qixxeessate calla. 1: Leellisaancho nabbawaancho horoonsi'reemmo. 2: Lowo borro. 3: Dawaro qaalinke hasaawa doorreemmo. 4: Itiyoophiyu Malaatu Afoo turjimaancho. 5: Viidiyoo aana borro. 6: Afoo'yanni turjimaancho. 7: Fayyimmaranna loosora roore yanna. 8: Shota qaalla nna misilla. 9: Ikkitinni kaa'lo daafira silki xa'mi. 10: Kulla dihasi'reemmo. Doorshikki kiiro woy su'ma yi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi. Tenne xa'mo darbate Darbi yi.",
   "needs": "Loosu aana hiittoo kaa'lo hasiissannohe? Ayeeno doori. Ma'nunni. Konne uduunnichokki aana keeshshanno, coyi'nanno loosuwa leellisate calla. 1: Gadu dinokki loosu bayicho. 2: Leellisaancho nabbawaanchora coyi'nanno uduunnicho. 3: Malaatu afoo turjimaancho. 4: Soorramanno loosu saate. 5: Mineenni loosa. Doorshikki kiiro woy su'ma yi. Albisate Albisi, wole macciishshate Qaalinke nabbawi yi. Tenne xa'mo darbate Darbi yi.",
   "why": "Konne loosu mayira hasatto? Shiima qaalla ikkanno. Hasaawa dandaatto. Xa dawarokki hasaawi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi.",
   "job": "Loosu su'mi ayeti? Xa dawarokki hasaawi. Albisate Albisi, wole macciishshate Qaalinke nabbawi yi.",
@@ -102,6 +103,7 @@ CLIPS = json.loads(r'''{
   "queued": "Interneete aana dikiitto. Dawaro keeshshi konne uduunnicho aana agarantino, interneete aana higgitto wote soyamanno.",
   "sentLater": "Agarantino dawaro keeshshi xa soyamino.",
   "tapToHear": "Xa'muwa macciishshate ayee ilkaawa xiiwi woy leellisaancho kaali.",
+  "n10": "Tonne",
   "n0": "Zeero",
   "n1": "Mitto",
   "n2": "Lame",
@@ -167,8 +169,12 @@ CLIPS = json.loads(r'''{
   "o_support_large": "Lowo borro",
   "o_support_voice": "Dawaro qaalinke hasaawa doorreemmo",
   "o_support_sign": "Itiyoophiyu Malaatu Afoo turjimaancho",
+  "o_support_captions": "Viidiyoo aana borro",
+  "o_support_interp": "Afoo'yanni turjimaancho",
+  "o_support_time": "Fayyimmaranna loosora roore yanna",
   "o_support_simple": "Shota qaalla nna misilla",
   "o_support_human": "Ikkitinni kaa'lo daafira silki xa'mi",
+  "o_support_prefer": "Kulla dihasi'reemmo",
   "q_needs": "Loosu aana hiittoo kaa'lo hasiissannohe? Ayeeno doori.",
   "o_needs_stepfree": "Gadu dinokki loosu bayicho",
   "o_needs_reader": "Leellisaancho nabbawaanchora coyi'nanno uduunnicho",
@@ -290,8 +296,18 @@ for lang in LANGS_TO_MAKE:
                     et, em = english_voice(); w = synth(et, em, part.lower())
                 else:
                     fixed = PRONOUNCE.get(lang, {}).get(part.strip(" .,!?።፣"))
-                    s = fixed if fixed else (romanise(part, lang) if needs_latin else part)
+                    if fixed:
+                        s = fixed
+                    elif needs_latin and any(w.strip(" .,!?።፣") in PRONOUNCE.get(lang, {}) for w in part.split()):
+                        # A sentence with one of those words in it (a numbered choice): that word as chosen, the rest romanised.
+                        s = " ".join(PRONOUNCE[lang].get(w.strip(" .,!?።፣")) or romanise(w, lang) for w in part.split())
+                    else:
+                        s = romanise(part, lang) if needs_latin else part
                     s = s.lower()
+                    # Letters this voice has no sound for: the nearest one it has (ቪዲዮ "video" -> "bidiyo", as many say it).
+                    for miss, near in (("v", "b"), ("p", "b")):
+                        if miss not in vocab and near in vocab:
+                            s = s.replace(miss, near)
                     lost = {c for c in s if c != " " and c not in vocab}
                     if lost:
                         dropped.setdefault(lang, {}).setdefault("".join(sorted(lost)), []).append(cid)

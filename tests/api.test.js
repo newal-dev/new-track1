@@ -49,6 +49,10 @@ describe('health and widget', () => {
     assert.equal((await fetch(U + '/site/../server.js')).status, 404);
     assert.match(await (await fetch(U + '/?info')).text(), /Inclusive Access plugin server/);
   });
+  test('interactive API docs at /docs, and the specification names this server', async () => {
+    assert.match(await (await fetch(U + '/docs')).text(), /SwaggerUIBundle\(\{ url: '\/openapi.yaml'/);
+    assert.match(await (await fetch(U + '/openapi.yaml')).text(), new RegExp('url: ' + U));
+  });
   test('db-form.js is still served (old install snippet)', async () => { assert.equal((await fetch(U + '/db-form.js')).status, 200); });
   test('OpenAPI spec is served', async () => { const t = await (await fetch(U + '/openapi.yaml')).text(); assert.match(t, /openapi: 3/); });
   test('service worker and local fonts are served', async () => {
@@ -182,6 +186,22 @@ describe('consent', () => {
     const { id, receipt } = await (await post('/v1/employer/jobs', { job: 'Temporary post', consent: consent() })).json();
     await fetch(U + '/v1/records/' + id, { method: 'DELETE', headers: { 'X-Receipt': receipt } });
     assert.ok(!(await (await fetch(U + '/v1/jobs')).json()).some(j => j.title === 'Temporary post'));
+  });
+});
+
+describe('learner data rights', () => {
+  test('a learner can export everything held about them, with their receipt; without it the record does not exist', async () => {
+    const { id, receipt } = await (await learner({ fullName: 'Export Me', contact: '0911 22 33 44', support: ['captions', 'time', 'interp', 'prefer'], consent: consent(['answers', 'support']) })).json();
+    const r = await fetch(U + '/v1/records/' + id, { headers: { 'x-receipt': receipt } }); assert.equal(r.status, 200);
+    const j = await r.json();
+    assert.equal(j.answers.fullName, 'Export Me');
+    assert.equal(j.answers.contact, '+251911223344'); // one stored format
+    assert.deepEqual(j.support, ['captions', 'time', 'interp']); // "prefer not to say" is never stored
+    assert.deepEqual(j.consent.scope, ['answers', 'support']);
+    assert.equal((await fetch(U + '/v1/records/' + id)).status, 404);
+    assert.equal((await fetch(U + '/v1/records/' + id, { headers: { 'x-receipt': 'wrong' } })).status, 404);
+    assert.equal((await fetch(U + '/v1/records/' + id, { method: 'DELETE', headers: { 'x-receipt': receipt } })).status, 204);
+    assert.equal((await fetch(U + '/v1/records/' + id, { headers: { 'x-receipt': receipt } })).status, 404);
   });
 });
 

@@ -23,6 +23,9 @@ const NWL = {
   so: ['Eber', 'Kow', 'Laba', 'Saddex', 'Afar', 'Shan', 'Lix', 'Toddoba', 'Siddeed', 'Sagaal'],
   sid: ['Zeero', 'Mitto', 'Lame', 'Sase', 'Shoole', 'Onte', 'Lee', 'Lamala', 'Sette', 'Honse'],
 };
+// n10: the support question now has ten choices. VERIFY_NATIVE for om, ti, so, sid.
+const TEN = { en: 'Ten', am: 'አሥር', om: 'Kudhan', ti: 'ዓሰርተ', so: 'Toban', sid: 'Tonne',
+};
 
 // Every clip: id, what it is, which languages need it (default: all), text per language.
 const items = [];
@@ -42,6 +45,7 @@ for (const [id, what] of [['errNeed', 'Error: question not answered'], ['errBad'
   if (id === 'draftH') { add(id, what, l => [u('draftH', l), u('draftP', l), u('draftGo', l), u('restart', l)].join(' ')); continue; }
   add(id, what, l => u(k, l));
 }
+add('n10', 'Number 10 (choice ten on the support question)', l => TEN[l]);
 for (let n = 0; n <= 9; n++) add('n' + n, 'Number ' + n + ' (confirmation, review numbers, phone digits)', l => NWL[l][n]);
 // Review page, spoken from clips: heading, then per answer number + question (q_...) + chosen option (o_...) or the
 // person's own words (device voice), then the consent sentence (around the partner's name) and the question.

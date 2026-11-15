@@ -67,7 +67,8 @@ KEY_WORDS = r"\b(Tab|Shift|Space|Enter|Escape|Esc)\b"
 # "hulate"). Whole phrase -> the Latin spelling the voice model is given instead. Chosen by a native speaker, by ear.
 PRONOUNCE = {
     # Digits chosen by a native Amharic speaker, by ear (15 Nov 2026). ዜሮ, ሁለት, ስምንት, ዘጠኝ keep the romaniser's spelling.
-    "am": {"አንድ": "aand", "ሦስት": "sosst", "አራት": "aratt", "አምስት": "amest", "ስድስት": "sidist", "ሰባት": "sabaat"},
+    "am": {"አንድ": "aand", "ሦስት": "sosst", "አራት": "aratt", "አምስት": "amest", "ስድስት": "sidist", "ሰባት": "sabaat",
+           "አሥር": "asser"},  # አሥር: same pattern as the chosen digits; a native speaker should listen to it
 }
 CLIPS = json.loads(r'''__CLIPS_JSON__''')
 
@@ -170,8 +171,18 @@ for lang in LANGS_TO_MAKE:
                     et, em = english_voice(); w = synth(et, em, part.lower())
                 else:
                     fixed = PRONOUNCE.get(lang, {}).get(part.strip(" .,!?።፣"))
-                    s = fixed if fixed else (romanise(part, lang) if needs_latin else part)
+                    if fixed:
+                        s = fixed
+                    elif needs_latin and any(w.strip(" .,!?።፣") in PRONOUNCE.get(lang, {}) for w in part.split()):
+                        # A sentence with one of those words in it (a numbered choice): that word as chosen, the rest romanised.
+                        s = " ".join(PRONOUNCE[lang].get(w.strip(" .,!?።፣")) or romanise(w, lang) for w in part.split())
+                    else:
+                        s = romanise(part, lang) if needs_latin else part
                     s = s.lower()
+                    # Letters this voice has no sound for: the nearest one it has (ቪዲዮ "video" -> "bidiyo", as many say it).
+                    for miss, near in (("v", "b"), ("p", "b")):
+                        if miss not in vocab and near in vocab:
+                            s = s.replace(miss, near)
                     lost = {c for c in s if c != " " and c not in vocab}
                     if lost:
                         dropped.setdefault(lang, {}).setdefault("".join(sorted(lost)), []).append(cid)

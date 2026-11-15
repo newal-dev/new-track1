@@ -24,7 +24,7 @@ When a clip is missing **and** the device has no voice for the language, the plu
 7. A native speaker must listen to every clip. If a word is wrong, fix the text in `public/db-form.js` (not here), then repeat from step 1.
 
 ## What to produce
-- **685 files in total**: 115 for `en`, 115 for `am`, 114 for `om`, 114 for `ti`, 113 for `so`, 114 for `sid`.
+- **715 files in total**: 120 for `en`, 120 for `am`, 119 for `om`, 119 for `ti`, 118 for `so`, 119 for `sid`.
 - Format: **mp3**, mono, 64 kbps or lower (small for 3G). The Colab script makes 48 kbps.
 - File name = the **ID** in the first column, plus `.mp3`. Example: `public/audio/am/fullName.mp3`. Use exactly this spelling and capital letters.
 - The plugin loads them from the `audio` attribute: `audio='http://localhost:3000/audio'` (the server serves the `public` folder).
@@ -93,6 +93,7 @@ When a clip is missing **and** the device has no voice for the language, the plu
 | `queued` | Offline: answers saved on the device, sent later | - | en, am, om, ti, so, sid |
 | `sentLater` | Saved answers were sent | - | en, am, om, ti, so, sid |
 | `tapToHear` | Press a key or tap to hear the questions | - | en, am, om, ti, so, sid |
+| `n10` | Number 10 (choice ten on the support question) | - | en, am, om, ti, so, sid |
 | `n0` | Number 0 (confirmation, review numbers, phone digits) | - | en, am, om, ti, so, sid |
 | `n1` | Number 1 (confirmation, review numbers, phone digits) | - | en, am, om, ti, so, sid |
 | `n2` | Number 2 (confirmation, review numbers, phone digits) | - | en, am, om, ti, so, sid |
@@ -158,8 +159,12 @@ When a clip is missing **and** the device has no voice for the language, the plu
 | `o_support_large` | Focus: choice "Large text" (question support) | - | en, am, om, ti, so, sid |
 | `o_support_voice` | Focus: choice "I prefer to speak my answers" (question support) | - | en, am, om, ti, so, sid |
 | `o_support_sign` | Focus: choice "Ethiopian Sign Language interpreter" (question support) | - | en, am, om, ti, so, sid |
+| `o_support_captions` | Focus: choice "Captions on videos" (question support) | - | en, am, om, ti, so, sid |
+| `o_support_interp` | Focus: choice "An interpreter in my language" (question support) | - | en, am, om, ti, so, sid |
+| `o_support_time` | Focus: choice "More time for tests and tasks" (question support) | - | en, am, om, ti, so, sid |
 | `o_support_simple` | Focus: choice "Simple words and pictures" (question support) | - | en, am, om, ti, so, sid |
 | `o_support_human` | Focus: choice "Please call me to help" (question support) | - | en, am, om, ti, so, sid |
+| `o_support_prefer` | Focus: choice "Prefer not to say" (question support) | - | en, am, om, ti, so, sid |
 | `q_needs` | The question "What support do you need at work? Choose any." on its own (answer box focus, review page) | - | en, am, om, ti, so, sid |
 | `o_needs_stepfree` | Focus: choice "Step-free workplace" (question needs) | - | en, am, om, ti, so, sid |
 | `o_needs_reader` | Focus: choice "Screen-reader friendly tools" (question needs) | - | en, am, om, ti, so, sid |
@@ -413,27 +418,27 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 **English** → `public/audio/en/support.mp3`
 
-> What support would help you? Choose any. You can skip this. No proof needed. Only the organisers see it, and only to prepare help for you. 1: I use a screen reader. 2: Large text. 3: I prefer to speak my answers. 4: Ethiopian Sign Language interpreter. 5: Simple words and pictures. 6: Please call me to help. Say the number or the name of your choice. Say Next to continue, Back to go back, or Read aloud to hear this again. Say Skip to skip this question.
+> What support would help you? Choose any. You can skip this. No proof needed. Only the organisers see it, and only to prepare help for you. 1: I use a screen reader. 2: Large text. 3: I prefer to speak my answers. 4: Ethiopian Sign Language interpreter. 5: Captions on videos. 6: An interpreter in my language. 7: More time for tests and tasks. 8: Simple words and pictures. 9: Please call me to help. 10: Prefer not to say. Say the number or the name of your choice. Say Next to continue, Back to go back, or Read aloud to hear this again. Say Skip to skip this question.
 
 **አማርኛ (checked by a native speaker)** → `public/audio/am/support.mp3`
 
-> ምን ዓይነት እገዛ ይጠቅምዎታል? የፈለጉትን ይምረጡ። ይህን መዝለል ይችላሉ። ማስረጃ አያስፈልግም። አዘጋጆቹ ብቻ ያዩታል፤ ለእርስዎ እገዛ ለማዘጋጀት ብቻ። 1: ስክሪን ሪደር እጠቀማለሁ. 2: ትልቅ ጽሑፍ. 3: መልሶቼን በድምፅ መናገር እመርጣለሁ. 4: የኢትዮጵያ ምልክት ቋንቋ አስተርጓሚ. 5: ቀላል ቃላትና ሥዕሎች. 6: እባክዎ ደውለው ያግዙኝ. የምርጫዎን ቁጥር ወይም ስም ይናገሩ። ለመቀጠል «ቀጥል»፣ ለመመለስ «ተመለስ»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ። ይህን ጥያቄ ለመዝለል «ዝለል» ይበሉ።
+> ምን ዓይነት እገዛ ይጠቅምዎታል? የፈለጉትን ይምረጡ። ይህን መዝለል ይችላሉ። ማስረጃ አያስፈልግም። አዘጋጆቹ ብቻ ያዩታል፤ ለእርስዎ እገዛ ለማዘጋጀት ብቻ። 1: ስክሪን ሪደር እጠቀማለሁ. 2: ትልቅ ጽሑፍ. 3: መልሶቼን በድምፅ መናገር እመርጣለሁ. 4: የኢትዮጵያ ምልክት ቋንቋ አስተርጓሚ. 5: በቪዲዮዎች ላይ የጽሑፍ ትርጉም. 6: በቋንቋዬ አስተርጓሚ. 7: ለፈተናና ለተግባራት ተጨማሪ ጊዜ. 8: ቀላል ቃላትና ሥዕሎች. 9: እባክዎ ደውለው ያግዙኝ. 10: መናገር አልፈልግም. የምርጫዎን ቁጥር ወይም ስም ይናገሩ። ለመቀጠል «ቀጥል»፣ ለመመለስ «ተመለስ»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ። ይህን ጥያቄ ለመዝለል «ዝለል» ይበሉ።
 
 **Afaan Oromoo (draft, VERIFY_NATIVE)** → `public/audio/om/support.mp3`
 
-> Deeggarsa akkamii si gargaara? Kamiyyuu filadhu. Irra darbuu dandeessa. Ragaan hin barbaachisu. Qindeessitoota qofatu arga, deeggarsa siif qopheessuuf qofa. 1: Dubbisaa iskiriinii nan fayyadama. 2: Barreeffama guddaa. 3: Deebii koo dubbachuu nan filadha. 4: Hiikaa Afaan Mallattoo Itoophiyaa. 5: Jechoota salphaa fi fakkiiwwan. 6: Maaloo na gargaaruuf natti bilbilaa. Lakkoofsa ykn maqaa filannoo keetii jedhi. Itti fufuuf Itti fufi, deebi'uuf Duubatti, ammas dhaga'uuf Sagaleedhaan dubbisi jedhi. Gaaffii kana irra darbuuf Irra darbi jedhi.
+> Deeggarsa akkamii si gargaara? Kamiyyuu filadhu. Irra darbuu dandeessa. Ragaan hin barbaachisu. Qindeessitoota qofatu arga, deeggarsa siif qopheessuuf qofa. 1: Dubbisaa iskiriinii nan fayyadama. 2: Barreeffama guddaa. 3: Deebii koo dubbachuu nan filadha. 4: Hiikaa Afaan Mallattoo Itoophiyaa. 5: Barreeffama viidiyoo irratti. 6: Hiikaa afaan kootiin. 7: Qormaataa fi hojiif yeroo dabalataa. 8: Jechoota salphaa fi fakkiiwwan. 9: Maaloo na gargaaruuf natti bilbilaa. 10: Dubbachuu hin barbaadu. Lakkoofsa ykn maqaa filannoo keetii jedhi. Itti fufuuf Itti fufi, deebi'uuf Duubatti, ammas dhaga'uuf Sagaleedhaan dubbisi jedhi. Gaaffii kana irra darbuuf Irra darbi jedhi.
 
 **ትግርኛ (draft, VERIFY_NATIVE)** → `public/audio/ti/support.mp3`
 
-> እንታይ ደገፍ ይሕግዘኩም? ዝኾነ ምረጹ። ክትሓልፍዎ ትኽእሉ ኢኹም። መረጋገጺ ኣየድልን። ኣወሃሃድቲ ጥራይ እዮም ዝርእይዎ፣ ንዓኹም ደገፍ ንምድላው ጥራይ። 1: ስክሪን ሪደር እጥቀም. 2: ዓቢ ጽሑፍ. 3: መልስታተይ ብድምጺ ክዛረብ እመርጽ. 4: ተርጓሚ ቋንቋ ምልክት ኢትዮጵያ. 5: ቀለልቲ ቃላትን ስእልታትን. 6: በጃኹም ደዊልኩም ሓግዙኒ. ቁጽሪ ወይ ስም ምርጫኹም በሉ። ንምቕጻል «ቀጽል»፣ ንምምላስ «ተመለስ»፣ ደጊምኩም ንምስማዕ «ኣንብበለይ» በሉ። ነዚ ሕቶ ንምሕላፍ «ሕለፍ» በሉ።
+> እንታይ ደገፍ ይሕግዘኩም? ዝኾነ ምረጹ። ክትሓልፍዎ ትኽእሉ ኢኹም። መረጋገጺ ኣየድልን። ኣወሃሃድቲ ጥራይ እዮም ዝርእይዎ፣ ንዓኹም ደገፍ ንምድላው ጥራይ። 1: ስክሪን ሪደር እጥቀም. 2: ዓቢ ጽሑፍ. 3: መልስታተይ ብድምጺ ክዛረብ እመርጽ. 4: ተርጓሚ ቋንቋ ምልክት ኢትዮጵያ. 5: ኣብ ቪድዮታት ጽሑፍ. 6: ብቋንቋየ ተርጓሚ. 7: ንፈተናታትን ዕማማትን ተወሳኺ ግዜ. 8: ቀለልቲ ቃላትን ስእልታትን. 9: በጃኹም ደዊልኩም ሓግዙኒ. 10: ክገልጽ ኣይደልን. ቁጽሪ ወይ ስም ምርጫኹም በሉ። ንምቕጻል «ቀጽል»፣ ንምምላስ «ተመለስ»፣ ደጊምኩም ንምስማዕ «ኣንብበለይ» በሉ። ነዚ ሕቶ ንምሕላፍ «ሕለፍ» በሉ።
 
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/support.mp3`
 
-> Taageero noocee ah ayaa ku caawin lahayd? Dooro mid kasta. Waad ka boodi kartaa. Caddayn looma baahna. Kaliya qabanqaabiyayaashu ayaa arka, si ay kuugu diyaariyaan caawimaad. 1: Waxaan isticmaalaa akhriyaha shaashadda. 2: Qoraal weyn. 3: Waxaan doorbidaa inaan ku hadlo jawaabahayga. 4: Turjubaan Luqadda Calaamadaha Itoobiya. 5: Erayo fudud iyo sawirro. 6: Fadlan ii soo wac si aad ii caawiso. Dheh lambarka ama magaca doorashadaada. Dheh Xiga si aad u sii socoto, Dib u noqo si aad dib ugu noqoto, ama Akhri si aad mar kale u maqasho. Dheh Ka bood si aad su'aashan uga boodo.
+> Taageero noocee ah ayaa ku caawin lahayd? Dooro mid kasta. Waad ka boodi kartaa. Caddayn looma baahna. Kaliya qabanqaabiyayaashu ayaa arka, si ay kuugu diyaariyaan caawimaad. 1: Waxaan isticmaalaa akhriyaha shaashadda. 2: Qoraal weyn. 3: Waxaan doorbidaa inaan ku hadlo jawaabahayga. 4: Turjubaan Luqadda Calaamadaha Itoobiya. 5: Qoraal ku qoran muuqaallada. 6: Turjubaan ku hadla luqaddayda. 7: Waqti dheeraad ah oo imtixaannada iyo hawlaha. 8: Erayo fudud iyo sawirro. 9: Fadlan ii soo wac si aad ii caawiso. 10: Ma doonayo inaan sheego. Dheh lambarka ama magaca doorashadaada. Dheh Xiga si aad u sii socoto, Dib u noqo si aad dib ugu noqoto, ama Akhri si aad mar kale u maqasho. Dheh Ka bood si aad su'aashan uga boodo.
 
 **Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/support.mp3`
 
-> Hiittoo kaa'lo kaa'lannohe? Ayeeno doori. Tenne darba dandaatto. Ragi dihasiissanno. Qixxeessitooti calla la'anno, kaa'lo qixxeessate calla. 1: Leellisaancho nabbawaancho horoonsi'reemmo. 2: Lowo borro. 3: Dawaro qaalinke hasaawa doorreemmo. 4: Itiyoophiyu Malaatu Afoo turjimaancho. 5: Shota qaalla nna misilla. 6: Ikkitinni kaa'lo daafira silki xa'mi. Doorshikki kiiro woy su'ma yi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi. Tenne xa'mo darbate Darbi yi.
+> Hiittoo kaa'lo kaa'lannohe? Ayeeno doori. Tenne darba dandaatto. Ragi dihasiissanno. Qixxeessitooti calla la'anno, kaa'lo qixxeessate calla. 1: Leellisaancho nabbawaancho horoonsi'reemmo. 2: Lowo borro. 3: Dawaro qaalinke hasaawa doorreemmo. 4: Itiyoophiyu Malaatu Afoo turjimaancho. 5: Viidiyoo aana borro. 6: Afoo'yanni turjimaancho. 7: Fayyimmaranna loosora roore yanna. 8: Shota qaalla nna misilla. 9: Ikkitinni kaa'lo daafira silki xa'mi. 10: Kulla dihasi'reemmo. Doorshikki kiiro woy su'ma yi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi. Tenne xa'mo darbate Darbi yi.
 
 ### `needs`: job flow, question 1
 
@@ -1006,6 +1011,32 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/tapToHear.mp3`
 
 > Xa'muwa macciishshate ayee ilkaawa xiiwi woy leellisaancho kaali.
+
+### `n10`: Number 10 (choice ten on the support question)
+
+**English** → `public/audio/en/n10.mp3`
+
+> Ten
+
+**አማርኛ (checked by a native speaker)** → `public/audio/am/n10.mp3`
+
+> አሥር
+
+**Afaan Oromoo (draft, VERIFY_NATIVE)** → `public/audio/om/n10.mp3`
+
+> Kudhan
+
+**ትግርኛ (draft, VERIFY_NATIVE)** → `public/audio/ti/n10.mp3`
+
+> ዓሰርተ
+
+**Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/n10.mp3`
+
+> Toban
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/n10.mp3`
+
+> Tonne
 
 ### `n0`: Number 0 (confirmation, review numbers, phone digits)
 
@@ -2689,6 +2720,84 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Itiyoophiyu Malaatu Afoo turjimaancho
 
+### `o_support_captions`: Focus: choice "Captions on videos" (question support)
+
+**English** → `public/audio/en/o_support_captions.mp3`
+
+> Captions on videos
+
+**አማርኛ (checked by a native speaker)** → `public/audio/am/o_support_captions.mp3`
+
+> በቪዲዮዎች ላይ የጽሑፍ ትርጉም
+
+**Afaan Oromoo (draft, VERIFY_NATIVE)** → `public/audio/om/o_support_captions.mp3`
+
+> Barreeffama viidiyoo irratti
+
+**ትግርኛ (draft, VERIFY_NATIVE)** → `public/audio/ti/o_support_captions.mp3`
+
+> ኣብ ቪድዮታት ጽሑፍ
+
+**Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/o_support_captions.mp3`
+
+> Qoraal ku qoran muuqaallada
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/o_support_captions.mp3`
+
+> Viidiyoo aana borro
+
+### `o_support_interp`: Focus: choice "An interpreter in my language" (question support)
+
+**English** → `public/audio/en/o_support_interp.mp3`
+
+> An interpreter in my language
+
+**አማርኛ (checked by a native speaker)** → `public/audio/am/o_support_interp.mp3`
+
+> በቋንቋዬ አስተርጓሚ
+
+**Afaan Oromoo (draft, VERIFY_NATIVE)** → `public/audio/om/o_support_interp.mp3`
+
+> Hiikaa afaan kootiin
+
+**ትግርኛ (draft, VERIFY_NATIVE)** → `public/audio/ti/o_support_interp.mp3`
+
+> ብቋንቋየ ተርጓሚ
+
+**Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/o_support_interp.mp3`
+
+> Turjubaan ku hadla luqaddayda
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/o_support_interp.mp3`
+
+> Afoo'yanni turjimaancho
+
+### `o_support_time`: Focus: choice "More time for tests and tasks" (question support)
+
+**English** → `public/audio/en/o_support_time.mp3`
+
+> More time for tests and tasks
+
+**አማርኛ (checked by a native speaker)** → `public/audio/am/o_support_time.mp3`
+
+> ለፈተናና ለተግባራት ተጨማሪ ጊዜ
+
+**Afaan Oromoo (draft, VERIFY_NATIVE)** → `public/audio/om/o_support_time.mp3`
+
+> Qormaataa fi hojiif yeroo dabalataa
+
+**ትግርኛ (draft, VERIFY_NATIVE)** → `public/audio/ti/o_support_time.mp3`
+
+> ንፈተናታትን ዕማማትን ተወሳኺ ግዜ
+
+**Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/o_support_time.mp3`
+
+> Waqti dheeraad ah oo imtixaannada iyo hawlaha
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/o_support_time.mp3`
+
+> Fayyimmaranna loosora roore yanna
+
 ### `o_support_simple`: Focus: choice "Simple words and pictures" (question support)
 
 **English** → `public/audio/en/o_support_simple.mp3`
@@ -2740,6 +2849,32 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/o_support_human.mp3`
 
 > Ikkitinni kaa'lo daafira silki xa'mi
+
+### `o_support_prefer`: Focus: choice "Prefer not to say" (question support)
+
+**English** → `public/audio/en/o_support_prefer.mp3`
+
+> Prefer not to say
+
+**አማርኛ (checked by a native speaker)** → `public/audio/am/o_support_prefer.mp3`
+
+> መናገር አልፈልግም
+
+**Afaan Oromoo (draft, VERIFY_NATIVE)** → `public/audio/om/o_support_prefer.mp3`
+
+> Dubbachuu hin barbaadu
+
+**ትግርኛ (draft, VERIFY_NATIVE)** → `public/audio/ti/o_support_prefer.mp3`
+
+> ክገልጽ ኣይደልን
+
+**Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/o_support_prefer.mp3`
+
+> Ma doonayo inaan sheego
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/o_support_prefer.mp3`
+
+> Kulla dihasi'reemmo
 
 ### `q_needs`: The question "What support do you need at work? Choose any." on its own (answer box focus, review page)
 

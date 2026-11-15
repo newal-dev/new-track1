@@ -182,6 +182,10 @@ The form tells your page what happened. Listen on the element:
   form.addEventListener('db-sent', e => {
     // Answers saved while offline were sent. e.detail.ok is true if the server accepted them.
   });
+  // The organisers' data contract (Technical Guide): the same moments under their names.
+  // db-signup:step { step, of, id } · db-signup:done { profile, id, receipt } · db-signup:support { support }
+  // (support is a separate event, sent only when the learner agreed to share it). db-job:… and db-employer:… likewise.
+  document.addEventListener('db-signup:done', e => { /* go to the learner's home page */ });
   form.addEventListener('db-theme', e => {
     // The visitor chose new colours: e.detail.theme is auto | standard | dark | contrast | rg | by
   });

@@ -223,3 +223,25 @@ test('phone numbers are grouped for reading aloud like they are written', () => 
   assert.deepEqual(g('251902576570'), ['251', '902', '57', '65', '70']);
   assert.deepEqual(g('12345'), ['123', '45']);
 });
+test('support: "Prefer not to say" stands alone, is chosen by voice like any other ("ten"), and is never sent', () => {
+  const st = step('support');
+  assert.equal(st.options.length, 10);
+  assert.equal(pick('ten', 'support'), '9');
+  assert.equal(pick('አሥር', 'support', 'am'), '9');
+  const ins = st.options.map(([k]) => ({ value: k, checked: false }));
+  const d = make({ i: 4 }); d.r = { querySelector: () => null, querySelectorAll: () => ins };
+  ins[0].checked = true; ins[3].checked = true; d.exclusive(st, ins[3]);
+  ins[9].checked = true; d.exclusive(st, ins[9]);
+  assert.deepEqual(ins.filter(x => x.checked).map(x => x.value), ['prefer']);
+  ins[1].checked = true; d.exclusive(st, ins[1]);
+  assert.deepEqual(ins.filter(x => x.checked).map(x => x.value), ['large']);
+  const p = make({ a: { fullName: 'A', support: ['prefer'] }, consent: { a: true, s: true } }); p.getAttribute = () => null;
+  assert.equal('support' in p.payload(), false);
+  assert.deepEqual(p.payload().consent.scope, ['answers']);
+});
+test('events follow the organisers’ data contract: db-signup:step, :done and :support', () => {
+  const got = [], d = make({ i: 1 }); d.getAttribute = () => null;
+  d.dispatchEvent = e => got.push([e.type, e.detail]);
+  d.emit('step', { step: 2, of: 5 });
+  assert.deepEqual(got, [['db-signup:step', { step: 2, of: 5 }]]);
+});
