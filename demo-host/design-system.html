@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang='en' data-theme='auto'>
+<head>
+<meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>Design system · Inclusive Access plugin</title>
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Noto+Sans+Ethiopic:wght@400;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap'>
+<link rel='stylesheet' href='site.css'>
+<script src='site.js'></script>
+<style>
+  .ds{display:grid;gap:var(--s6);grid-template-columns:minmax(0,1fr)}
+  @media (min-width:60rem){.ds{grid-template-columns:13rem minmax(0,1fr);gap:var(--s7)}.toc{position:sticky;top:var(--s5);align-self:start}}
+  .toc ol{list-style:none;margin:0;padding:0;display:grid;gap:var(--s1);border-left:2px solid var(--line)}
+  .toc a{display:block;padding:var(--s1) var(--s3);color:var(--ink-2);text-decoration:none;margin-left:-2px;border-left:2px solid transparent}
+  .toc a:hover{color:var(--ink);border-left-color:var(--line-strong)}
+  .part{display:grid;gap:var(--s4);padding-bottom:var(--s7);margin-bottom:var(--s6);border-bottom:1px solid var(--line)}
+  .part>p{max-width:44rem;color:var(--ink-2)}
+  .part h3{margin-top:var(--s3)}
+  .principles{margin:0;padding-left:1.2em;display:grid;gap:var(--s2);max-width:46rem}
+  .controls{display:flex;flex-wrap:wrap;gap:var(--s3);align-items:center;padding:var(--s3) var(--s4);border:1px solid var(--line);border-radius:var(--r2);background:var(--surface)}
+  .controls label{font-weight:700}
+  select{font:inherit;min-height:44px;padding:0 var(--s3);border:2px solid var(--line-strong);border-radius:var(--r1);background:var(--surface);color:var(--ink)}
+  .type{display:grid;gap:var(--s3);padding:var(--s5);background:var(--surface);border:1px solid var(--line);border-radius:var(--r2)}
+  .type .row{display:grid;grid-template-columns:7rem minmax(0,1fr);gap:var(--s4);align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:var(--s3)}
+  .type .row:last-child{border-bottom:0;padding-bottom:0}
+  .type .meta{font-size:.8125rem;color:var(--ink-2);font-family:var(--font-mono)}
+  .themes{display:grid;gap:var(--s4)}
+  .theme{border:1px solid var(--line);border-radius:var(--r2);overflow:hidden;background:var(--surface)}
+  .theme header{display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--s2);padding:var(--s3) var(--s4);border-bottom:1px solid var(--line)}
+  .theme header code{font-family:var(--font-mono);font-size:.875rem;color:var(--ink-2)}
+  .chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(8.5rem,1fr))}
+  .chip{padding:var(--s3);min-height:5.5rem;display:flex;flex-direction:column;justify-content:flex-end;font-size:.8125rem;border-right:1px solid rgb(0 0 0 / .08)}
+  .chip b{font-family:var(--font-mono);font-weight:400}
+  .checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));gap:0;border-top:1px solid var(--line)}
+  .checks div{display:flex;justify-content:space-between;gap:var(--s2);padding:var(--s2) var(--s4);font-size:.875rem;border-bottom:1px solid var(--line)}
+  .pass,.fail{font-weight:700;font-family:var(--font-mono)}
+  .fail{color:var(--error)}
+  .fail::before{content:'✕ '}.pass::before{content:'✓ '}
+  .spec{display:block}
+  .grid2{display:grid;gap:var(--s4)}
+  @media (min-width:48rem){.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  .icons{display:grid;grid-template-columns:repeat(auto-fill,minmax(7rem,1fr));gap:var(--s2)}
+  .icons figure{margin:0;display:grid;justify-items:start;gap:var(--s2);padding:var(--s3);border:1px solid var(--line);border-radius:var(--r1);background:var(--surface);color:var(--ink)}
+  .icons figcaption{font-family:var(--font-mono);font-size:.75rem;color:var(--ink-2)}
+  .elev{display:grid;gap:var(--s4);grid-template-columns:repeat(auto-fill,minmax(12rem,1fr))}
+  .elev div{padding:var(--s4);min-height:7rem;border-radius:var(--r2);display:flex;align-items:flex-end;font-size:.875rem}
+</style>
+</head>
+<body>
+<a class='skip' href='#main'>Skip to content</a>
+<header class='site'>
+  <div class='wrap top'>
+    <a class='brand' href='./'>
+      <svg width='40' height='40' viewBox='0 0 56 56' aria-hidden='true' focusable='false'><circle cx='28' cy='12' r='8' fill='currentColor'/><path d='M6 22c14 0 20 8 22 26C26 30 20 24 6 22zM50 22c-14 0-20 8-22 26 2-18 8-24 22-26z' fill='currentColor' opacity='.75'/></svg>
+      <span><strong>Inclusive Access</strong><small>Design system proof page</small></span>
+    </a>
+  </div>
+  <nav class='primary' aria-label='Main'>
+    <div class='wrap'><ul>
+      <li><a href='./?flow=signup'>Join the programme</a></li>
+      <li><a href='./?flow=job'>Apply for a job</a></li>
+      <li><a href='./?flow=employer'>For employers</a></li>
+      <li><a href='design-system.html' aria-current='page'>Design system</a></li>
+    </ul></div>
+  </nav>
+</header>
+
+<main id='main' class='wrap'>
+  <div class='ds'>
+    <nav class='toc' aria-label='On this page'>
+      <ol>
+        <li><a href='#principles'>Principles</a></li>
+        <li><a href='#type'>Typography</a></li>
+        <li><a href='#colour'>Colour and themes</a></li>
+        <li><a href='#surfaces'>Surfaces</a></li>
+        <li><a href='#components'>Components</a></li>
+        <li><a href='#states'>States</a></li>
+        <li><a href='#icons'>Icons</a></li>
+        <li><a href='#live'>Live form</a></li>
+      </ol>
+    </nav>
+    <div>
+      <section class='part' id='principles' aria-labelledby='h-p'>
+        <h1 id='h-p'>Design system</h1>
+        <p>One plugin, used by people who are deaf, hard of hearing, blind, colour blind or new to forms, often on a cheap phone. Every token below comes from the plugin itself (<code>customElements.get('db-form').design</code>), so this page cannot drift from the real form.</p>
+        <ol class='principles'>
+          <li><strong>Nothing only by sound.</strong> Everything spoken is also shown as a caption; listening is a visible state; the beep also flashes.</li>
+          <li><strong>Nothing only by colour.</strong> Selected = check mark and heavier border. Errors = warning icon, bar and words.</li>
+          <li><strong>One accent.</strong> Neutral, warm surfaces. The accent marks the one thing to do next.</li>
+          <li><strong>Large, calm, left-aligned.</strong> 18 px base text, 48 px minimum targets, one question per page.</li>
+          <li><strong>Every script.</strong> Latin and Ge'ez are set together; Ge'ez gets more line height.</li>
+        </ol>
+      </section>
+
+      <section class='part' id='type' aria-labelledby='h-t'>
+        <h2 id='h-t'>Typography</h2>
+        <p>Atkinson Hyperlegible (Braille Institute) for the interface: letters that are hard to confuse (I l 1, 0 O). Noto Sans Ethiopic for Amharic and Tigrinya. Source Serif 4 only for this partner site's own headings, never inside the form.</p>
+        <div class='type'>
+          <div class='row'><span class='meta'>Display 48</span><span style='font:700 3rem/1.1 var(--font-display)'>Join our programme</span></div>
+          <div class='row'><span class='meta'>Question 25</span><span style='font:700 1.5625rem/1.3 var(--font-ui)'>How would you like to show who you are?</span></div>
+          <div class='row'><span class='meta'>Body 18</span><span style='font:400 1.125rem/1.55 var(--font-ui)'>Only used to contact you about this programme. A phone number has 10 digits and starts with 0.</span></div>
+          <div class='row'><span class='meta'>Ge'ez 18 / 1.8</span><span lang='am' style='font:400 1.125rem/1.8 var(--font-ui)'>ማንነትዎን እንዴት ማሳየት ይፈልጋሉ? ቀበሌ መታወቂያ ወይም ፓስፖርት።</span></div>
+          <div class='row'><span class='meta'>Tigrinya</span><span lang='ti' style='font:400 1.125rem/1.8 var(--font-ui)'>መንነትኩም ብኸመይ ከተርእዩ ትደልዩ?</span></div>
+          <div class='row'><span class='meta'>Oromo / Somali</span><span style='font:400 1.125rem/1.55 var(--font-ui)'><span lang='om'>Eenyummaa kee akkamitti agarsiisuu barbaadda?</span> · <span lang='so'>Su'aasha 2 ee 5</span></span></div>
+          <div class='row'><span class='meta'>Small 15</span><span style='font:400 .9375rem/1.5 var(--font-ui);color:var(--ink-2)'>Status line and hints use the second ink colour.</span></div>
+        </div>
+      </section>
+
+      <section class='part' id='colour' aria-labelledby='h-c'>
+        <h2 id='h-c'>Colour and themes</h2>
+        <p>Six themes. People choose in the form's Colours menu; the choice is saved on their device and this site follows it. Contrast is calculated live from the tokens (WCAG 2.2: text 4.5:1, borders and icons 3:1).</p>
+        <div class='themes' id='themes'></div>
+      </section>
+
+      <section class='part' id='surfaces' aria-labelledby='h-s'>
+        <h2 id='h-s'>Surfaces, radius and elevation</h2>
+        <p>Three surfaces. Small radii: 4 px for controls, 8 px for choices and cards. One soft shadow, only on the form card.</p>
+        <div class='elev'>
+          <div style='background:var(--bg);border:1px solid var(--line)'>bg · page</div>
+          <div style='background:var(--surface);border:1px solid var(--line)'>surface · card, r 8</div>
+          <div style='background:var(--surface-2);border:1px solid var(--line)'>surface-2 · captions, hover</div>
+          <div style='background:var(--surface);border:1px solid var(--line);box-shadow:0 1px 2px rgb(27 29 26 / .06),0 12px 28px -16px rgb(27 29 26 / .28)'>shadow · the form card only</div>
+        </div>
+      </section>
+
+      <section class='part' id='components' aria-labelledby='h-k'>
+        <h2 id='h-k'>Components</h2>
+        <p>Rendered with the plugin's real stylesheet. Hover and focus are shown with demo classes so you can see them without a mouse.</p>
+        <div class='controls'><label for='spec-theme'>Show components in</label><select id='spec-theme'></select></div>
+        <div class='grid2'>
+          <div><h3>Buttons</h3><div class='spec' data-spec='buttons'></div></div>
+          <div><h3>Text input</h3><div class='spec' data-spec='inputs'></div></div>
+          <div><h3>Choices</h3><div class='spec' data-spec='options'></div></div>
+          <div><h3>Captions and listening</h3><div class='spec' data-spec='caption'></div></div>
+          <div><h3>Top bar: language and colours</h3><div class='spec' data-spec='bar'></div></div>
+          <div><h3>Review row and progress</h3><div class='spec' data-spec='review'></div></div>
+        </div>
+      </section>
+
+      <section class='part' id='states' aria-labelledby='h-st'>
+        <h2 id='h-st'>States</h2>
+        <p>Error, empty, loading and done are designed, not left to the browser.</p>
+        <div class='grid2'>
+          <div><h3>Error</h3><div class='spec' data-spec='error'></div></div>
+          <div><h3>Loading (sending)</h3><div class='spec' data-spec='loading'></div></div>
+          <div><h3>Empty (no jobs yet)</h3><div class='spec' data-spec='empty'></div></div>
+          <div><h3>Done</h3><div class='spec' data-spec='done'></div></div>
+        </div>
+      </section>
+
+      <section class='part' id='icons' aria-labelledby='h-i'>
+        <h2 id='h-i'>Icons</h2>
+        <p>24 px line icons, 1.8 px stroke, current text colour. Always next to a word, never alone, and hidden from screen readers.</p>
+        <div class='icons' id='iconlist'></div>
+      </section>
+
+      <section class='part' id='live' aria-labelledby='h-l'>
+        <h2 id='h-l'>Live form</h2>
+        <p>The real plugin. Try the Colours menu: this whole page follows it.</p>
+        <db-form flow='signup' lang='en' lang-ask='no' api='http://localhost:3000/v1'></db-form>
+      </section>
+    </div>
+  </div>
+</main>
+
+<footer class='site'>
+  <div class='wrap'>
+    <div class='small' style='margin-top:0;border-top:0;padding-top:0'>
+      <p>Inclusive Access plugin · design system</p>
+      <p><a href='./'>Back to the demo partner site</a></p>
+    </div>
+  </div>
+</footer>
+
+<script src='http://localhost:3000/db-form.js'></script>
+<script>
+customElements.whenDefined('db-form').then(() => {
+  const D = customElements.get('db-form').design, I = (k, s) => D.svg(D.ICONS[k], s);
+  const NAMES = { auto: 'Same as my device', standard: 'Standard', dark: 'Dark', contrast: 'High contrast', rg: 'Blue / orange (red-green colour blindness)', by: 'Teal / red (blue-yellow colour blindness)' };
+
+  // ---- colour: swatches + live contrast checks per theme
+  const parse = t => Object.fromEntries(t.split(';').filter(Boolean).map(x => { const i = x.indexOf(':'); let v = x.slice(i + 1).trim(); const m = v.match(/^var\(--[\w-]+,\s*(#[0-9a-f]{6})\)$/i); if (m) v = m[1]; return [x.slice(0, i).trim(), v]; }));
+  const lum = h => { const c = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255).map(v => v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+  const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+  const CHECKS = [['--ink', '--surface', 4.5, 'Text on surface'], ['--ink-2', '--surface', 4.5, 'Hint text on surface'], ['--ink', '--surface-2', 4.5, 'Caption text'], ['--accent-ink', '--accent', 4.5, 'Primary button text'], ['--ink', '--accent-soft', 4.5, 'Text on selected choice'], ['--ink', '--error-soft', 4.5, 'Error message text'], ['--accent', '--surface', 3, 'Accent border / icon'], ['--error', '--surface', 3, 'Error bar / icon'], ['--line-strong', '--surface', 3, 'Input and button border']];
+  const CHIP = ['--bg', '--surface', '--surface-2', '--ink', '--ink-2', '--line-strong', '--accent', '--accent-soft', '--error', '--error-soft'];
+  document.getElementById('themes').innerHTML = Object.entries(D.TOKENS).map(([k, t]) => {
+    const v = parse(t);
+    const chips = CHIP.map(n => { const bg = v[n], fg = ratio(bg, '#000000') > ratio(bg, '#ffffff') ? '#000000' : '#ffffff'; return `<div class='chip' style='background:${bg};color:${fg}'><span>${n.slice(2)}</span><b>${bg}</b></div>`; }).join('');
+    const checks = CHECKS.map(([a, b, min, what]) => { const r = ratio(v[a], v[b]); return `<div><span>${what}</span><span class='${r >= min ? 'pass' : 'fail'}'>${r.toFixed(2)}:1 ${r >= min ? 'pass' : 'fail'}</span></div>`; }).join('');
+    return `<article class='theme'><header><h3>${NAMES[k]}</h3><code>theme='${k}'</code></header><div class='chips'>${chips}</div><div class='checks'>${checks}</div></article>`;
+  }).join('');
+
+  // ---- component specimens: real plugin CSS in shadow roots
+  const DEMO = `.is-hover{background:var(--surface-2)}button.p.is-hover{background:var(--accent-hover);border-color:var(--accent-hover)}.is-focus{outline:3px solid var(--focus);outline-offset:2px;box-shadow:0 0 0 2px var(--focus-gap)}section{max-width:none;box-shadow:none;padding:var(--s4)}.stack{display:grid;gap:var(--s3)}.lab{font-size:.8125rem;color:var(--ink-2);margin-bottom:-6px}`;
+  const SPEC = {
+    buttons: `<div class='stack'><span class='lab'>Primary · hover · focus</span><button class='p'>Next ${I('next', 20)}</button><button class='p is-hover'>Next (hover) ${I('next', 20)}</button><button class='p is-focus'>Next (focus) ${I('next', 20)}</button>
+      <span class='lab'>Secondary · quiet · disabled</span><button>${I('back', 20)}Back</button><button class='q'>${I('speaker', 20)}Read aloud</button><button class='p' disabled>Sending…</button><button class='big'>${I('mic')}Start with voice</button></div>`,
+    inputs: `<div class='stack'><span class='lab'>Default</span><input type='text' value='Abebe Kebede' aria-label='Default'><span class='lab'>Focus</span><input type='text' class='is-focus' value='abebe@' aria-label='Focus'><span class='lab'>Error</span><input type='text' aria-invalid='true' value='091100' aria-label='Error'><div class='err' style='margin-top:0'>${I('alert', 22)}<span>Please type a phone number with 10 digits, starting with zero, or an email address with an @ sign.</span></div><span class='lab'>Disabled</span><input type='text' disabled value='Not editable' aria-label='Disabled'></div>`,
+    options: `<div class='opts'><label class='opt'><input type='radio' name='d1'><span>Kebele ID or passport</span><span class='tick'>${I('check', 20)}</span></label><label class='opt'><input type='radio' name='d1' checked><span>Refugee or returnee ID</span><span class='tick'>${I('check', 20)}</span></label><label class='opt'><input type='checkbox' checked><span class='pic'>${I('sign', 28)}</span><span>Ethiopian Sign Language interpreter</span><span class='tick'>${I('check', 20)}</span></label><label class='opt'><input type='checkbox'><span class='pic'>${I('human', 28)}</span><span>Please call me to help</span><span class='tick'>${I('check', 20)}</span></label></div>`,
+    caption: `<div class='cap' data-state='speaking' style='margin:0 0 12px'><span class='ic'>${I('speaker')}</span><div><span class='k'>Reading aloud...</span><span class='t'>How would you like to show who you are? 1: Kebele ID or passport. 2: Refugee or returnee ID.</span></div></div><div class='cap' data-state='listening' style='margin:0 0 12px'><span class='ic'>${I('mic')}</span><div><span class='k'></span><span class='t'>Listening. Please speak.</span></div><span class='lvl'><i></i><i></i><i></i><i></i></span></div><button class='mic p on'><span class='lab' style='font-size:inherit;color:inherit;margin:0'>${I('mic')}Speak</span><span class='lvl'><i></i><i></i><i></i><i></i></span></button>`,
+    bar: `<div class='bar' style='margin:0;padding:0;border:0'><div class='lang'><button aria-pressed='true'>English</button><button lang='am' aria-pressed='false'>አማርኛ</button><button aria-pressed='false'>Afaan Oromoo</button><button lang='ti' aria-pressed='false'>ትግርኛ</button><button aria-pressed='false'>Soomaali</button></div><details class='disp' open><summary>${I('palette', 20)}Colours</summary><fieldset class='panel' style='position:static;margin-top:8px;width:auto'>${D.THEMES.map((t, i) => `<label><input type='radio' name='dth' ${i === 0 ? 'checked' : ''}><span class='sw'>${D.SWATCH[t].map(c => `<i style='background:${c}'></i>`).join('')}</span><span>${NAMES[t]}</span></label>`).join('')}</fieldset></details></div>`,
+    review: `<p class='step'><span>Question 3 of 5</span></p><div class='track'><i style='width:60%'></i></div><dl class='review'><div class='item'><dt>1. What is your full name?</dt><dd><span>Abebe Kebede</span><button>Change</button></dd></div><div class='item'><dt>2. How would you like to show who you are?</dt><dd><span>Refugee or returnee ID</span><button>Change</button></dd></div></dl>`,
+    error: `<h2>Check your answers</h2><div class='err'>${I('alert', 22)}<span>We could not send your answers. Nothing is lost. Please try again.</span></div><div class='row'><button class='p big'>${I('check')}Yes, submit</button></div>`,
+    loading: `<p class='status' style='display:block'>Sending…</p><div class='row' style='margin-top:0'><button class='p big' disabled>Sending…</button><button class='big' disabled>Start again</button></div>`,
+    empty: `<legend>Which job are you applying for?</legend><p id='hint' style='display:block'>No jobs are listed yet, so please type the job title.</p><input type='text' aria-label='Job title' placeholder=''>`,
+    done: `<div class='done'>${D.svg("<circle cx='12' cy='12' r='10'/><path d='M7 12.5l3.2 3.2L17 9'/>", 56)}<h2>Thank you. We received your answers.</h2></div>`,
+  };
+  const sel = document.getElementById('spec-theme');
+  sel.innerHTML = D.THEMES.map(t => `<option value='${t}'>${NAMES[t]}</option>`).join('');
+  const paint = () => document.querySelectorAll('[data-spec]').forEach(h => {
+    const r = h.shadowRoot || h.attachShadow({ mode: 'open' });
+    r.innerHTML = `<style>${D.CSS}${DEMO}</style><section lang='en' data-theme='${sel.value}' inert>${SPEC[h.dataset.spec]}</section>`;
+  });
+  sel.value = document.documentElement.dataset.theme || 'auto';
+  sel.addEventListener('change', paint);
+  document.addEventListener('db-theme', e => { sel.value = e.detail.theme; paint(); });
+  paint();
+
+  // ---- icons
+  document.getElementById('iconlist').innerHTML = Object.keys(D.ICONS).map(k => `<figure>${I(k, 28)}<figcaption>${k}</figcaption></figure>`).join('');
+});
+</script>
+</body>
+</html>

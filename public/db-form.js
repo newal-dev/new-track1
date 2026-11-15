@@ -1,169 +1,418 @@
 /* Inclusive Access plugin: one script, one tag.
    <script src='https://YOUR-HOST/db-form.js'></script>
    <db-form flow='signup' lang='en' api='https://YOUR-HOST/v1'></db-form>
-   flow: signup | job | employer.  lang: en | am.  hide: optional comma list of question ids to leave out, e.g. hide='idRoute,support' (fullName, role and job cannot be hidden).  audio: optional base URL of recorded .mp3 files (BASE/en|am/QUESTIONID.mp3).  Events: db-complete, db-error.
-   Amharic text is a DRAFT: have a native speaker check every string before submitting. */
+   flow: signup | job | employer.  lang: en | am | om | ti | so (anything else falls back to en).  lang-ask='no': skip the first page that asks for the language (shown in English by default).  theme: auto | standard | dark | contrast | rg | by (the person's own choice in the Colours menu wins).  CSS hooks on <db-form>: --db-accent, --db-font.  hide: optional comma list of question ids to leave out, e.g. hide='idRoute,support' (fullName, role and job cannot be hidden).  audio: optional base URL of recorded .mp3 files (BASE/en|am|om|ti|so/QUESTIONID.mp3).  Events: db-complete, db-error.
+   Amharic text is a DRAFT: have a native speaker check every string before submitting.
+   Afaan Oromoo (om), Tigrinya (ti) and Somali (so) text is a machine-assisted DRAFT: every line marked // VERIFY_NATIVE must be reviewed by a native speaker. */
+// Everything below is block-scoped so its names (LANGS, UI, T, ...) never clash with the host page's own scripts.
+{
 const T = (x, l) => (x && x.en ? (x[l] || x.en) : x);
-const o = (k, en, am) => [k, { en, am }];
+const o = (k, en, am, om, ti, so) => [k, { en, am, om, ti, so }];
+
+// Supported languages. sr = speech recognition locale; tts = prefixes that match a device voice (2- and 3-letter codes).
+// en = English name (shown under the native name on the language page). say = words recognised (in English speech) on the language page.
+const LANGS = [
+  { id: 'en', name: 'English', en: 'English', sr: 'en-US', tts: ['en'], say: ['english', 'inglizii', 'ingliffa'] },
+  { id: 'am', name: 'አማርኛ', en: 'Amharic', sr: 'am-ET', tts: ['am'], say: ['amharic', 'amharigna', 'amarigna', 'amarinya', 'አማርኛ'] },
+  { id: 'om', name: 'Afaan Oromoo', en: 'Oromo', sr: 'om-ET', tts: ['om', 'orm'], say: ['oromo', 'oromoo', 'oromiffa', 'oromifa', 'oromigna'] }, // VERIFY_NATIVE
+  { id: 'ti', name: 'ትግርኛ', en: 'Tigrinya', sr: 'ti-ET', tts: ['ti', 'tir'], say: ['tigrinya', 'tigrigna', 'tigrinia', 'tigrina', 'ትግርኛ'] }, // VERIFY_NATIVE
+  { id: 'so', name: 'Soomaali', en: 'Somali', sr: 'so-SO', tts: ['so', 'som'], say: ['somali', 'soomaali', 'somaali', 'somalia'] }, // VERIFY_NATIVE
+];
+const LANG_RE = /^(en|am|om|ti|so)$/;
+const LANG = id => LANGS.find(x => x.id === id) || LANGS[0];
+// Keyboards differ: full-width digits and ＠ (phone keyboards, IMEs) and Arabic-Indic digits become plain 0-9 and @ before checking.
+const ascii = v => String(v == null ? '' : v).normalize('NFKC').replace(/[٠-٩۰-۹]/g, d => String(d.charCodeAt(0) & 0xF));
+// Buttons and the UI text they show; used to read a button aloud when it gets keyboard focus (clip b_<key>).
+// Per-question keyboard hints. Names in any script: no spellcheck/autocorrect (it "fixes" Ge'ez and Oromo names into English words).
+// Contact takes a phone number OR an email: inputmode='email' keeps the letters and shows @, and digits stay one tap away.
+const INPUT_HINTS = {
+  fullName: "autocomplete='name' autocapitalize='words' autocorrect='off' spellcheck='false'",
+  contact: "autocomplete='email' autocapitalize='off' autocorrect='off' spellcheck='false' inputmode='email'",
+  why: "autocomplete='off' autocapitalize='sentences' spellcheck='false'",
+  job: "autocomplete='organization-title' autocapitalize='sentences' spellcheck='false'",
+};
+const NAV_KEYS = ['Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '];
+const QUIET_KEYS =['Shift', 'Control', 'Alt', 'AltGraph', 'Meta', 'OS', 'CapsLock', 'Process', 'Unidentified', 'Dead', 'Compose'];
+const BTN = { next: 'next', back: 'back', skip: 'skip', read: 'read', mic: 'speak', rm: 'readToMe', stoprm: 'stopRead', send: 'send', nochange: 'noChange', restart: 'restart', edit: 'change' };
 
 const UI = {
-  next: { en: 'Next', am: 'ቀጥል' }, back: { en: 'Back', am: 'ተመለስ' },
-  read: { en: 'Read aloud', am: 'አንብብልኝ' }, speak: { en: 'Speak', am: 'ተናገር' },
-  send: { en: 'Yes, submit', am: 'አዎ፣ አስገባ' }, change: { en: 'Change', am: 'ቀይር' },
-  review: { en: 'Check your answers', am: 'መልሶችዎን ያረጋግጡ' },
-  thanks: { en: 'Thank you. We received your answers.', am: 'እናመሰግናለን። መልሶችዎን ተቀብለናል።' },
-  need: { en: 'Please answer this question, or press Back.', am: 'እባክዎ ይህን ጥያቄ ይመልሱ ወይም ተመለስ ይጫኑ።' },
-  bad: { en: 'Please type a phone number with 10 digits, starting with zero, or an email address with an @ sign.', am: 'እባክዎ በዜሮ የሚጀምር ባለ አሥር አሃዝ ስልክ ቁጥር ይጻፉ፤ ወይም «@» ምልክት ያለው ኢሜይል አድራሻ ይጻፉ።' },
-  skip: { en: 'Skip', am: 'ዝለል' },
-  stopped: { en: 'Reading stopped. Press Read to me to start again.', am: 'ማንበብ ቆሟል። እንደገና ለመጀመር «አንብቡልኝ» ይጫኑ።' },
-  skipped: { en: '(skipped)', am: '(ተዘሏል)' },
-  of: { en: 'Question {n} of {t}', am: 'ጥያቄ {n} ከ {t}' },
-  heard: { en: 'We heard: {x}. You can edit it.', am: 'የሰማነው፦ {x}። ማስተካከል ይችላሉ።' },
-  novoice: { en: 'Voice input is not available here. Please type.', am: 'የድምፅ ግብዓት እዚህ አይገኝም። እባክዎ ይጻፉ።' },
-  novoicehere: { en: 'This device has no voice for this language. Please read the text, or try another device.', am: 'ይህ መሣሪያ ለዚህ ቋንቋ ድምፅ የለውም። እባክዎ ጽሑፉን ያንብቡ ወይም ሌላ መሣሪያ ይሞክሩ።' },
-  listening: { en: 'Listening. Please speak.', am: 'እያዳመጥን ነው። ይናገሩ።' },
-  micblocked: { en: 'The microphone is blocked. Allow it in the browser, or type.', am: 'ማይክሮፎን ታግዷል። በአሳሹ ውስጥ ፈቃድ ይስጡ ወይም ይጻፉ።' },
-  nolang: { en: 'This browser cannot understand this language by voice. Please type.', am: 'ይህ አሳሽ ይህን ቋንቋ በድምፅ መረዳት አይችልም። እባክዎ ይጻፉ።' },
-  nospeech: { en: 'We did not hear anything. Try again, or type.', am: 'ምንም አልሰማንም። እንደገና ይሞክሩ ወይም ይጻፉ።' },
-  welcomeH: { en: 'Welcome!', am: 'እንኳን ደህና መጡ!' },
-  welcomeP: { en: 'A simpler way to register and find opportunities.', am: 'ለመመዝገብና ዕድሎችን ለማግኘት ቀለል ያለ መንገድ።' },
-  startVoice: { en: 'Start with voice', am: 'በድምፅ ጀምር' },
-  typeInstead: { en: 'Type instead', am: 'በምትኩ ይጻፉ' },
-  start: { en: 'Start', am: 'ጀምር' },
-  intro: { en: 'Welcome. This form asks one question at a time. Use Tab to move between buttons and Enter to choose. Press Read aloud to hear a page.', am: 'እንኳን ደህና መጡ። ይህ ቅጽ አንድ ጥያቄ በአንድ ጊዜ ይጠይቃል። በአዝራሮች መካከል ለመንቀሳቀስ Tab ይጠቀሙ፤ ለመምረጥ Enter ይጫኑ። ገጽ ለመስማት «አንብብልኝ» ይጫኑ።' },
-  readToMe: { en: 'Read to me', am: 'አንብቡልኝ' },
-  stopRead: { en: 'Stop reading', am: 'ማንበብ አቁም' },
-  reading: { en: 'Reading aloud...', am: 'እያነበብን ነው...' },
-  raAsk: { en: 'Would you like this page to be read aloud to you?', am: 'ይህ ገጽ እንዲነበብልዎ ይፈልጋሉ?' },
-  raHint: { en: 'Please say Yes or No, or press a button.', am: '«አዎ» ወይም «አይ» ይበሉ፤ ወይም አንድ ቁልፍ ይጫኑ።' },
-  raPrivacy: { en: 'If you choose Yes, or press a Speak button later, your browser may send your voice to its provider to turn it into text. You can choose No and type instead.', am: '«አዎ» ከመረጡ ወይም በኋላ «ተናገር» ከተጫኑ አሳሽዎ ድምፅዎን ወደ ጽሑፍ ለመቀየር ወደ አቅራቢው ሊልክ ይችላል። «አይ» መርጠው በምትኩ መጻፍ ይችላሉ።' },
-  raAgain: { en: 'We did not hear an answer, so we will take that as No. If you would like the page read aloud, please say Yes now, or press the Yes button.', am: 'መልስ አልሰማንም። እንደ «አይ» እንወስደዋለን። እንዲነበብልዎ ከፈለጉ አሁን «አዎ» ይበሉ ወይም «አዎ» የሚለውን ይጫኑ።' },
-  raYes: { en: 'Yes, read aloud', am: 'አዎ፣ ይነበብልኝ' },
-  raNo: { en: 'No, thank you', am: 'አይ፣ አያስፈልግም' },
-  raNone: { en: 'Continuing without reading aloud. You can press Read to me at any time.', am: 'ሳይነበብ እንቀጥላለን። «አንብቡልኝ» የሚለውን በማንኛውም ጊዜ መጫን ይችላሉ።' },
-  sayChoose: { en: 'Say the number or the name of your choice. Say Next to continue, Back to go back, or Read aloud to hear this again.', am: 'የምርጫዎን ቁጥር ወይም ስም ይናገሩ። ለመቀጠል «ቀጥል»፣ ለመመለስ «ተመለስ»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ።' },
-  sayChoose1: { en: 'Say the number or the name of your choice. Say Next to continue, or Read aloud to hear this again.', am: 'የምርጫዎን ቁጥር ወይም ስም ይናገሩ። ለመቀጠል «ቀጥል»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ።' },
-  saySkip: { en: 'Say Skip to skip this question.', am: 'ይህን ጥያቄ ለመዝለል «ዝለል» ይበሉ።' },
-  sayText: { en: 'Speak your answer now. Say Next to continue, Back to go back, or Read aloud to hear this again.', am: 'መልስዎን አሁን ይናገሩ። ለመቀጠል «ቀጥል»፣ ለመመለስ «ተመለስ»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ።' },
-  sayText1: { en: 'Speak your answer now. Say Next to continue, or Read aloud to hear this again.', am: 'መልስዎን አሁን ይናገሩ። ለመቀጠል «ቀጥል»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ።' },
-  sayWelcome: { en: 'Say Start to begin.', am: 'ለመጀመር «ጀምር» ይበሉ።' },
-  sayReview: { en: 'Say Submit to send your answers, or Back to change them.', am: 'መልሶችዎን ለመላክ «አስገባ»፣ ለመቀየር «ተመለስ» ይበሉ።' },
-  chose: { en: 'You chose: {x}. Say Next to continue, or choose again.', am: 'የመረጡት፦ {x}። ለመቀጠል «ቀጥል» ይበሉ ወይም እንደገና ይምረጡ።' },
-  noneSel: { en: 'Nothing is chosen. Say a number or a name, or say Skip.', am: 'ምንም አልተመረጠም። ቁጥር ወይም ስም ይናገሩ፤ ወይም «ዝለል» ይበሉ።' },
-  unclear: { en: 'Sorry, I did not understand. Please say the number of your choice.', am: 'ይቅርታ፣ አልገባኝም። እባክዎ የምርጫዎን ቁጥር ይናገሩ።' },
-  heardNext: { en: 'We heard: {x}. Say Next to continue, or say your answer again.', am: 'የሰማነው፦ {x}። ለመቀጠል «ቀጥል» ይበሉ ወይም መልስዎን እንደገና ይናገሩ።' },
-  idle: { en: 'We did not hear you. Press the big Speak button, or press Stop reading to use the keyboard.', am: 'አልሰማንዎትም። ትልቁን «ተናገር» ቁልፍ ይጫኑ፤ ወይም ኪቦርድ ለመጠቀም «ማንበብ አቁም» ይጫኑ።' },
-  sayType: { en: 'Please type your answer in the box. Then press Enter, or press the Next button.', am: 'እባክዎ መልስዎን በሳጥኑ ውስጥ ይጻፉ። ከዚያ Enter ወይም «ቀጥል» የሚለውን ቁልፍ ይጫኑ።' },
-  reviewAsk: { en: 'Do you want to submit your answers? Say Yes to submit, or No to change something.', am: 'መልሶችዎን ማስገባት ይፈልጋሉ? ለማስገባት «አዎ»፣ አንድ ነገር ለመቀየር «አይ» ይበሉ።' },
-  reviewFix: { en: 'Say Start again to go back to the first question, or say the number of the question you want to change.', am: 'ወደ መጀመሪያው ጥያቄ ለመመለስ «እንደገና ጀምር» ይበሉ፤ ወይም መቀየር የሚፈልጉትን ጥያቄ ቁጥር ይናገሩ።' },
-  noChange: { en: 'No, change something', am: 'አይ፣ አንድ ነገር ልቀይር' },
-  restart: { en: 'Start again', am: 'እንደገና ጀምር' },
-  choseA: { en: 'You chose', am: 'የመረጡት' },
-  choseB: { en: 'Say Next to continue, or choose again.', am: 'ለመቀጠል «ቀጥል» ይበሉ ወይም እንደገና ይምረጡ።' },
-  heardGeneric: { en: 'We heard your answer. It is shown on the screen. Say Next to continue, or say your answer again.', am: 'መልስዎን ሰምተናል። በማያ ገጹ ላይ ይታያል። ለመቀጠል «ቀጥል» ይበሉ ወይም መልስዎን እንደገና ይናገሩ።' },
-  fail: { en: 'We could not send your answers. Nothing is lost. Please try again.', am: 'መልሶችዎን መላክ አልቻልንም። ምንም አልጠፋም። እባክዎ እንደገና ይሞክሩ።' },
+  // Language page. It is always in English first (langH, langAsk, langNone); each language then invites its own speakers (langSelf).
+  langH: { en: 'Which language would you like to use?' },
+  langAsk: { en: 'Which language would you like to use? Say English, Amharic, Oromo, Tigrinya or Somali, or press a button.' },
+  langNone: { en: 'We did not hear a language. Please press a language button.' },
+  colours: { en: 'Colours', am: 'ቀለሞች', om: "Halluuwwan", ti: "ሕብርታት", so: "Midabada" }, // VERIFY_NATIVE (om ti so)
+  th_auto: { en: 'Same as my device', am: 'እንደ መሣሪያዬ', om: "Akkuma meeshaa koo", ti: "ከም መሳርሒየ", so: "Sida qalabkayga" }, // VERIFY_NATIVE (om ti so)
+  th_standard: { en: 'Standard', am: 'መደበኛ', om: "Idilee", ti: "ልሙድ", so: "Caadi" }, // VERIFY_NATIVE (om ti so)
+  th_dark: { en: 'Dark', am: 'ጨለማ', om: "Dukkana", ti: "ጸሊም", so: "Mugdi" }, // VERIFY_NATIVE (om ti so)
+  th_contrast: { en: 'High contrast (black and white)', am: 'ከፍተኛ ንፅፅር (ጥቁርና ነጭ)', om: "Garaagarummaa olaanaa (gurraacha fi adii)", ti: "ልዑል ፍልልይ (ጸሊምን ጻዕዳን)", so: "Kala-duwanaan sare (madow iyo cad)" }, // VERIFY_NATIVE (om ti so)
+  th_rg: { en: 'Blue and orange (for red-green colour blindness)', am: 'ሰማያዊና ብርቱካናማ (ቀይና አረንጓዴን ለማይለዩ)', om: "Cuquliisaa fi burtukaanii (warra diimaa fi magariisa adda hin baafneef)", ti: "ሰማያዊን ብርቱኳናውን (ቀይሕን ቀጠልያን ንዘይፈልዩ)", so: "Buluug iyo oranji (kuwa aan kala garan casaanka iyo cagaarka)" }, // VERIFY_NATIVE (om ti so)
+  th_by: { en: 'Teal and red (for blue-yellow colour blindness)', am: 'ደማቅ አረንጓዴና ቀይ (ሰማያዊና ቢጫን ለማይለዩ)', om: "Magariisa cuquliisaa fi diimaa (warra cuquliisaa fi keelloo adda hin baafneef)", ti: "ሰማያዊ-ቀጠልያን ቀይሕን (ሰማያዊን ብጫን ንዘይፈልዩ)", so: "Cagaar-buluug iyo casaan (kuwa aan kala garan buluugga iyo jaallaha)" }, // VERIFY_NATIVE (om ti so)
+  sending: { en: 'Sending…', am: 'በመላክ ላይ…', om: "Ergaa jira…", ti: "ይለኣኽ ኣሎ…", so: "Waa la dirayaa…" }, // VERIFY_NATIVE (om ti so)
+  speakNow: { en: 'Speak now.', am: 'አሁን ይናገሩ።', om: "Amma dubbadhu.", ti: "ሕጂ ተዛረቡ።", so: "Hadda hadal." }, // VERIFY_NATIVE (om ti so)
+  sel: { en: 'selected', am: 'ተመርጧል', om: "filatameera", ti: "ተመሪጹ", so: "waa la doortay" }, // VERIFY_NATIVE (om ti so)
+  unsel: { en: 'not selected', am: 'አልተመረጠም', om: "hin filatamne", ti: "ኣይተመርጸን", so: "lama dooran" }, // VERIFY_NATIVE (om ti so)
+  langSelf: { en: 'For English, say English, or press the English button.', am: 'ለአማርኛ «Amharic» ይበሉ፤ ወይም «አማርኛ» የሚለውን ቁልፍ ይጫኑ።', om: "Afaan Oromoo filachuuf Oromo jedhi, ykn qabduu Afaan Oromoo tuqi.", ti: "ንትግርኛ «Tigrinya» በሉ፣ ወይ «ትግርኛ» ዝብል መጠወቒ ጠውቑ።", so: "Af Soomaali: dheh Somali, ama riix badhanka Soomaali." }, // VERIFY_NATIVE (om ti so)
+  next: { en: 'Next', am: 'ቀጥል', om: "Itti fufi", ti: "ቀጽል", so: "Xiga" }, // VERIFY_NATIVE
+  back: { en: 'Back', am: 'ተመለስ', om: "Duubatti", ti: "ተመለስ", so: "Dib u noqo" }, // VERIFY_NATIVE
+  read: { en: 'Read aloud', am: 'አንብብልኝ', om: "Sagaleedhaan dubbisi", ti: "ኣንብበለይ", so: "Akhri" }, // VERIFY_NATIVE
+  speak: { en: 'Speak', am: 'ተናገር', om: "Dubbadhu", ti: "ተዛረብ", so: "Hadal" }, // VERIFY_NATIVE
+  send: { en: 'Yes, submit', am: 'አዎ፣ አስገባ', om: "Eeyyee, ergi", ti: "እወ፣ ኣረክብ", so: "Haa, gudbi" }, // VERIFY_NATIVE
+  change: { en: 'Change', am: 'ቀይር', om: "Jijjiiri", ti: "ቀይር", so: "Beddel" }, // VERIFY_NATIVE
+  review: { en: 'Check your answers', am: 'መልሶችዎን ያረጋግጡ', om: "Deebii kee mirkaneessi", ti: "መልስታትኩም ኣረጋግጹ", so: "Hubi jawaabahaaga" }, // VERIFY_NATIVE
+  thanks: { en: 'Thank you. We received your answers.', am: 'እናመሰግናለን። መልሶችዎን ተቀብለናል።', om: "Galatoomi. Deebii kee argannee jirra.", ti: "የቐንየልና። መልስታትኩም ተቐቢልናዮ።", so: "Mahadsanid. Waan helnay jawaabahaaga." }, // VERIFY_NATIVE
+  need: { en: 'Please answer this question, or press Back.', am: 'እባክዎ ይህን ጥያቄ ይመልሱ ወይም ተመለስ ይጫኑ።', om: "Maaloo gaaffii kana deebisi, ykn Duubatti tuqi.", ti: "በጃኹም ነዚ ሕቶ ምለሱ፣ ወይ «ተመለስ» ጠውቑ።", so: "Fadlan ka jawaab su'aashan, ama riix Dib u noqo." }, // VERIFY_NATIVE
+  bad: { en: 'Please type a phone number with 10 digits, starting with zero, or an email address with an @ sign.', am: 'እባክዎ በዜሮ የሚጀምር ባለ አሥር አሃዝ ስልክ ቁጥር ይጻፉ፤ ወይም «@» ምልክት ያለው ኢሜይል አድራሻ ይጻፉ።', om: "Maaloo lakkoofsa bilbilaa dijiitii 10 qabu kan zeeroon jalqabu, ykn teessoo imeelii mallattoo @ qabu barreessi.", ti: "በጃኹም ብዜሮ ዚጅምር 10 ኣሃዝ ዘለዎ ቁጽሪ ስልኪ፣ ወይ «@» ምልክት ዘለዎ ኢመይል ጽሓፉ።", so: "Fadlan qor lambar taleefan oo 10 god ah oo ku bilaabmaya eber, ama cinwaan iimayl oo leh calaamadda @." }, // VERIFY_NATIVE
+  skip: { en: 'Skip', am: 'ዝለል', om: "Irra darbi", ti: "ሕለፍ", so: "Ka bood" }, // VERIFY_NATIVE
+  stopped: { en: 'Reading stopped. Press Read to me to start again.', am: 'ማንበብ ቆሟል። እንደገና ለመጀመር «አንብቡልኝ» ይጫኑ።', om: "Dubbisuun dhaabateera. Ammas jalqabuuf Naaf dubbisi tuqi.", ti: "ምንባብ ቆይሙ። ደጊምኩም ንምጅማር «ኣንብቡለይ» ጠውቑ።", so: "Akhrintii waa la joojiyay. Riix Ii akhri si aad dib ugu bilowdo." }, // VERIFY_NATIVE
+  skipped: { en: '(skipped)', am: '(ተዘሏል)', om: "(darbameera)", ti: "(ተሓሊፉ)", so: "(waa laga booday)" }, // VERIFY_NATIVE
+  of: { en: 'Question {n} of {t}', am: 'ጥያቄ {n} ከ {t}', om: "Gaaffii {n} kan {t} keessaa", ti: "ሕቶ {n} ካብ {t}", so: "Su'aasha {n} ee {t}" }, // VERIFY_NATIVE
+  heard: { en: 'We heard: {x}. You can edit it.', am: 'የሰማነው፦ {x}። ማስተካከል ይችላሉ።', om: "Kan dhageenye: {x}. Sirreessuu dandeessa.", ti: "ዝሰማዕናዮ፦ {x}። ከተመሓይሹዎ ትኽእሉ ኢኹም።", so: "Waxaan maqalnay: {x}. Waad wax ka beddeli kartaa." }, // VERIFY_NATIVE
+  novoice: { en: 'Voice input is not available here. Please type.', am: 'የድምፅ ግብዓት እዚህ አይገኝም። እባክዎ ይጻፉ።', om: "Sagaleedhaan galchuun asitti hin danda'amu. Maaloo barreessi.", ti: "ብድምጺ ምእታው ኣብዚ ኣይርከብን። በጃኹም ጽሓፉ።", so: "Codka halkan laguma isticmaali karo. Fadlan qor." }, // VERIFY_NATIVE
+  novoicehere: { en: 'This device has no voice for this language. Please read the text, or try another device.', am: 'ይህ መሣሪያ ለዚህ ቋንቋ ድምፅ የለውም። እባክዎ ጽሑፉን ያንብቡ ወይም ሌላ መሣሪያ ይሞክሩ።', om: "Meeshaan kun afaan kanaaf sagalee hin qabu. Maaloo barreeffama dubbisi, ykn meeshaa biraa yaali.", ti: "እዚ መሳርሒ ነዚ ቋንቋ ድምጺ የብሉን። በጃኹም ጽሑፉ ኣንብቡ፣ ወይ ካልእ መሳርሒ ፈትኑ።", so: "Qalabkan cod uma laha luqaddan. Fadlan akhri qoraalka, ama isku day qalab kale." }, // VERIFY_NATIVE
+  listening: { en: 'Listening. Please speak.', am: 'እያዳመጥን ነው። ይናገሩ።', om: "Dhaggeeffachaa jirra. Maaloo dubbadhu.", ti: "ንሰምዕ ኣለና። በጃኹም ተዛረቡ።", so: "Waan dhageysanaynaa. Fadlan hadal." }, // VERIFY_NATIVE
+  micblocked: { en: 'The microphone is blocked. Allow it in the browser, or type.', am: 'ማይክሮፎን ታግዷል። በአሳሹ ውስጥ ፈቃድ ይስጡ ወይም ይጻፉ።', om: "Maaykiroofooniin cufameera. Barbaadduu keessatti hayyami, ykn barreessi.", ti: "ማይክሮፎን ተዓጽዩ ኣሎ። ኣብ መርበብ ፍቐዱ፣ ወይ ጽሓፉ።", so: "Makarafoonka waa la xannibay. U oggolow browserka, ama qor." }, // VERIFY_NATIVE
+  nolang: { en: 'This browser cannot understand this language by voice. Please type.', am: 'ይህ አሳሽ ይህን ቋንቋ በድምፅ መረዳት አይችልም። እባክዎ ይጻፉ።', om: "Barbaadduun kun afaan kana sagaleedhaan hubachuu hin danda'u. Maaloo barreessi.", ti: "እዚ መርበብ ነዚ ቋንቋ ብድምጺ ክርዳእ ኣይክእልን። በጃኹም ጽሓፉ።", so: "Browserkan ma fahmi karo luqaddan cod ahaan. Fadlan qor." }, // VERIFY_NATIVE
+  nospeech: { en: 'We did not hear anything. Try again, or type.', am: 'ምንም አልሰማንም። እንደገና ይሞክሩ ወይም ይጻፉ።', om: "Homaa hin dhageenye. Irra deebi'ii yaali, ykn barreessi.", ti: "ዋላ ሓንቲ ኣይሰማዕናን። ደጊምኩም ፈትኑ፣ ወይ ጽሓፉ።", so: "Waxba ma aanaan maqal. Mar kale isku day, ama qor." }, // VERIFY_NATIVE
+  welcomeH: { en: 'Welcome!', am: 'እንኳን ደህና መጡ!', om: "Baga nagaan dhuftan!", ti: "እንቋዕ ብደሓን መጻእኩም!", so: "Soo dhawoow!" }, // VERIFY_NATIVE
+  welcomeP: { en: 'A simpler way to register and find opportunities.', am: 'ለመመዝገብና ዕድሎችን ለማግኘት ቀለል ያለ መንገድ።', om: "Karaa salphaa itti galmooftanii carraa argattan.", ti: "ንምምዝጋብን ዕድላት ንምርካብን ቀሊል መንገዲ።", so: "Hab fudud oo aad isku diiwaangeliso oo aad fursado ku hesho." }, // VERIFY_NATIVE
+  startVoice: { en: 'Start with voice', am: 'በድምፅ ጀምር', om: "Sagaleedhaan jalqabi", ti: "ብድምጺ ጀምር", so: "Ku bilow cod" }, // VERIFY_NATIVE
+  typeInstead: { en: 'Type instead', am: 'በምትኩ ይጻፉ', om: "Kanaa mannaa barreessi", ti: "ኣብ ክንድኡ ጽሓፉ", so: "Qor beddelkeeda" }, // VERIFY_NATIVE
+  start: { en: 'Start', am: 'ጀምር', om: "Jalqabi", ti: "ጀምር", so: "Bilow" }, // VERIFY_NATIVE
+  intro: { en: 'Welcome. This form asks one question at a time. Use Tab to move between buttons and Enter to choose. Press Read aloud to hear a page.', am: 'እንኳን ደህና መጡ። ይህ ቅጽ አንድ ጥያቄ በአንድ ጊዜ ይጠይቃል። በአዝራሮች መካከል ለመንቀሳቀስ Tab ይጠቀሙ፤ ለመምረጥ Enter ይጫኑ። ገጽ ለመስማት «አንብብልኝ» ይጫኑ።', om: "Baga nagaan dhuftan. Unkaan kun yeroo tokkotti gaaffii tokko gaafata. Qabduuwwan gidduu socho'uuf Tab, filachuuf Enter fayyadami. Fuula dhaga'uuf Sagaleedhaan dubbisi tuqi.", ti: "እንቋዕ ብደሓን መጻእኩም። እዚ ቅጥዒ ሓደ ሕቶ ብሓደ ግዜ ይሓትት። ኣብ መንጎ መጠወቒታት ንምንቅሳቕ Tab፣ ንምምራጽ Enter ተጠቐሙ። ገጽ ንምስማዕ «ኣንብበለይ» ጠውቑ።", so: "Soo dhawoow. Foomkan wuxuu weydiinayaa hal su'aal markiiba. Isticmaal Tab si aad badhamada u dhex marto, iyo Enter si aad u doorato. Riix Akhri si aad bogga u maqasho." }, // VERIFY_NATIVE
+  readToMe: { en: 'Read to me', am: 'አንብቡልኝ', om: "Naaf dubbisi", ti: "ኣንብቡለይ", so: "Ii akhri" }, // VERIFY_NATIVE
+  stopRead: { en: 'Stop reading', am: 'ማንበብ አቁም', om: "Dubbisuu dhaabi", ti: "ምንባብ ኣቋርጽ", so: "Jooji akhrinta" }, // VERIFY_NATIVE
+  reading: { en: 'Reading aloud...', am: 'እያነበብን ነው...', om: "Dubbisaa jira...", ti: "ይንበብ ኣሎ...", so: "Waa la akhrinayaa..." }, // VERIFY_NATIVE
+  raAsk: { en: 'Would you like this page to be read aloud to you?', am: 'ይህ ገጽ እንዲነበብልዎ ይፈልጋሉ?', om: "Fuulli kun sagaleedhaan akka siif dubbifamu barbaaddaa?", ti: "እዚ ገጽ ክንበበልኩም ትደልዩ ዶ?", so: "Ma rabtaa in boggan laguu akhriyo?" }, // VERIFY_NATIVE
+  raHint: { en: 'Please say Yes or No, or press a button.', am: '«አዎ» ወይም «አይ» ይበሉ፤ ወይም አንድ ቁልፍ ይጫኑ።', om: "Maaloo Eeyyee ykn Lakki jedhi, ykn qabduu tokko tuqi.", ti: "በጃኹም «እወ» ወይ «ኣይፋል» በሉ፣ ወይ ሓደ መጠወቒ ጠውቑ።", so: "Fadlan dheh Haa ama Maya, ama riix badhan." }, // VERIFY_NATIVE
+  raPrivacy: { en: 'If you choose Yes, or press a Speak button later, your browser may send your voice to its provider to turn it into text. You can choose No and type instead.', am: '«አዎ» ከመረጡ ወይም በኋላ «ተናገር» ከተጫኑ አሳሽዎ ድምፅዎን ወደ ጽሑፍ ለመቀየር ወደ አቅራቢው ሊልክ ይችላል። «አይ» መርጠው በምትኩ መጻፍ ይችላሉ።', om: "Eeyyee yoo filatte, ykn booda qabduu Dubbadhu yoo tuqxe, barbaadduun kee sagalee kee gara barreeffamaatti jijjiiruuf dhiyeessaa isaatti erguu danda'a. Lakki filattee barreessuu dandeessa.", ti: "«እወ» እንተ መሪጽኩም፣ ወይ ደሓር «ተዛረብ» እንተ ጠዊቕኩም፣ መርበብኩም ድምጽኹም ናብ ጽሑፍ ንምቕያር ናብ ኣቕራቢኡ ክሰዶ ይኽእል። «ኣይፋል» መሪጽኩም ክትጽሕፉ ትኽእሉ ኢኹም።", so: "Haddii aad doorato Haa, ama aad hadhow riixdo badhanka Hadal, browserkaagu wuxuu codkaaga u diri karaa bixiyahiisa si uu qoraal ugu beddelo. Waxaad dooran kartaa Maya oo aad qori kartaa." }, // VERIFY_NATIVE
+  raAgain: { en: 'We did not hear an answer, so we will take that as No. If you would like the page read aloud, please say Yes now, or press the Yes button.', am: 'መልስ አልሰማንም። እንደ «አይ» እንወስደዋለን። እንዲነበብልዎ ከፈለጉ አሁን «አዎ» ይበሉ ወይም «አዎ» የሚለውን ይጫኑ።', om: "Deebii hin dhageenye, kanaaf akka Lakkiitti fudhanna. Fuulli akka siif dubbifamu yoo barbaadde, amma Eeyyee jedhi, ykn qabduu Eeyyee tuqi.", ti: "መልሲ ኣይሰማዕናን፣ ስለዚ ከም «ኣይፋል» ንወስዶ። ገጹ ክንበበልኩም እንተ ደሊኹም፣ ሕጂ «እወ» በሉ፣ ወይ «እወ» ዝብል መጠወቒ ጠውቑ።", so: "Jawaab ma aanaan maqal, sidaa darteed waxaan u qaadanaynaa Maya. Haddii aad rabto in boggan laguu akhriyo, hadda dheh Haa, ama riix badhanka Haa." }, // VERIFY_NATIVE
+  raYes: { en: 'Yes, read aloud', am: 'አዎ፣ ይነበብልኝ', om: "Eeyyee, naaf dubbisi", ti: "እወ፣ ኣንብቡለይ", so: "Haa, ii akhri" }, // VERIFY_NATIVE
+  raNo: { en: 'No, thank you', am: 'አይ፣ አያስፈልግም', om: "Lakki, galatoomi", ti: "ኣይፋል፣ የቐንየለይ", so: "Maya, mahadsanid" }, // VERIFY_NATIVE
+  raNone: { en: 'Continuing without reading aloud. You can press Read to me at any time.', am: 'ሳይነበብ እንቀጥላለን። «አንብቡልኝ» የሚለውን በማንኛውም ጊዜ መጫን ይችላሉ።', om: "Osoo hin dubbisin itti fufna. Yeroo kamiyyuu Naaf dubbisi tuquu dandeessa.", ti: "ብዘይ ምንባብ ንቕጽል። «ኣንብቡለይ» ኣብ ዝኾነ ግዜ ክትጠውቑ ትኽእሉ ኢኹም።", so: "Waan sii wadnaa annagoon akhrin. Waxaad riixi kartaa Ii akhri wakhti kasta." }, // VERIFY_NATIVE
+  sayChoose: { en: 'Say the number or the name of your choice. Say Next to continue, Back to go back, or Read aloud to hear this again.', am: 'የምርጫዎን ቁጥር ወይም ስም ይናገሩ። ለመቀጠል «ቀጥል»፣ ለመመለስ «ተመለስ»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ።', om: "Lakkoofsa ykn maqaa filannoo keetii jedhi. Itti fufuuf Itti fufi, deebi'uuf Duubatti, ammas dhaga'uuf Sagaleedhaan dubbisi jedhi.", ti: "ቁጽሪ ወይ ስም ምርጫኹም በሉ። ንምቕጻል «ቀጽል»፣ ንምምላስ «ተመለስ»፣ ደጊምኩም ንምስማዕ «ኣንብበለይ» በሉ።", so: "Dheh lambarka ama magaca doorashadaada. Dheh Xiga si aad u sii socoto, Dib u noqo si aad dib ugu noqoto, ama Akhri si aad mar kale u maqasho." }, // VERIFY_NATIVE
+  sayChoose1: { en: 'Say the number or the name of your choice. Say Next to continue, or Read aloud to hear this again.', am: 'የምርጫዎን ቁጥር ወይም ስም ይናገሩ። ለመቀጠል «ቀጥል»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ።', om: "Lakkoofsa ykn maqaa filannoo keetii jedhi. Itti fufuuf Itti fufi, ammas dhaga'uuf Sagaleedhaan dubbisi jedhi.", ti: "ቁጽሪ ወይ ስም ምርጫኹም በሉ። ንምቕጻል «ቀጽል»፣ ደጊምኩም ንምስማዕ «ኣንብበለይ» በሉ።", so: "Dheh lambarka ama magaca doorashadaada. Dheh Xiga si aad u sii socoto, ama Akhri si aad mar kale u maqasho." }, // VERIFY_NATIVE
+  saySkip: { en: 'Say Skip to skip this question.', am: 'ይህን ጥያቄ ለመዝለል «ዝለል» ይበሉ።', om: "Gaaffii kana irra darbuuf Irra darbi jedhi.", ti: "ነዚ ሕቶ ንምሕላፍ «ሕለፍ» በሉ።", so: "Dheh Ka bood si aad su'aashan uga boodo." }, // VERIFY_NATIVE
+  sayText: { en: 'Speak your answer now. Say Next to continue, Back to go back, or Read aloud to hear this again.', am: 'መልስዎን አሁን ይናገሩ። ለመቀጠል «ቀጥል»፣ ለመመለስ «ተመለስ»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ።', om: "Amma deebii kee dubbadhu. Itti fufuuf Itti fufi, deebi'uuf Duubatti, ammas dhaga'uuf Sagaleedhaan dubbisi jedhi.", ti: "ሕጂ መልስኹም ተዛረቡ። ንምቕጻል «ቀጽል»፣ ንምምላስ «ተመለስ»፣ ደጊምኩም ንምስማዕ «ኣንብበለይ» በሉ።", so: "Hadda ku hadal jawaabtaada. Dheh Xiga si aad u sii socoto, Dib u noqo si aad dib ugu noqoto, ama Akhri si aad mar kale u maqasho." }, // VERIFY_NATIVE
+  sayText1: { en: 'Speak your answer now. Say Next to continue, or Read aloud to hear this again.', am: 'መልስዎን አሁን ይናገሩ። ለመቀጠል «ቀጥል»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ።', om: "Amma deebii kee dubbadhu. Itti fufuuf Itti fufi, ammas dhaga'uuf Sagaleedhaan dubbisi jedhi.", ti: "ሕጂ መልስኹም ተዛረቡ። ንምቕጻል «ቀጽል»፣ ደጊምኩም ንምስማዕ «ኣንብበለይ» በሉ።", so: "Hadda ku hadal jawaabtaada. Dheh Xiga si aad u sii socoto, ama Akhri si aad mar kale u maqasho." }, // VERIFY_NATIVE
+  sayWelcome: { en: 'Say Start to begin.', am: 'ለመጀመር «ጀምር» ይበሉ።', om: "Jalqabuuf Jalqabi jedhi.", ti: "ንምጅማር «ጀምር» በሉ።", so: "Dheh Bilow si aad u bilowdo." }, // VERIFY_NATIVE
+  sayReview: { en: 'Say Submit to send your answers, or Back to change them.', am: 'መልሶችዎን ለመላክ «አስገባ»፣ ለመቀየር «ተመለስ» ይበሉ።', om: "Deebii kee erguuf Ergi, jijjiiruuf Duubatti jedhi.", ti: "መልስታትኩም ንምርካብ «ኣረክብ»፣ ንምቕያር «ተመለስ» በሉ።", so: "Dheh Gudbi si aad jawaabahaaga u dirto, ama Dib u noqo si aad u beddesho." }, // VERIFY_NATIVE
+  chose: { en: 'You chose: {x}. Say Next to continue, or choose again.', am: 'የመረጡት፦ {x}። ለመቀጠል «ቀጥል» ይበሉ ወይም እንደገና ይምረጡ።', om: "Kan filatte: {x}. Itti fufuuf Itti fufi jedhi, ykn ammas filadhu.", ti: "ዝመረጽኩምዎ፦ {x}። ንምቕጻል «ቀጽል» በሉ፣ ወይ ደጊምኩም ምረጹ።", so: "Waxaad dooratay: {x}. Dheh Xiga si aad u sii socoto, ama mar kale dooro." }, // VERIFY_NATIVE
+  noneSel: { en: 'Nothing is chosen. Say a number or a name, or say Skip.', am: 'ምንም አልተመረጠም። ቁጥር ወይም ስም ይናገሩ፤ ወይም «ዝለል» ይበሉ።', om: "Homtuu hin filatamne. Lakkoofsa ykn maqaa jedhi, ykn Irra darbi jedhi.", ti: "ዋላ ሓደ ኣይተመርጸን። ቁጽሪ ወይ ስም በሉ፣ ወይ «ሕለፍ» በሉ።", so: "Waxba lama dooran. Dheh lambar ama magac, ama dheh Ka bood." }, // VERIFY_NATIVE
+  unclear: { en: 'Sorry, I did not understand. Please say the number of your choice.', am: 'ይቅርታ፣ አልገባኝም። እባክዎ የምርጫዎን ቁጥር ይናገሩ።', om: "Dhiifama, hin hubanne. Maaloo lakkoofsa filannoo keetii jedhi.", ti: "ይቕሬታ፣ ኣይተረዳእኩን። በጃኹም ቁጽሪ ምርጫኹም በሉ።", so: "Waan ka xumahay, ma fahmin. Fadlan dheh lambarka doorashadaada." }, // VERIFY_NATIVE
+  heardNext: { en: 'We heard: {x}. Say Next to continue, or say your answer again.', am: 'የሰማነው፦ {x}። ለመቀጠል «ቀጥል» ይበሉ ወይም መልስዎን እንደገና ይናገሩ።', om: "Kan dhageenye: {x}. Itti fufuuf Itti fufi jedhi, ykn deebii kee ammas jedhi.", ti: "ዝሰማዕናዮ፦ {x}። ንምቕጻል «ቀጽል» በሉ፣ ወይ መልስኹም ደጊምኩም በሉ።", so: "Waxaan maqalnay: {x}. Dheh Xiga si aad u sii socoto, ama mar kale dheh jawaabtaada." }, // VERIFY_NATIVE
+  idle: { en: 'We did not hear you. Press the big Speak button, or press Stop reading to use the keyboard.', am: 'አልሰማንዎትም። ትልቁን «ተናገር» ቁልፍ ይጫኑ፤ ወይም ኪቦርድ ለመጠቀም «ማንበብ አቁም» ይጫኑ።', om: "Si hin dhageenye. Qabduu guddaa Dubbadhu tuqi, ykn kiiboordii fayyadamuuf Dubbisuu dhaabi tuqi.", ti: "ኣይሰማዕናኩምን። ነቲ ዓቢ «ተዛረብ» መጠወቒ ጠውቑ፣ ወይ ኪቦርድ ንምጥቃም «ምንባብ ኣቋርጽ» ጠውቑ።", so: "Ma aanaan ku maqal. Riix badhanka weyn ee Hadal, ama riix Jooji akhrinta si aad u isticmaasho kiiboodhka." }, // VERIFY_NATIVE
+  sayType: { en: 'Please type your answer in the box. Then press Enter, or press the Next button.', am: 'እባክዎ መልስዎን በሳጥኑ ውስጥ ይጻፉ። ከዚያ Enter ወይም «ቀጥል» የሚለውን ቁልፍ ይጫኑ።', om: "Maaloo deebii kee saanduqa keessatti barreessi. Achiis Enter ykn qabduu Itti fufi tuqi.", ti: "በጃኹም መልስኹም ኣብቲ ሳንዱቕ ጽሓፉ። ድሕሪኡ Enter ወይ «ቀጽል» ዝብል መጠወቒ ጠውቑ።", so: "Fadlan ku qor jawaabtaada sanduuqa. Kadib riix Enter, ama riix badhanka Xiga." }, // VERIFY_NATIVE
+  reviewAsk: { en: 'Do you want to submit your answers? Say Yes to submit, or No to change something.', am: 'መልሶችዎን ማስገባት ይፈልጋሉ? ለማስገባት «አዎ»፣ አንድ ነገር ለመቀየር «አይ» ይበሉ።', om: "Deebii kee erguu barbaaddaa? Erguuf Eeyyee, waa jijjiiruuf Lakki jedhi.", ti: "መልስታትኩም ከተረክቡ ትደልዩ ዶ? ንምርካብ «እወ»፣ ገለ ነገር ንምቕያር «ኣይፋል» በሉ።", so: "Ma rabtaa inaad gudbiso jawaabahaaga? Dheh Haa si aad u gudbiso, ama Maya si aad wax u beddesho." }, // VERIFY_NATIVE
+  reviewFix: { en: 'Say Start again to go back to the first question, or say the number of the question you want to change.', am: 'ወደ መጀመሪያው ጥያቄ ለመመለስ «እንደገና ጀምር» ይበሉ፤ ወይም መቀየር የሚፈልጉትን ጥያቄ ቁጥር ይናገሩ።', om: "Gara gaaffii jalqabaatti deebi'uuf Irra deebi'ii jalqabi jedhi, ykn lakkoofsa gaaffii jijjiiruu barbaaddu jedhi.", ti: "ናብ ቀዳማይ ሕቶ ንምምላስ «ደጊምካ ጀምር» በሉ፣ ወይ ቁጽሪ ክትቕይርዎ እትደልዩ ሕቶ በሉ።", so: "Dheh Dib u bilow si aad ugu noqoto su'aasha koowaad, ama dheh lambarka su'aasha aad rabto inaad beddesho." }, // VERIFY_NATIVE
+  noChange: { en: 'No, change something', am: 'አይ፣ አንድ ነገር ልቀይር', om: "Lakki, waan tokko jijjiira", ti: "ኣይፋል፣ ገለ ክቕይር", so: "Maya, wax baan beddelayaa" }, // VERIFY_NATIVE
+  restart: { en: 'Start again', am: 'እንደገና ጀምር', om: "Irra deebi'ii jalqabi", ti: "ደጊምካ ጀምር", so: "Dib u bilow" }, // VERIFY_NATIVE
+  choseA: { en: 'You chose', am: 'የመረጡት', om: "Kan filatte", ti: "ዝመረጽኩምዎ", so: "Waxaad dooratay" }, // VERIFY_NATIVE
+  choseB: { en: 'Say Next to continue, or choose again.', am: 'ለመቀጠል «ቀጥል» ይበሉ ወይም እንደገና ይምረጡ።', om: "Itti fufuuf Itti fufi jedhi, ykn ammas filadhu.", ti: "ንምቕጻል «ቀጽል» በሉ፣ ወይ ደጊምኩም ምረጹ።", so: "Dheh Xiga si aad u sii socoto, ama mar kale dooro." }, // VERIFY_NATIVE
+  heardGeneric: { en: 'We heard your answer. It is shown on the screen. Say Next to continue, or say your answer again.', am: 'መልስዎን ሰምተናል። በማያ ገጹ ላይ ይታያል። ለመቀጠል «ቀጥል» ይበሉ ወይም መልስዎን እንደገና ይናገሩ።', om: "Deebii kee dhageenyeerra. Iskiriinii irratti mul'ata. Itti fufuuf Itti fufi jedhi, ykn deebii kee ammas jedhi.", ti: "መልስኹም ሰሚዕና። ኣብ ስክሪን ይርአ ኣሎ። ንምቕጻል «ቀጽል» በሉ፣ ወይ መልስኹም ደጊምኩም በሉ።", so: "Waan maqalnay jawaabtaada. Waxay ka muuqataa shaashadda. Dheh Xiga si aad u sii socoto, ama mar kale dheh jawaabtaada." }, // VERIFY_NATIVE
+  fail: { en: 'We could not send your answers. Nothing is lost. Please try again.', am: 'መልሶችዎን መላክ አልቻልንም። ምንም አልጠፋም። እባክዎ እንደገና ይሞክሩ።', om: "Deebii kee erguu hin dandeenye. Homtuu hin badne. Maaloo irra deebi'ii yaali.", ti: "መልስታትኩም ክንሰድድ ኣይከኣልናን። ዋላ ሓንቲ ኣይጠፍአን። በጃኹም ደጊምኩም ፈትኑ።", so: "Ma aanaan diri karin jawaabahaaga. Waxba ma lumin. Fadlan mar kale isku day." }, // VERIFY_NATIVE
 };
 
 const WORK = [
-  o('stepfree', 'Step-free workplace', 'ከደረጃ ነፃ የሥራ ቦታ'), o('reader', 'Screen-reader friendly tools', 'ለስክሪን ሪደር ተስማሚ መሣሪያዎች'),
-  o('interp', 'Sign language interpreter', 'የምልክት ቋንቋ አስተርጓሚ'), o('hours', 'Flexible hours', 'ተለዋዋጭ የሥራ ሰዓት'), o('remote', 'Work from home', 'ከቤት መሥራት'),
+  o('stepfree', 'Step-free workplace', 'ከደረጃ ነፃ የሥራ ቦታ', "Bakka hojii gulantaa hin qabne", "ብዘይ መሳልል ዝኣቶ ቦታ ስራሕ", "Goob shaqo oo aan jaranjaro lahayn"), // VERIFY_NATIVE
+  o('reader', 'Screen-reader friendly tools', 'ለስክሪን ሪደር ተስማሚ መሣሪያዎች', "Meeshaalee dubbisaa iskiriinii waliin hojjetan", "ምስ ስክሪን ሪደር ዝሰማምዑ መሳርሒታት", "Qalab ku habboon akhriyaha shaashadda"), // VERIFY_NATIVE
+  o('interp', 'Sign language interpreter', 'የምልክት ቋንቋ አስተርጓሚ', "Hiikaa afaan mallattoo", "ተርጓሚ ቋንቋ ምልክት", "Turjubaan luqadda calaamadaha"), // VERIFY_NATIVE
+  o('hours', 'Flexible hours', 'ተለዋዋጭ የሥራ ሰዓት', "Sa'aatii hojii jijjiiramaa", "ተዓጻጻፊ ሰዓታት ስራሕ", "Saacado dabacsan"), // VERIFY_NATIVE
+  o('remote', 'Work from home', 'ከቤት መሥራት', "Mana irraa hojjechuu", "ካብ ገዛ ምስራሕ", "Ka shaqeyn guriga"), // VERIFY_NATIVE
 ];
 
 const FLOWS = {
   signup: { path: '/learners', steps: [
-    { id: 'prefs', local: true, q: { en: 'How would you like to use this form?', am: 'ይህን ቅጽ እንዴት መጠቀም ይፈልጋሉ?' }, hint: { en: 'Optional. You can skip this.', am: 'አማራጭ ነው። መዝለል ይችላሉ።' }, type: 'checkbox', optional: true, options: [o('large', 'Larger text', 'ትልቅ ጽሑፍ'), o('simple', 'Pictures next to choices', 'ከምርጫዎች ጋር ሥዕሎች')] },
-    { id: 'fullName', q: { en: 'What is your full name?', am: 'ሙሉ ስምዎ ማነው?' }, hint: { en: 'The name you use every day is fine.', am: 'በየቀኑ የሚጠቀሙበት ስም በቂ ነው።' }, type: 'text' },
-    { id: 'contact', novoice: true, q: { en: 'What phone number or email can we use?', am: 'ልናገኝዎ የምንችልበት ስልክ ቁጥር ወይም ኢሜይል ምንድን ነው?' }, hint: { en: 'Only used to contact you about this programme. A phone number has 10 digits and starts with 0.', am: 'ስለዚህ ፕሮግራም ለማግኘት ብቻ ነው የሚያገለግለው። ስልክ ቁጥር በዜሮ የሚጀምር ባለ አሥር አሃዝ ነው።' }, type: 'text',
-      check: v => v.includes('@') || /^(0\d{9}|251\d{9})$/.test(v.replace(/[^0-9]/g, '')), bad: 'bad' },
-    { id: 'idRoute', q: { en: 'How would you like to show who you are?', am: 'ማንነትዎን እንዴት ማሳየት ይፈልጋሉ?' }, type: 'radio', options: [
-      o('kebele', 'Kebele ID or passport', 'ቀበሌ መታወቂያ ወይም ፓስፖርት'), o('refugee', 'Refugee or returnee ID', 'የስደተኛ ወይም ተመላሽ መታወቂያ'),
-      o('other', 'Another document', 'ሌላ ሰነድ'), o('refer', "I don't have an ID. Refer me through a partner organisation", 'ሰነድ የለኝም። አጋር ድርጅት እንዲያመላክተኝ ይጠይቁ')] },
-    { id: 'support', q: { en: 'What support would help you? Choose any.', am: 'ምን ዓይነት እገዛ ይጠቅምዎታል? የፈለጉትን ይምረጡ።' }, hint: { en: 'You can skip this. No proof needed. Only the organisers see it, and only to prepare help for you.', am: 'ይህን መዝለል ይችላሉ። ማስረጃ አያስፈልግም። አዘጋጆቹ ብቻ ያዩታል፤ ለእርስዎ እገዛ ለማዘጋጀት ብቻ።' }, type: 'checkbox', optional: true, options: [
-      o('screenreader', 'I use a screen reader', 'ስክሪን ሪደር እጠቀማለሁ'), o('large', 'Large text', 'ትልቅ ጽሑፍ'), o('voice', 'I prefer to speak my answers', 'መልሶቼን በድምፅ መናገር እመርጣለሁ'),
-      o('sign', 'Ethiopian Sign Language interpreter', 'የኢትዮጵያ ምልክት ቋንቋ አስተርጓሚ'), o('simple', 'Simple words and pictures', 'ቀላል ቃላትና ሥዕሎች'), o('human', 'Please call me to help', 'እባክዎ ደውለው ያግዙኝ')] },
+    { id: 'prefs', local: true,
+      q: { en: 'How would you like to use this form?', am: 'ይህን ቅጽ እንዴት መጠቀም ይፈልጋሉ?', om: "Unka kana akkamitti fayyadamuu barbaadda?", ti: "ነዚ ቅጥዒ ብኸመይ ክትጥቀሙሉ ትደልዩ?", so: "Sidee baad u rabtaa inaad u isticmaasho foomkan?" }, // VERIFY_NATIVE
+      hint: { en: 'Optional. You can skip this.', am: 'አማራጭ ነው። መዝለል ይችላሉ።', om: "Dirqama miti. Irra darbuu dandeessa.", ti: "ግዴታ ኣይኮነን። ክትሓልፍዎ ትኽእሉ ኢኹም።", so: "Ikhtiyaari. Waad ka boodi kartaa." }, // VERIFY_NATIVE
+      type: 'checkbox', optional: true, options: [
+        o('large', 'Larger text', 'ትልቅ ጽሑፍ', "Barreeffama guddaa", "ዓቢ ጽሑፍ", "Qoraal ka weyn"), // VERIFY_NATIVE
+        o('simple', 'Pictures next to choices', 'ከምርጫዎች ጋር ሥዕሎች', "Filannoo cinaatti fakkii", "ምስ ምርጫታት ስእልታት", "Sawirro ku xiga doorashooyinka")] }, // VERIFY_NATIVE
+    { id: 'fullName',
+      q: { en: 'What is your full name?', am: 'ሙሉ ስምዎ ማነው?', om: "Maqaan kee guutuun eenyu?", ti: "ምሉእ ስምኩም መን እዩ?", so: "Waa maxay magacaaga oo buuxa?" }, // VERIFY_NATIVE
+      hint: { en: 'The name you use every day is fine.', am: 'በየቀኑ የሚጠቀሙበት ስም በቂ ነው።', om: "Maqaan guyyaa guyyaan itti fayyadamtu gahaadha.", ti: "እቲ መዓልታዊ እትጥቀሙሉ ስም ይኣክል።", so: "Magaca aad maalin walba isticmaasho waa ku filan yahay." }, // VERIFY_NATIVE
+      type: 'text' },
+    { id: 'contact', novoice: true,
+      q: { en: 'What phone number or email can we use?', am: 'ልናገኝዎ የምንችልበት ስልክ ቁጥር ወይም ኢሜይል ምንድን ነው?', om: "Lakkoofsa bilbilaa ykn imeelii kamiin si quunnamuu dandeenya?", ti: "ብኣየናይ ቁጽሪ ስልኪ ወይ ኢመይል ክንረኽበኩም ንኽእል?", so: "Lambarkee taleefan ama iimayl ayaan isticmaali karnaa?" }, // VERIFY_NATIVE
+      hint: { en: 'Only used to contact you about this programme. A phone number has 10 digits and starts with 0.', am: 'ስለዚህ ፕሮግራም ለማግኘት ብቻ ነው የሚያገለግለው። ስልክ ቁጥር በዜሮ የሚጀምር ባለ አሥር አሃዝ ነው።', om: "Waa'ee sagantaa kanaa qofa si quunnamuuf. Lakkoofsi bilbilaa dijiitii 10 qaba, 0n jalqaba.", ti: "ብዛዕባ እዚ መደብ ንምርካብኩም ጥራይ። ቁጽሪ ስልኪ 10 ኣሃዝ ኣለዎ፣ ብ0 ይጅምር።", so: "Kaliya si laguula soo xiriiro barnaamijkan. Lambar taleefan wuxuu leeyahay 10 god, wuxuuna ku bilaabmaa 0." }, // VERIFY_NATIVE
+      type: 'text',
+      check: v => (v = ascii(v)).includes('@') || /^(0\d{9}|251\d{9})$/.test(v.replace(/[^0-9]/g, '')), bad: 'bad' },
+    { id: 'idRoute',
+      q: { en: 'How would you like to show who you are?', am: 'ማንነትዎን እንዴት ማሳየት ይፈልጋሉ?', om: "Eenyummaa kee akkamitti agarsiisuu barbaadda?", ti: "መንነትኩም ብኸመይ ከተርእዩ ትደልዩ?", so: "Sidee baad u rabtaa inaad muujiso cidda aad tahay?" }, // VERIFY_NATIVE
+      type: 'radio', options: [
+        o('kebele', 'Kebele ID or passport', 'ቀበሌ መታወቂያ ወይም ፓስፖርት', "Waraqaa eenyummaa gandaa ykn paaspoortii", "መንነት ቀበሌ ወይ ፓስፖርት", "Aqoonsiga kebele ama baasaboor"), // VERIFY_NATIVE
+        o('refugee', 'Refugee or returnee ID', 'የስደተኛ ወይም ተመላሽ መታወቂያ', "Waraqaa eenyummaa baqataa ykn deebi'aa", "መንነት ስደተኛ ወይ ተመላሲ", "Aqoonsiga qaxootiga ama soo-noqotaha"), // VERIFY_NATIVE
+        o('other', 'Another document', 'ሌላ ሰነድ', "Sanada biraa", "ካልእ ሰነድ", "Dukumenti kale"), // VERIFY_NATIVE
+        o('refer', "I don't have an ID. Refer me through a partner organisation", 'ሰነድ የለኝም። አጋር ድርጅት እንዲያመላክተኝ ይጠይቁ', "Waraqaa eenyummaa hin qabu. Karaa dhaabbata michuu naaf ergaa", "መንነት የብለይን። ብመሻርኽቲ ትካል ኣመሓላልፉኒ", "Ma haysto aqoonsi. Iigu gudbiya hay'ad iskaashi")] }, // VERIFY_NATIVE
+    { id: 'support',
+      q: { en: 'What support would help you? Choose any.', am: 'ምን ዓይነት እገዛ ይጠቅምዎታል? የፈለጉትን ይምረጡ።', om: "Deeggarsa akkamii si gargaara? Kamiyyuu filadhu.", ti: "እንታይ ደገፍ ይሕግዘኩም? ዝኾነ ምረጹ።", so: "Taageero noocee ah ayaa ku caawin lahayd? Dooro mid kasta." }, // VERIFY_NATIVE
+      hint: { en: 'You can skip this. No proof needed. Only the organisers see it, and only to prepare help for you.', am: 'ይህን መዝለል ይችላሉ። ማስረጃ አያስፈልግም። አዘጋጆቹ ብቻ ያዩታል፤ ለእርስዎ እገዛ ለማዘጋጀት ብቻ።', om: "Irra darbuu dandeessa. Ragaan hin barbaachisu. Qindeessitoota qofatu arga, deeggarsa siif qopheessuuf qofa.", ti: "ክትሓልፍዎ ትኽእሉ ኢኹም። መረጋገጺ ኣየድልን። ኣወሃሃድቲ ጥራይ እዮም ዝርእይዎ፣ ንዓኹም ደገፍ ንምድላው ጥራይ።", so: "Waad ka boodi kartaa. Caddayn looma baahna. Kaliya qabanqaabiyayaashu ayaa arka, si ay kuugu diyaariyaan caawimaad." }, // VERIFY_NATIVE
+      type: 'checkbox', optional: true, options: [
+        o('screenreader', 'I use a screen reader', 'ስክሪን ሪደር እጠቀማለሁ', "Dubbisaa iskiriinii nan fayyadama", "ስክሪን ሪደር እጥቀም", "Waxaan isticmaalaa akhriyaha shaashadda"), // VERIFY_NATIVE
+        o('large', 'Large text', 'ትልቅ ጽሑፍ', "Barreeffama guddaa", "ዓቢ ጽሑፍ", "Qoraal weyn"), // VERIFY_NATIVE
+        o('voice', 'I prefer to speak my answers', 'መልሶቼን በድምፅ መናገር እመርጣለሁ', "Deebii koo dubbachuu nan filadha", "መልስታተይ ብድምጺ ክዛረብ እመርጽ", "Waxaan doorbidaa inaan ku hadlo jawaabahayga"), // VERIFY_NATIVE
+        o('sign', 'Ethiopian Sign Language interpreter', 'የኢትዮጵያ ምልክት ቋንቋ አስተርጓሚ', "Hiikaa Afaan Mallattoo Itoophiyaa", "ተርጓሚ ቋንቋ ምልክት ኢትዮጵያ", "Turjubaan Luqadda Calaamadaha Itoobiya"), // VERIFY_NATIVE
+        o('simple', 'Simple words and pictures', 'ቀላል ቃላትና ሥዕሎች', "Jechoota salphaa fi fakkiiwwan", "ቀለልቲ ቃላትን ስእልታትን", "Erayo fudud iyo sawirro"), // VERIFY_NATIVE
+        o('human', 'Please call me to help', 'እባክዎ ደውለው ያግዙኝ', "Maaloo na gargaaruuf natti bilbilaa", "በጃኹም ደዊልኩም ሓግዙኒ", "Fadlan ii soo wac si aad ii caawiso")] }, // VERIFY_NATIVE
   ] },
   job: { path: '/applications', steps: [
-    { id: 'needs', local: true, q: { en: 'What support do you need at work? Choose any.', am: 'በሥራ ላይ ምን እገዛ ያስፈልግዎታል? የፈለጉትን ይምረጡ።' }, hint: { en: 'Private. This stays on your device and is only used to show suitable jobs.', am: 'ሚስጥራዊ ነው። በመሣሪያዎ ላይ ብቻ ይቆያል፤ ተስማሚ ሥራዎችን ለማሳየት ብቻ ነው።' }, type: 'checkbox', optional: true, options: WORK },
-    { id: 'role', dyn: true, q: { en: 'Which job are you applying for?', am: 'የትኛውን ሥራ እየጠየቁ ነው?' }, type: 'text' },
-    { id: 'why', q: { en: 'Why do you want this job?', am: 'ይህን ሥራ ለምን ይፈልጋሉ?' }, hint: { en: 'A few words are enough. You can speak instead.', am: 'ጥቂት ቃላት በቂ ናቸው። በድምፅ መናገርም ይችላሉ።' }, type: 'text' },
+    { id: 'needs', local: true,
+      q: { en: 'What support do you need at work? Choose any.', am: 'በሥራ ላይ ምን እገዛ ያስፈልግዎታል? የፈለጉትን ይምረጡ።', om: "Hojii irratti deeggarsa akkamii si barbaachisa? Kamiyyuu filadhu.", ti: "ኣብ ስራሕ እንታይ ደገፍ የድልየኩም? ዝኾነ ምረጹ።", so: "Taageero noocee ah ayaad ugu baahan tahay shaqada? Dooro mid kasta." }, // VERIFY_NATIVE
+      hint: { en: 'Private. This stays on your device and is only used to show suitable jobs.', am: 'ሚስጥራዊ ነው። በመሣሪያዎ ላይ ብቻ ይቆያል፤ ተስማሚ ሥራዎችን ለማሳየት ብቻ ነው።', om: "Dhuunfaa. Kun meeshaa kee irratti hafa, hojii si mijatu agarsiisuuf qofa itti fayyadamna.", ti: "ብሕታዊ እዩ። ኣብ መሳርሒኹም ጥራይ ይጸንሕ፣ ተስማዕቲ ስራሓት ንምርኣይ ጥራይ ይጥቀመሉ።", so: "Gaar ah. Wuxuu ku jiraa qalabkaaga oo kaliya waxaa loo isticmaalaa in lagu tuso shaqooyin ku habboon." }, // VERIFY_NATIVE
+      type: 'checkbox', optional: true, options: WORK },
+    { id: 'role', dyn: true,
+      q: { en: 'Which job are you applying for?', am: 'የትኛውን ሥራ እየጠየቁ ነው?', om: "Hojii kamiif iyyachaa jirta?", ti: "ንኣየናይ ስራሕ ኢኹም እትሓቱ ዘለኹም?", so: "Shaqadee ayaad codsanaysaa?" }, // VERIFY_NATIVE
+      type: 'text' },
+    { id: 'why',
+      q: { en: 'Why do you want this job?', am: 'ይህን ሥራ ለምን ይፈልጋሉ?', om: "Hojii kana maaliif barbaadda?", ti: "ነዚ ስራሕ ስለምንታይ ትደልይዎ?", so: "Maxaad u rabtaa shaqadan?" }, // VERIFY_NATIVE
+      hint: { en: 'A few words are enough. You can speak instead.', am: 'ጥቂት ቃላት በቂ ናቸው። በድምፅ መናገርም ይችላሉ።', om: "Jechoota muraasni gahaadha. Dubbachuus dandeessa.", ti: "ውሑዳት ቃላት ይኣኽሉ። ብድምጺ እውን ክትዛረቡ ትኽእሉ ኢኹም።", so: "Erayo kooban ayaa ku filan. Waad ku hadli kartaa beddelkeeda." }, // VERIFY_NATIVE
+      type: 'text' },
   ] },
   employer: { path: '/employer/jobs', steps: [
-    { id: 'job', q: { en: 'What is the job title?', am: 'የሥራው መጠሪያ ምንድን ነው?' }, type: 'text' },
-    { id: 'offers', q: { en: 'Which adjustments can this job offer?', am: 'ይህ ሥራ ምን ዓይነት ማስተካከያዎችን ማቅረብ ይችላል?' }, type: 'checkbox', optional: true, options: WORK },
+    { id: 'job',
+      q: { en: 'What is the job title?', am: 'የሥራው መጠሪያ ምንድን ነው?', om: "Maqaan hojii kanaa maali?", ti: "ሽም እቲ ስራሕ እንታይ እዩ?", so: "Waa maxay magaca shaqada?" }, // VERIFY_NATIVE
+      type: 'text' },
+    { id: 'offers',
+      q: { en: 'Which adjustments can this job offer?', am: 'ይህ ሥራ ምን ዓይነት ማስተካከያዎችን ማቅረብ ይችላል?', om: "Hojiin kun mijeessuu akkamii dhiyeessuu danda'a?", ti: "እዚ ስራሕ እንታይ ምትዕርራያት ከቕርብ ይኽእል?", so: "Waa maxay hagaajinta ay shaqadani bixin karto?" }, // VERIFY_NATIVE
+      type: 'checkbox', optional: true, options: WORK },
   ] },
 };
 
+// ---- Design tokens ---------------------------------------------------------------------------------------------
+// One accent per theme, warm neutral surfaces. Meaning never depends on colour alone: selected = check mark + heavier
+// border, error = warning icon + bar + text. A host page can set --db-accent (and --db-font) on <db-form> to brand the
+// Standard theme; CSS custom properties pass into the shadow DOM.
+const THEMES = ['auto', 'standard', 'dark', 'contrast', 'rg', 'by'];
+const TOKENS = {
+  standard: 'color-scheme:light;--bg:#f6f4ef;--surface:#ffffff;--surface-2:#efece4;--ink:#1b1d1a;--ink-2:#4a4f47;--line:#d6d1c4;--line-strong:#6b6f66;--accent:var(--db-accent,#1d5c3f);--accent-hover:#164a32;--accent-ink:#ffffff;--accent-soft:#e2eee6;--error:#a3221b;--error-soft:#fbeae8;--focus:#1d5c3f;--focus-gap:#ffffff;--shadow:0 1px 2px rgb(27 29 26 / .06),0 12px 28px -16px rgb(27 29 26 / .28)',
+  dark: 'color-scheme:dark;--bg:#121412;--surface:#1b1e1b;--surface-2:#252925;--ink:#eef0ea;--ink-2:#b9bfb4;--line:#363b35;--line-strong:#80887d;--accent:#86d4a8;--accent-hover:#a3e0bd;--accent-ink:#0b1a11;--accent-soft:#1d3427;--error:#ff8f85;--error-soft:#3b1d1a;--focus:#86d4a8;--focus-gap:#121412;--shadow:0 1px 2px rgb(0 0 0 / .4),0 12px 28px -16px rgb(0 0 0 / .7)',
+  contrast: 'color-scheme:light;--bg:#ffffff;--surface:#ffffff;--surface-2:#ffffff;--ink:#000000;--ink-2:#000000;--line:#000000;--line-strong:#000000;--accent:#000000;--accent-hover:#000000;--accent-ink:#ffffff;--accent-soft:#fff200;--error:#000000;--error-soft:#fff200;--focus:#000000;--focus-gap:#fff200;--shadow:none;--bw:3px',
+  // Red-green colour blindness (protanopia, deuteranopia): blue accent, orange-brown for errors.
+  rg: 'color-scheme:light;--bg:#f5f6f8;--surface:#ffffff;--surface-2:#eceff3;--ink:#16191d;--ink-2:#454b54;--line:#cfd5dd;--line-strong:#5f6772;--accent:#0b57a4;--accent-hover:#084683;--accent-ink:#ffffff;--accent-soft:#e1ecf8;--error:#9a4a00;--error-soft:#fdf0e3;--focus:#0b57a4;--focus-gap:#ffffff;--shadow:0 1px 2px rgb(22 25 29 / .06),0 12px 28px -16px rgb(22 25 29 / .28)',
+  // Blue-yellow colour blindness (tritanopia): teal accent, red for errors.
+  by: 'color-scheme:light;--bg:#f6f5f4;--surface:#ffffff;--surface-2:#eeecea;--ink:#1c1b1a;--ink-2:#4d4a47;--line:#d5d1cc;--line-strong:#6c6863;--accent:#006a66;--accent-hover:#00534f;--accent-ink:#ffffff;--accent-soft:#dff0ef;--error:#b0003a;--error-soft:#fbe6ec;--focus:#006a66;--focus-gap:#ffffff;--shadow:0 1px 2px rgb(28 27 26 / .06),0 12px 28px -16px rgb(28 27 26 / .28)',
+};
 const CSS = `
-:host{display:block;font:1.125rem/1.6 system-ui,'Noto Sans Ethiopic',sans-serif;color:#1a1a1a}
-section{max-width:36rem;margin:auto;padding:1.5rem;background:#f7fbf8;border:2px solid #1b5e3f;border-radius:16px}
-fieldset{border:0;padding:0;margin:0}
-legend,h2{font-size:1.25em;font-weight:700;padding:0}
-input[type=text]{width:100%;font:inherit;padding:.75rem;border:2px solid #1a1a1a;border-radius:6px;box-sizing:border-box}
-.opt{display:flex;gap:.75rem;align-items:center;min-height:52px;padding:.5rem .75rem;margin:.5rem 0;border:2px solid #4a6b57;border-radius:10px;background:#fff;cursor:pointer}
-.opt:has(input:checked){background:#e3f2e8;border-width:3px}
-input[type=radio],input[type=checkbox]{width:1.5rem;height:1.5rem}
-button{font:inherit;min-height:44px;min-width:44px;padding:.5rem 1rem;border-radius:6px;border:2px solid #1b5e3f;background:#fff;color:#1b5e3f;cursor:pointer}
-button.p{background:#1b5e3f;color:#fff}
-:focus-visible{outline:3px solid #1b5e3f;outline-offset:3px}
-.err{color:#a00000;font-weight:600}
-.row{display:flex;flex-direction:column;gap:.75rem;margin-top:1.5rem}
+:host{display:block}
+section{${TOKENS.standard};--font:var(--db-font,'Atkinson Hyperlegible','Noto Sans Ethiopic','Nyala','Ebrima',system-ui,sans-serif);
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:24px;--s6:32px;--r1:4px;--r2:8px;--bw:2px;
+  font:1.125rem/1.55 var(--font);color:var(--ink);background:var(--surface);
+  max-width:38rem;margin:0 auto;padding:var(--s5);border:1px solid var(--line);border-radius:var(--r2);box-shadow:var(--shadow);text-align:left}
+section[data-theme=dark]{${TOKENS.dark}}
+section[data-theme=contrast]{${TOKENS.contrast}}
+section[data-theme=rg]{${TOKENS.rg}}
+section[data-theme=by]{${TOKENS.by}}
+@media (prefers-color-scheme:dark){section[data-theme=auto]{${TOKENS.dark}}}
+@media (prefers-contrast:more){section[data-theme=auto]{${TOKENS.contrast}}}
+:lang(am),:lang(ti){line-height:1.8}
+*{box-sizing:border-box}
+svg{flex:none}
+h2,legend{font-size:1.375em;line-height:1.3;font-weight:700;letter-spacing:-.005em;margin:0;padding:0;color:var(--ink)}
+p{margin:0}
+fieldset{border:0;padding:0;margin:0;min-width:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* top bar: language + colours */
+.bar{display:flex;flex-wrap:wrap;gap:var(--s2) var(--s3);align-items:flex-start;justify-content:space-between;padding-bottom:var(--s4);margin-bottom:var(--s4);border-bottom:1px solid var(--line)}
+.lang{display:flex;flex-wrap:wrap;gap:var(--s1);flex:1 1 18rem}
+.lang button{flex:0 1 auto;min-height:40px;padding:.25rem .7rem;font-size:.875em;border-color:var(--line)}
+.lang button[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--ink);font-weight:700}
+details.disp{position:relative;font-size:.875em;margin-left:auto}
+details.disp summary{display:inline-flex;align-items:center;gap:var(--s2);min-height:40px;padding:.25rem .7rem;border:var(--bw) solid var(--line);border-radius:var(--r1);cursor:pointer;list-style:none;color:var(--ink);background:var(--surface)}
+details.disp summary::-webkit-details-marker{display:none}
+details.disp[open] summary{border-color:var(--accent)}
+.disp .panel{position:absolute;right:0;z-index:2;margin-top:var(--s1);width:min(20rem,80vw);padding:var(--s3);background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--r2);box-shadow:var(--shadow)}
+.disp label{display:flex;gap:var(--s2);align-items:center;min-height:44px;padding:0 var(--s2);border-radius:var(--r1);cursor:pointer}
+.disp label:has(input:checked){background:var(--accent-soft);font-weight:700}
+.sw{display:inline-flex;gap:2px}.sw i{width:10px;height:18px;border-radius:2px;border:1px solid rgb(0 0 0 / .25)}
+
+/* buttons */
+button{font:inherit;display:inline-flex;align-items:center;justify-content:center;gap:var(--s2);min-height:48px;min-width:48px;padding:.55rem 1.1rem;border-radius:var(--r1);border:var(--bw) solid var(--line-strong);background:var(--surface);color:var(--ink);cursor:pointer;text-align:left;transition:background-color .12s,border-color .12s,transform .06s}
+button:hover{background:var(--surface-2)}
+button:active{transform:translateY(1px)}
+button.p{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+button.p:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+button.q{border-color:transparent;background:transparent;text-decoration:underline;text-underline-offset:.2em}
+button.q:hover{background:var(--surface-2)}
+button:disabled,button[aria-disabled=true]{opacity:.55;cursor:not-allowed;transform:none}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;box-shadow:0 0 0 2px var(--focus-gap)}
+.big{min-height:64px;font-size:1.1em;padding:.75rem 1.25rem;justify-content:flex-start}
+.row{display:flex;flex-direction:column;gap:var(--s3);margin-top:var(--s5)}
 .row button{width:100%}
-.sr{position:absolute;left:-9999px}
-.center{text-align:center}
-.big{font-size:1.2em;padding:.75rem 1.5rem;min-height:72px}
-.tools{margin:-.75rem 0 1rem}
-.tools button{width:100%}
-.mic{display:flex;width:100%;justify-content:center;align-items:center;margin-bottom:1rem;font-size:1.3em;min-height:72px;padding:1rem;border-radius:2rem;border-width:3px}
-progress{width:100%;height:.6rem;accent-color:#1b5e3f}
-.wave{display:none;gap:3px;margin-left:.5rem;align-items:center;height:1.2em}
-.mic.on .wave{display:inline-flex}
-.wave i{width:4px;height:100%;background:currentColor;animation:w 1s infinite ease-in-out}
-.wave i:nth-child(2){animation-delay:.15s}.wave i:nth-child(3){animation-delay:.3s}.wave i:nth-child(4){animation-delay:.45s}.wave i:nth-child(5){animation-delay:.6s}
+.row .split{display:flex;gap:var(--s3)}.row .split button{flex:1}
+.tools{display:flex;gap:var(--s2);margin:0 0 var(--s4)}
+.tools button{font-size:.9375em;min-height:44px}
+
+/* captions: everything spoken is also shown (for deaf and hard-of-hearing people) */
+.cap{display:none;gap:var(--s3);align-items:flex-start;margin:0 0 var(--s4);padding:var(--s3) var(--s4);border-radius:var(--r2);border:1px solid var(--line);background:var(--surface-2);color:var(--ink)}
+.cap[data-state=speaking],.cap[data-state=listening]{display:flex}
+.cap .k{display:block;font-size:.8125em;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
+.cap .t{display:block;max-height:9.5em;overflow:auto}
+.cap[data-state=listening]{background:var(--accent-soft);border:var(--bw) solid var(--accent)}
+.cap[data-state=listening] .t{font-size:1.25em;font-weight:700}
+.cap.flash{animation:flash .45s ease-out}
+.lvl{display:none;gap:3px;align-items:center;height:1.4em;margin-left:auto}
+.cap[data-state=listening] .lvl,.mic.on .lvl{display:inline-flex}
+.lvl i{width:4px;height:100%;border-radius:2px;background:currentColor;animation:w 1s infinite ease-in-out}
+.lvl i:nth-child(2){animation-delay:.15s}.lvl i:nth-child(3){animation-delay:.3s}.lvl i:nth-child(4){animation-delay:.45s}
 @keyframes w{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}
-form>*+*{margin-top:1rem}
-.center>*+*{margin-top:1.25rem}
-.step{margin:0;font-weight:600}
-legend{margin-bottom:.5rem}
-#hint{margin:.5rem 0 1rem;color:#33473b}
-.lang{display:flex;gap:.5rem;margin-bottom:1.5rem}
-.lang button{flex:1}
-.lang button[aria-pressed=true]{background:#1b5e3f;color:#fff}
-.status{margin:0 0 1rem;padding:.75rem 1rem;border-left:6px solid #1b5e3f;background:#e3f2e8;border-radius:8px;font-weight:600}
-.status:empty{padding:0;border:0;margin:0;background:none}
+@keyframes flash{0%{box-shadow:0 0 0 6px var(--accent)}100%{box-shadow:0 0 0 0 transparent}}
+.status{margin:0 0 var(--s4);font-size:.9375em;color:var(--ink-2)}
+.status:empty{display:none}
+.cap:is([data-state=speaking],[data-state=listening])~.status{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:0}
+
+/* form */
+.step{display:flex;justify-content:space-between;gap:var(--s3);font-size:.875em;font-weight:700;color:var(--ink-2);margin-bottom:var(--s2)}
+.track{height:6px;border-radius:3px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden;margin-bottom:var(--s5)}
+.track i{display:block;height:100%;background:var(--accent)}
+legend{margin-bottom:var(--s2)}
+#hint{margin:0 0 var(--s4);color:var(--ink-2)}
+#hint:empty{display:none}
+input[type=text]{width:100%;font:inherit;min-height:52px;padding:.7rem .85rem;border:var(--bw) solid var(--line-strong);border-radius:var(--r1);background:var(--surface);color:var(--ink)}
+input[type=text]:hover{border-color:var(--ink)}
+input[type=text][aria-invalid=true]{border-color:var(--error);border-width:3px}
+.opts{display:grid;gap:var(--s2)}
+.opt{display:flex;gap:var(--s3);align-items:center;min-height:56px;padding:var(--s2) var(--s3);border:var(--bw) solid var(--line);border-radius:var(--r2);background:var(--surface);cursor:pointer}
+.opt:hover{border-color:var(--line-strong)}
+.opt .pic,.opt .tick{display:inline-flex}
+.opt .pic{color:var(--accent)}
+.opt .tick{margin-left:auto;visibility:hidden;color:var(--accent)}
+.opt:has(input:checked){border-color:var(--accent);border-width:3px;background:var(--accent-soft);padding:calc(var(--s2) - 1px) calc(var(--s3) - 1px)}
+.opt:has(input:checked) .tick{visibility:visible}
+.opt:has(input:focus-visible){outline:3px solid var(--focus);outline-offset:2px}
+input[type=radio],input[type=checkbox]{width:1.375rem;height:1.375rem;margin:0;accent-color:var(--accent);flex:none}
+.err{display:flex;gap:var(--s2);align-items:flex-start;margin-top:var(--s4);padding:var(--s3);border-left:6px solid var(--error);border-radius:var(--r1);background:var(--error-soft);color:var(--ink);font-weight:700}
+.err svg{color:var(--error)}
+.err:empty{display:none}
+.mic{width:100%;justify-content:space-between;margin-bottom:var(--s4);min-height:64px;font-size:1.125em;border:3px solid var(--accent);font-weight:700}
+.mic svg{color:var(--accent)}
+.mic .lab{display:inline-flex;gap:var(--s2);align-items:center}
+.mic.on{outline:3px solid var(--accent);outline-offset:3px}
+form>*+*{margin-top:0}
+
+/* pages */
+.head{display:flex;flex-direction:column;gap:var(--s3);margin-bottom:var(--s2)}
+.head p{color:var(--ink-2)}
+.logo{color:var(--accent)}
+.langhelp{list-style:none;padding:0;margin:var(--s4) 0 0;display:grid;gap:var(--s2);color:var(--ink-2);border-left:3px solid var(--line);padding-left:var(--s3)}
+.pick{flex-direction:column;align-items:flex-start;gap:0}
+.pick small{font-size:.8em;font-weight:400;color:var(--ink-2)}
+.privacy{font-size:.9375em;color:var(--ink-2);padding:var(--s3);border:1px solid var(--line);border-radius:var(--r1);background:var(--surface-2)}
+dl.review{margin:var(--s4) 0 0;border-top:1px solid var(--line)}
+.review .item{padding:var(--s3) 0;border-bottom:1px solid var(--line)}
+.review dt{font-size:.875em;color:var(--ink-2);margin-bottom:var(--s1)}
+.review dd{margin:0;display:flex;gap:var(--s3);align-items:center;justify-content:space-between;font-weight:700}
+.review dd button{min-height:44px;font-weight:400}
+.after{margin-top:var(--s4)}
+.done{display:flex;flex-direction:column;gap:var(--s3);padding:var(--s4) 0}
+.done svg{color:var(--accent)}
+
+@media (max-width:30rem){section{padding:var(--s4);border-radius:0;border-left:0;border-right:0}.disp .panel{right:auto;left:0}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (forced-colors:active){button,.opt,input[type=text],.cap,.err,details.disp summary{border:2px solid CanvasText}.opt:has(input:checked){outline:3px solid Highlight}.track i{background:Highlight}}
 `;
 
-const IC = { kebele: '🆔', refugee: '🏕️', other: '📄', refer: '🤝', screenreader: '🔊', large: '🔍', voice: '🎤', sign: '🤟', simple: '🖼️', human: '📞', stepfree: '♿', reader: '🔊', interp: '🤟', hours: '⏰', remote: '🏠' };
-const LOGO = `<svg width='56' height='56' viewBox='0 0 56 56' aria-hidden='true' focusable='false'><circle cx='28' cy='12' r='8' fill='#1b5e3f'/><path d='M6 22c14 0 20 8 22 26C26 30 20 24 6 22zM50 22c-14 0-20 8-22 26 2-18 8-24 22-26z' fill='#2e8b57'/></svg>`;
-const CHECK = `<svg width='64' height='64' viewBox='0 0 64 64' aria-hidden='true' focusable='false'><circle cx='32' cy='32' r='30' fill='#1b5e3f'/><path d='M18 33l9 9 19-20' stroke='#fff' stroke-width='5' fill='none'/></svg>`;
+// ---- Icons: 24px line icons, stroke = currentColor, always aria-hidden next to a text label ----------------------
+const svg = (d, s = 24) => `<svg width='${s}' height='${s}' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true' focusable='false'>${d}</svg>`;
+const P = {
+  mic: "<rect x='9' y='3' width='6' height='11' rx='3'/><path d='M5 11a7 7 0 0 0 14 0M12 18v3'/>",
+  speaker: "<path d='M4 9v6h4l5 4V5L8 9z'/><path d='M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11'/>",
+  stop: "<rect x='6' y='6' width='12' height='12' rx='1.5'/>",
+  check: "<path d='M5 12.5l4.5 4.5L19 7.5'/>",
+  alert: "<path d='M12 3l9.5 17h-19z'/><path d='M12 10v4.5M12 17.5v.01'/>",
+  globe: "<circle cx='12' cy='12' r='9'/><path d='M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z'/>",
+  palette: "<path d='M12 3a9 9 0 1 0 0 18c1.2 0 1.8-.8 1.8-1.7 0-1.4-1.2-1.6-1.2-2.8 0-1 .8-1.7 1.8-1.7H17a4 4 0 0 0 4-4C21 6.6 17 3 12 3z'/><circle cx='7.5' cy='11' r='1'/><circle cx='10.5' cy='7.5' r='1'/><circle cx='15' cy='7.5' r='1'/>",
+  next: "<path d='M5 12h14M13 6l6 6-6 6'/>",
+  back: "<path d='M19 12H5M11 6l-6 6 6 6'/>",
+  kebele: "<rect x='3' y='5' width='18' height='14' rx='2'/><circle cx='9' cy='11' r='2'/><path d='M6 16c.8-1.4 1.8-2 3-2s2.2.6 3 2M14 10h4M14 13.5h4'/>",
+  refugee: "<path d='M3 20L12 4l9 16z'/><path d='M9 20l3-6 3 6'/>",
+  other: "<path d='M6 3h8l4 4v14H6z'/><path d='M14 3v4h4M9 12h6M9 16h6'/>",
+  refer: "<circle cx='8' cy='8' r='3'/><path d='M3 20c0-3 2.2-5 5-5s5 2 5 5M15 10h6M18 7l3 3-3 3'/>",
+  screenreader: "<path d='M4 9v6h4l5 4V5L8 9z'/><path d='M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11'/>",
+  large: "<path d='M3 19L8 5l5 14M5 14h6M15 19v-6a2.5 2.5 0 0 1 5 0v6M15 15.5h5'/>",
+  voice: "<rect x='9' y='3' width='6' height='11' rx='3'/><path d='M5 11a7 7 0 0 0 14 0M12 18v3'/>",
+  sign: "<path d='M8 13V5.5a1.5 1.5 0 0 1 3 0V11M11 10.5V4.5a1.5 1.5 0 0 1 3 0V11M14 11V6a1.5 1.5 0 0 1 3 0v7c0 4-2.5 7-6 7-2.4 0-4-1.2-5.5-3.5L4 13.6a1.5 1.5 0 0 1 2.5-1.7L8 14'/>",
+  simple: "<rect x='3' y='4' width='18' height='16' rx='2'/><circle cx='9' cy='10' r='2'/><path d='M21 17l-5-5-9 8'/>",
+  human: "<path d='M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z'/>",
+  stepfree: "<circle cx='10' cy='4.5' r='1.5'/><path d='M10 7.5v5.5h5l3 5M10 10h4M7.5 11.5A5 5 0 1 0 14 18'/>",
+  hours: "<circle cx='12' cy='12' r='9'/><path d='M12 7v5l3 2'/>",
+  remote: "<path d='M3 11l9-7 9 7M5 9.5V20h14V9.5M10 20v-6h4v6'/>",
+};
+P.reader = P.screenreader; P.interp = P.sign;
+const I = (k, s) => svg(P[k], s);
+const LOGO = `<svg class='logo' width='44' height='44' viewBox='0 0 56 56' aria-hidden='true' focusable='false'><circle cx='28' cy='12' r='8' fill='currentColor'/><path d='M6 22c14 0 20 8 22 26C26 30 20 24 6 22zM50 22c-14 0-20 8-22 26 2-18 8-24 22-26z' fill='currentColor' opacity='.75'/></svg>`;
+const CHECK = svg("<circle cx='12' cy='12' r='10'/><path d='M7 12.5l3.2 3.2L17 9'/>", 56);
+const SWATCH = { auto: ['#f6f4ef', '#121412'], standard: ['#ffffff', '#1d5c3f'], dark: ['#1b1e1b', '#86d4a8'], contrast: ['#ffffff', '#000000', '#fff200'], rg: ['#ffffff', '#0b57a4', '#9a4a00'], by: ['#ffffff', '#006a66', '#b0003a'] };
 const esc = s => String(s == null ? '' : s).replace(/[&<>']/g, c => '&#' + c.charCodeAt(0) + ';');
 
-const NUM = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, 'አንድ': 1, 'ሁለት': 2, 'ሦስት': 3, 'ሶስት': 3, 'አራት': 4, 'አምስት': 5, 'ስድስት': 6, 'ሰባት': 7, 'ስምንት': 8, '፩': 1, '፪': 2, '፫': 3, '፬': 4, '፭': 5, '፮': 6, '፯': 7, '፰': 8 };
-const NUM1 = { won: 1, to: 2, too: 2, for: 4 };
-const STOP = ['use', 'the', 'and', 'for', 'you', 'can', 'not', 'don', 'have', 'please', 'through', 'any'];
-const CMD = {
-  next: ['next', 'continue', 'done', 'finished', 'ቀጥል', 'ቀጥሉ', 'ጨርሻለሁ'],
-  back: ['back', 'previous', 'ተመለስ', 'ኋላ'],
-  skip: ['skip', 'ዝለል', 'ዝለሉ'],
-  repeat: ['read', 'aloud', 'repeat', 'again', 'አንብብልኝ', 'አንብብ', 'ድገም', 'እንደገና'],
-  start: ['start', 'begin', 'ጀምር'],
-  send: ['submit', 'send', 'አስገባ'],
-  restart: ['restart', 'beginning', 'ከመጀመሪያ'],
-  stop: ['stop', 'ቁም', 'አቁም'],
+const NUM = {
+  one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8,
+  'አንድ': 1, 'ሁለት': 2, 'ሦስት': 3, 'ሶስት': 3, 'አራት': 4, 'አምስት': 5, 'ስድስት': 6, 'ሰባት': 7, 'ስምንት': 8, '፩': 1, '፪': 2, '፫': 3, '፬': 4, '፭': 5, '፮': 6, '፯': 7, '፰': 8,
+  tokko: 1, lama: 2, sadii: 3, afur: 4, shan: 5, jaha: 6, torba: 7, saddeet: 8, // om, VERIFY_NATIVE
+  'ሓደ': 1, 'ክልተ': 2, 'ሰለስተ': 3, 'ኣርባዕተ': 4, 'ሓሙሽተ': 5, 'ሽዱሽተ': 6, 'ሸውዓተ': 7, 'ሸሞንተ': 8, // ti, VERIFY_NATIVE
+  kow: 1, hal: 1, laba: 2, saddex: 3, afar: 4, lix: 6, toddoba: 7, siddeed: 8, // so (shan = 5 is shared with om), VERIFY_NATIVE
 };
+const NUM1 = { won: 1, to: 2, too: 2, for: 4 };
+const STOP = ['use', 'the', 'and', 'for', 'you', 'can', 'not', 'don', 'have', 'please', 'through', 'any',
+  'ykn', 'kan', 'fi', 'maaloo', // om, VERIFY_NATIVE
+  'ama', 'iyo', 'aan', 'fadlan']; // so, VERIFY_NATIVE
+// Voice commands. Words are compared one by one after norm(), which turns apostrophes into spaces, so no entry contains one.
+const CMD = {
+  next: ['next', 'continue', 'done', 'finished', 'ቀጥል', 'ቀጥሉ', 'ጨርሻለሁ',
+    'fufi', 'ቀጽል', 'ቀጽሉ', 'xiga'], // om ti so, VERIFY_NATIVE
+  back: ['back', 'previous', 'ተመለስ', 'ኋላ',
+    'duubatti', 'ተመለሱ', 'noqo'], // om ti so, VERIFY_NATIVE
+  skip: ['skip', 'ዝለል', 'ዝለሉ',
+    'darbi', 'ሕለፍ', 'ሕለፉ', 'bood'], // om ti so, VERIFY_NATIVE
+  repeat: ['read', 'aloud', 'repeat', 'again', 'አንብብልኝ', 'አንብብ', 'ድገም', 'እንደገና',
+    'dubbisi', 'ኣንብበለይ', 'ኣንብብ', 'akhri', 'celi'], // om ti so, VERIFY_NATIVE
+  start: ['start', 'begin', 'ጀምር',
+    'jalqabi', 'bilow'], // om so (ti uses ጀምር), VERIFY_NATIVE
+  send: ['submit', 'send', 'አስገባ',
+    'ergi', 'ኣረክብ', 'ስደድ', 'gudbi'], // om ti so, VERIFY_NATIVE
+  restart: ['restart', 'beginning', 'ከመጀመሪያ'],
+  // "Start again" = a start word plus one of these (review page only).
+  again: ['again', 'እንደገና',
+    'deebi', 'ደጊምካ', 'ደጊምኩም', 'dib'], // om ti so, VERIFY_NATIVE
+  stop: ['stop', 'ቁም', 'አቁም',
+    'dhaabi', 'ኣቋርጽ', 'ደው', 'jooji'], // om ti so, VERIFY_NATIVE
+};
+// Yes / No for the first question and the review page.
+const YES = ['አዎ', 'አዎን', 'ይሁን', 'yes', 'yeah', 'yep', 'ok', 'okay', 'sure',
+  'eeyyee', 'eeyye', 'eeyee', 'እወ', 'እዉ', 'haa', 'haye', 'haah']; // om ti so, VERIFY_NATIVE
+const NO = ['አይ', 'አይደለም', 'አልፈልግም', 'አያስፈልግም', 'no', 'nope',
+  'lakki', 'lakkii', 'miti', 'ኣይፋል', 'ኣይፋልን', 'maya', 'mayo']; // om ti so, VERIFY_NATIVE
 const HASV = () => window.SpeechRecognition || window.webkitSpeechRecognition;
 
 class DbForm extends HTMLElement {
+  // The design system, for host pages and the design-system proof page: one source of truth for tokens, themes and icons.
+  static get design() { return { THEMES, TOKENS, SWATCH, CSS, ICONS: P, svg }; }
   constructor() { super(); this.r = this.attachShadow({ mode: 'open' }); this.i = 0; this.a = {}; this.err = ''; this.done = false; this.moved = false; this.vok = false; this.pref = {}; this.jobs = null; this.welcome = false; this.vm = false; this.rm = false; this.cp = false; this.aud = null; this.ra = 0; this.manual = false; this.rec = null; this.vrec = null; this.vno = false; this.vtries = 0; this.tok = 0; this.rs = 0; this.fromReview = false; this.noticed = false; this.hide = []; }
   connectedCallback() {
-    this.f = FLOWS[this.getAttribute('flow')] || FLOWS.signup; this.l = this.getAttribute('lang') === 'am' ? 'am' : 'en';
+    this.f = FLOWS[this.getAttribute('flow')] || FLOWS.signup; this.l = LANG_RE.test(this.getAttribute('lang') || '') ? this.getAttribute('lang') : 'en';
     this.welcome = true;
+    // Language page first, in English. A site that already knows the language can skip it with lang-ask='no'.
+    this.lp = this.getAttribute('lang-ask') !== 'no';
+    let saved = null; try { saved = localStorage.getItem('db-form-theme'); } catch (x) { /* storage blocked */ }
+    this.theme = THEMES.includes(saved) ? saved : THEMES.includes(this.getAttribute('theme')) ? this.getAttribute('theme') : 'auto';
+    if (this.lp) this.l = 'en';
     this.hide = (this.getAttribute('hide') || '').split(',').map(x => x.trim()).filter(x => x && !['fullName', 'role', 'job'].includes(x));
     this.addEventListener('keydown', e => {
       if (e.key === 'Escape' && this.active()) { e.preventDefault(); if (this.welcome && this.ra < 2) { this.stopRA(); this.say(this.u('stopped')); } else this.stopRead(); return; }
+      // Modifier keys alone (e.g. Alt+Shift or Win+Space to switch keyboard layout) and IME key events do not stop the voice.
+      if (QUIET_KEYS.includes(e.key) || e.isComposing || e.keyCode === 229) return;
+      // Tab, Shift+Tab, arrows (radio groups) and Space (tick a box) move or change the focus: stop listening so the mic does not hear the read-out.
+      if (NAV_KEYS.includes(e.key)) { this.kbd = Date.now(); if (this.vrec) this.stopVoice(); if (this.welcome && this.ra < 2) this.stopRA(); return; }
       if (this.welcome && this.ra < 2) this.stopRA();
-      else if (this.vrec && !['Tab', 'Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) this.stopVoice();
+      else if (this.vrec) this.stopVoice();
     });
+    // Tab / Shift+Tab: read the newly focused control aloud, in the chosen language.
+    this.r.addEventListener('focusin', e => { if (Date.now() - (this.kbd || 0) < 600) this.readFocus(e.target); });
+    // Space on a checkbox changes it without moving focus: read the new state.
+    this.r.addEventListener('change', e => { if (e.target.name === 'f' && e.target.type === 'checkbox' && Date.now() - (this.kbd || 0) < 600) this.readFocus(e.target); });
+    // Typing with an input method (Ge'ez, Keyman, phone keyboards): Enter that ends a composition must not submit the form.
+    this.r.addEventListener('compositionstart', () => { this.composing = true; });
+    this.r.addEventListener('compositionend', () => { this.composedAt = Date.now(); this.composing = false; });
     const api = this.getAttribute('api');
     if (this.f.steps.some(s => s.dyn) && api) fetch(api + '/jobs').then(r => r.json()).then(j => { this.jobs = j; }).catch(() => {}).finally(() => this.draw());
     else this.draw();
@@ -175,11 +424,15 @@ class DbForm extends HTMLElement {
     return { ...s, type: 'radio', options: (ok.length ? ok : this.jobs).map(j => [j.title, { en: j.title, am: j.titleAm }]) };
   }
   u(k, v) { let t = T(UI[k], this.l); for (const x in v) t = t.replace('{' + x + '}', v[x]); return t; }
-  sl() { return this.l === 'am' ? 'am-ET' : 'en-US'; }
+  sl() { return LANG(this.l).sr; }
+  // Does this device voice speak the current language? Voices report 2- or 3-letter codes (so-SO, som), so check every known prefix.
+  vmatch(v, l = this.l) { const c = v.lang.toLowerCase(); return LANG(l).tts.some(p => c === p || c.startsWith(p + '-') || c.startsWith(p + '_')); }
+  // Folder for recorded clips. Only supported languages ever reach the URL.
+  al() { return LANG_RE.test(this.l) ? this.l : 'en'; }
   keep(s) {
     if (!s) return;
     const f = this.r.querySelector('#f');
-    if (f) { this.a[s.id] = f.value; return; }
+    if (f) { this.a[s.id] = f.value.normalize('NFC'); return; }
     const c = [...this.r.querySelectorAll('input[name=f]:checked')].map(x => x.value);
     if (s.type === 'radio') this.a[s.id] = c[0] || ''; else if (s.type === 'checkbox') this.a[s.id] = c;
   }
@@ -193,29 +446,39 @@ class DbForm extends HTMLElement {
   field(s, n) {
     const v = this.a[s.id] || (s.type === 'checkbox' ? [] : '');
     const inp = s.type === 'text'
-      ? `<input id='f' type='text' value='${esc(v)}' aria-labelledby='h' aria-describedby='hint err'>`
-      : s.options.map(([k, t]) => `<label class='opt'><input type='${s.type}' name='f' value='${esc(k)}' ${[].concat(v).includes(k) ? 'checked' : ''}> ${this.pref.simple ? `<span aria-hidden='true'>${IC[k] || ''}</span> ` : ''}${esc(T(t, this.l))}</label>`).join('');
-    const hasV = HASV();
-    const mic = hasV && !s.novoice ? `<button type='button' data-mic class='mic p'><span aria-hidden='true'>🎤</span> ${this.u('speak')}<span class='wave' aria-hidden='true'><i></i><i></i><i></i><i></i><i></i></span></button>` : '';
-    return `<form novalidate><p class='step'>${esc(this.u('of', { n: this.i + 1, t: n }))}</p><progress value='${this.i + 1}' max='${n}' aria-hidden='true'></progress>
+      ? `<input id='f' type='text' value='${esc(v)}' aria-labelledby='h' aria-describedby='hint err' ${this.err ? "aria-invalid='true'" : ''} lang='${this.l}' dir='auto' ${INPUT_HINTS[s.id] || "autocomplete='off' spellcheck='false'"}>`
+      : `<div class='opts'>${s.options.map(([k, t]) => `<label class='opt'><input type='${s.type}' name='f' value='${esc(k)}' ${[].concat(v).includes(k) ? 'checked' : ''}>${this.pref.simple && P[k] ? `<span class='pic'>${I(k, 28)}</span>` : ''}<span>${esc(T(t, this.l))}</span><span class='tick'>${I('check', 20)}</span></label>`).join('')}</div>`;
+    const mic = HASV() && !s.novoice ? `<button type='button' data-mic class='mic'><span class='lab'>${I('mic')}${this.u('speak')}</span><span class='lvl' aria-hidden='true'><i></i><i></i><i></i><i></i></span></button>` : '';
+    return `<form novalidate><p class='step'><span>${esc(this.u('of', { n: this.i + 1, t: n }))}</span></p><div class='track' aria-hidden='true'><i style='width:${Math.round((this.i + 1) / n * 100)}%'></i></div>
       <fieldset><legend id='h' tabindex='-1'>${esc(T(s.q, this.l))}</legend><p id='hint'>${esc(T(s.hint, this.l))}</p>${mic}${inp}
-      <p id='err' class='err' role='alert'>${esc(this.err)}</p></fieldset>
-      <div class='row'><button class='p'>${this.u('next')}</button>${s.optional ? `<button type='button' data-skip>${this.u('skip')}</button>` : ''}${this.i ? `<button type='button' data-back>${this.u('back')}</button>` : ''}<button type='button' data-read><span aria-hidden='true'>🔊</span> ${this.u('read')}</button></div></form>`;
+      ${this.errHTML()}</fieldset>
+      <div class='row'><button class='p' data-next>${this.u('next')}${I('next', 20)}</button>${s.optional ? `<button type='button' data-skip>${this.u('skip')}</button>` : ''}${this.i ? `<button type='button' data-back>${I('back', 20)}${this.u('back')}</button>` : ''}<button type='button' class='q' data-read>${I('speaker', 20)}${this.u('read')}</button></div></form>`;
+  }
+
+  // Error box: icon + text (never colour alone). Empty = hidden, but it stays in the page so role=alert announces changes.
+  errHTML() { return `<div id='err' class='err' role='alert'>${this.err ? I('alert', 22) + `<span>${esc(this.err)}</span>` : ''}</div>`; }
+
+  // The first page: choose a language. The question is in English; each language also invites its own speakers in its own words.
+  langHTML() {
+    const help = LANGS.filter(x => x.id !== 'en').map(x => `<li lang='${x.id}'>${esc(UI.langSelf[x.id])}</li>`).join('');
+    const btn = x => `<button type='button' class='big pick' data-pick='${x.id}' lang='${x.id}'><span>${esc(x.name)}</span>${x.id === 'en' ? '' : `<small lang='en'>${esc(x.en)}</small>`}</button>`;
+    return `<div class='head'>${LOGO}<h2 id='h' tabindex='-1'>${esc(UI.langH.en)}</h2></div><ul class='langhelp'>${help}</ul><div class='row' role='group' aria-labelledby='h'>${LANGS.map(btn).join('')}</div>`;
   }
 
   welcomeHTML() {
-    if (this.ra < 2) return `<div class='center'>${LOGO}<h2 id='h' tabindex='-1'>${this.u(this.ra ? 'raAgain' : 'raAsk')}</h2>${this.ra ? '' : `<p>${this.u('raHint')}</p><p>${this.u('raPrivacy')}</p>`}<div class='row'><button type='button' class='p big' data-ra='y'>${this.u('raYes')}</button><button type='button' class='big' data-ra='n'>${this.u('raNo')}</button></div></div>`;
-    const hasV = window.SpeechRecognition || window.webkitSpeechRecognition;
-    return `<div class='center'>${LOGO}<h2 id='h' tabindex='-1'>${this.u('welcomeH')}</h2><p>${this.u('welcomeP')}</p>
-      <div class='row'><button type='button' class='p big' data-start='t'>${this.u('start')}</button>
-      ${hasV ? `<button type='button' class='big' data-start='v'><span aria-hidden='true'>🎤</span> ${this.u('startVoice')}</button>` : ''}
-      ${this.rm ? `<button type='button' class='big' data-stoprm>${this.u('stopRead')}</button>` : `<button type='button' class='big' data-rm><span aria-hidden='true'>🔊</span> ${this.u('readToMe')}</button>`}</div></div>`;
+    if (this.lp) return this.langHTML();
+    if (this.ra < 2) return `<div class='head'>${LOGO}<h2 id='h' tabindex='-1'>${this.u(this.ra ? 'raAgain' : 'raAsk')}</h2>${this.ra ? '' : `<p>${this.u('raHint')}</p>`}</div>${this.ra ? '' : `<p class='privacy'>${this.u('raPrivacy')}</p>`}<div class='row'><button type='button' class='p big' data-ra='y'>${I('speaker')}${this.u('raYes')}</button><button type='button' class='big' data-ra='n'>${this.u('raNo')}</button></div>`;
+    return `<div class='head'>${LOGO}<h2 id='h' tabindex='-1'>${this.u('welcomeH')}</h2><p>${this.u('welcomeP')}</p></div>
+      <div class='row'><button type='button' class='p big' data-start='t'>${this.u('start')}${I('next', 20)}</button>
+      ${HASV() ? `<button type='button' class='big' data-start='v'>${I('mic')}${this.u('startVoice')}</button>` : ''}
+      ${this.rm ? `<button type='button' class='big' data-stoprm>${I('stop')}${this.u('stopRead')}</button>` : `<button type='button' class='big' data-rm>${I('speaker')}${this.u('readToMe')}</button>`}</div>`;
   }
 
   pageText(s, noErr) {
     const l = this.l, n = k => this.u(k), v = this.rm && HASV(), err = this.err && !noErr ? this.err + ' ' : '';
     const j = a => a.filter(Boolean).map(x => (/[.?!።]$/.test(x) ? x : x + '.')).join(' ');
     if (this.done) return n('thanks');
+    if (this.lp) return UI.langAsk.en;
     if (this.welcome) return j([n('welcomeH'), n('welcomeP'), n('start'), n('startVoice'), n('readToMe'), v ? n('sayWelcome') : '']);
     if (!s) {
       if (this.rs) return err + n('reviewFix');
@@ -227,10 +490,118 @@ class DbForm extends HTMLElement {
     return err + j([T(s.q, l), T(s.hint, l), ...opts, ins]);
   }
 
+  // Language page, spoken: the English question, then each language's own invitation (from its own recorded clip), then listen.
+  askLang() {
+    if (this.manual || !this.lp) return;
+    const items = [{ l: 'en', id: 'langAsk', t: UI.langAsk.en }, ...LANGS.filter(x => x.id !== 'en').map(x => ({ l: x.id, id: 'langSelf', t: UI.langSelf[x.id] }))];
+    this.say(UI.langAsk.en);
+    this.playList(items, () => this.cue(() => this.hearLang()));
+  }
+
+  // Play clips that may be in different languages. A missing clip is read by a device voice for its language; if there is none, it is skipped.
+  playList(items, cb) {
+    const base = this.getAttribute('audio'), k = ++this.tok, vs = window.speechSynthesis ? speechSynthesis.getVoices() : [];
+    if (this.aud) this.aud.pause();
+    if (window.speechSynthesis) speechSynthesis.cancel();
+    let n = 0;
+    this.cap('speaking', items.map(x => x.t).join(' · '), items.every(x => x.l === items[0].l) ? items[0].l : null);
+    const go = () => {
+      if (k !== this.tok) return;
+      if (n >= items.length) { this.cap('idle'); if (cb) cb(); return; }
+      const it = items[n++];
+      let used = false;
+      const fb = () => {
+        if (used || k !== this.tok) return; used = true;
+        const v = vs.find(x => this.vmatch(x, it.l));
+        if (!window.speechSynthesis || (vs.length && !v)) { go(); return; }
+        const u = new SpeechSynthesisUtterance(it.t); u.lang = LANG(it.l).sr; if (v) u.voice = v; u.onend = go; u.onerror = go; speechSynthesis.speak(u);
+      };
+      if (!base || !it.id) { fb(); return; }
+      const a = this.aud = new Audio(base + '/' + it.l + '/' + it.id + '.mp3');
+      a.onended = () => { if (!used) { used = true; go(); } }; a.onerror = fb; a.play().catch(fb);
+    };
+    go();
+  }
+
+  // What to say when a control gets keyboard focus: [{ l: language, id: clip id (null = device voice only), t: text }].
+  focusItems(el) {
+    const l = this.l, it = (id, t, lang = l) => ({ l: lang, id, t });
+    if (!el || !el.dataset) return [];
+    const d = el.dataset, s = this.welcome ? null : this.steps[this.i];
+    if (d.pick || d.lang) { const x = LANG(d.pick || d.lang); return [it('langName', x.name, x.id)]; }
+    if (d.ra) return [it(d.ra === 'y' ? 'b_raYes' : 'b_raNo', this.u(d.ra === 'y' ? 'raYes' : 'raNo'))];
+    if (d.start) return [it(d.start === 'v' ? 'b_startVoice' : 'b_start', this.u(d.start === 'v' ? 'startVoice' : 'start'))];
+    if (el.name === 'f' && s && s.options) {
+      const n = s.options.findIndex(p => p[0] === el.value);
+      if (n < 0) return [];
+      return [it('n' + (n + 1), String(n + 1)), it('o_' + s.id + '_' + el.value, T(s.options[n][1], l)), it(el.checked ? 'sel' : 'unsel', this.u(el.checked ? 'sel' : 'unsel'))];
+    }
+    if (el.id === 'f' && s) return [it('q_' + s.id, T(s.q, l)), ...(el.value.trim() ? [it(null, el.value.trim())] : [])];
+    const k = Object.keys(BTN).find(x => x in d);
+    if (k === 'edit') { const rv = this.steps.filter(x => !x.local), n = rv.indexOf(this.steps[+d.edit]) + 1; return [it('b_change', this.u('change')), it('n' + n, String(n))]; }
+    if (k) return [it('b_' + BTN[k], this.u(BTN[k]))];
+    if (el.name === 'th') return [it(null, this.u('th_' + el.value)), it(el.checked ? 'sel' : 'unsel', this.u(el.checked ? 'sel' : 'unsel'))];
+    const t = (el.textContent || '').trim();
+    return t ? [it(null, t)] : [];
+  }
+
+  // Read the focused control, but only while the voice is in use (language page, the "read aloud?" question, or Read to me mode).
+  readFocus(el) {
+    if (!(this.lp || (this.welcome && this.ra < 2) || this.rm)) return;
+    const items = this.focusItems(el);
+    if (items.length) this.playList(items);
+  }
+
+  // Before the microphone opens: say "Speak now" in the chosen language, then a short beep, then listen.
+  cue(cb) {
+    this.say(this.u('speakNow'));
+    this.playList([{ l: this.l, id: 'speakNow', t: this.u('speakNow') }], () => {
+      const k = this.tok; this.beep();
+      setTimeout(() => { if (k === this.tok) cb(); }, 300);
+    });
+  }
+
+  beep() {
+    try {
+      const C = window.AudioContext || window.webkitAudioContext; if (!C) return;
+      const c = this.ac || (this.ac = new C()), o = c.createOscillator(), g = c.createGain(), t = c.currentTime;
+      o.frequency.value = 880; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.25, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+      o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + 0.2);
+    } catch (x) { /* no sound is fine: the screen shows Listening */ }
+    const c = this.r && this.r.querySelector && this.r.querySelector('#cap');
+    if (c) { c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash'); }
+  }
+
+  // Which language did the person name? English speech recognition is used, because the question is asked in English.
+  pickLang(t) {
+    const w = this.norm(t).split(' '), hit = LANGS.filter(x => x.say.some(s => w.includes(s)));
+    return hit.length === 1 ? hit[0].id : '';
+  }
+
+  hearLang() {
+    const R = HASV();
+    if (!R || this.manual || !this.lp) return;
+    const rec = new R(); rec.lang = 'en-US'; rec.interimResults = false;
+    let fin = false;
+    rec.onresult = e => { fin = true; const id = this.pickLang(e.results[0][0].transcript); if (id) this.chooseLang(id); else this.say(UI.langNone.en); };
+    rec.onerror = e => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { fin = true; this.say(UI.micblocked.en); } };
+    rec.onend = () => { this.cap('idle'); if (!fin) this.say(UI.langNone.en); };
+    this.rec = rec; this.cap('listening');
+    try { rec.start(); } catch (x) { /* the buttons still work */ }
+  }
+
+  // A language was chosen (button or voice): switch, then ask "read aloud?" in that language.
+  chooseLang(id) {
+    this.stopRA();
+    this.l = LANG_RE.test(id) ? id : 'en'; this.lp = false; this.manual = false; this.moved = true;
+    this.draw();
+    this.askRA();
+  }
+
   askRA() {
-    if (this.manual || !this.welcome || this.ra > 1) return;
+    if (this.manual || !this.welcome || this.lp || this.ra > 1) return;
     const id = this.ra ? 'raAgain' : 'raAsk';
-    this.speak(this.u(id) + (this.ra ? '' : ' ' + this.u('raHint') + ' ' + this.u('raPrivacy')), id, () => this.hear());
+    this.speak(this.u(id) + (this.ra ? '' : ' ' + this.u('raHint') + ' ' + this.u('raPrivacy')), id, () => this.cue(() => this.hear()));
   }
 
   hear() {
@@ -241,15 +612,14 @@ class DbForm extends HTMLElement {
     const finish = a => { if (!fin) { fin = true; this.raDone(a); } };
     rec.onresult = e => finish(this.ans(e.results[0][0].transcript));
     rec.onerror = e => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed' || e.error === 'language-not-supported') { fin = true; this.say(this.u(e.error === 'language-not-supported' ? 'nolang' : 'micblocked')); } };
-    rec.onend = () => finish('');
-    this.rec = rec;
+    rec.onend = () => { this.cap('idle'); finish(''); };
+    this.rec = rec; this.cap('listening');
     try { rec.start(); } catch (x) { /* the buttons still work */ }
   }
 
   ans(t) {
-    const yes = ['አዎ', 'አዎን', 'ይሁን', 'yes', 'yeah', 'yep', 'ok', 'okay', 'sure'], no = ['አይ', 'አይደለም', 'አልፈልግም', 'አያስፈልግም', 'no', 'nope'];
     const w = t.toLowerCase().split(/[\s.,!?፣።]+/);
-    return w.some(x => no.includes(x)) ? 'n' : w.some(x => yes.includes(x)) ? 'y' : '';
+    return w.some(x => NO.includes(x)) ? 'n' : w.some(x => YES.includes(x)) ? 'y' : '';
   }
 
   raDone(a) {
@@ -262,7 +632,7 @@ class DbForm extends HTMLElement {
   }
 
   stopRA() {
-    this.manual = true;
+    this.manual = true; this.cap('idle');
     if (window.speechSynthesis) speechSynthesis.cancel();
     if (this.aud) this.aud.pause();
     if (this.rec) { this.rec.onend = null; this.rec.onerror = null; this.rec.onresult = null; try { this.rec.abort(); } catch (x) { /* ignore */ } }
@@ -272,34 +642,60 @@ class DbForm extends HTMLElement {
 
   draw() {
     if (this.moved) this.halt();
-    const st = this.steps, s = st[this.i], other = this.l === 'en' ? 'am' : 'en';
+    const st = this.steps, s = st[this.i];
     let b;
-    if (this.done) b = `<div class='center'>${CHECK}<h2 id='h' tabindex='-1'>${this.u('thanks')}</h2></div>`;
+    if (this.done) b = `<div class='done'>${CHECK}<h2 id='h' tabindex='-1'>${this.u('thanks')}</h2></div>`;
     else if (this.welcome) b = this.welcomeHTML();
     else if (!s) {
       const rv = st.map((x, n) => [x, n]).filter(([x]) => !x.local);
-      b = `<h2 id='h' tabindex='-1'>${this.u('review')}</h2><dl>${rv.map(([x, n], k) =>
-        `<dt>${k + 1}. ${esc(T(x.q, this.l))}</dt><dd>${esc(this.show(x))} <button type='button' data-edit='${n}'>${this.u('change')}</button></dd>`).join('')}</dl>
-      <p>${this.u(this.rs ? 'reviewFix' : 'reviewAsk')}</p>
-      <p id='err' class='err' role='alert'>${esc(this.err)}</p>
-      <div class='row'><button type='button' class='p big' data-send>${this.u('send')}</button>${this.rs ? '' : `<button type='button' class='big' data-nochange>${this.u('noChange')}</button>`}<button type='button' class='big' data-restart>${this.u('restart')}</button><button type='button' data-back>${this.u('back')}</button></div>`;
+      b = `<h2 id='h' tabindex='-1'>${this.u('review')}</h2><dl class='review'>${rv.map(([x, n], k) =>
+        `<div class='item'><dt>${k + 1}. ${esc(T(x.q, this.l))}</dt><dd><span>${esc(this.show(x))}</span><button type='button' data-edit='${n}'>${this.u('change')}<span class='sr'> ${k + 1}</span></button></dd></div>`).join('')}</dl>
+      <p class='after'>${this.u(this.rs ? 'reviewFix' : 'reviewAsk')}</p>
+      ${this.errHTML()}
+      <div class='row'><button type='button' class='p big' data-send>${I('check')}${this.u('send')}</button>${this.rs ? '' : `<button type='button' class='big' data-nochange>${this.u('noChange')}</button>`}<button type='button' class='big' data-restart>${this.u('restart')}</button><button type='button' data-back>${I('back', 20)}${this.u('back')}</button></div>`;
     }
     else b = this.field(s, st.length);
-    const sb = k => `<button type='button' data-${k === 'stop' ? 'stoprm' : 'rm'}>${this.u(k === 'stop' ? 'stopRead' : 'readToMe')}</button>`;
+    const sb = k => k === 'stop' ? `<button type='button' data-stoprm>${I('stop', 20)}${this.u('stopRead')}</button>` : `<button type='button' data-rm>${I('speaker', 20)}${this.u('readToMe')}</button>`;
     const tb = this.welcome ? (this.ra < 2 ? sb('stop') : '') : this.rm ? sb('stop') : sb('read');
     const tools = tb ? `<div class='tools'>${tb}</div>` : '';
-    this.r.innerHTML = `<style>${CSS}</style><section lang='${this.l}' style='font-size:${this.pref.large ? "1.4rem" : "inherit"}'><div class='lang' role='group' aria-label='Language'><button type='button' data-lang='en' aria-pressed='${this.l === 'en'}'>English</button><button type='button' data-lang='am' lang='am' aria-pressed='${this.l === 'am'}'>አማርኛ</button></div>${tools}<p class='status' id='live' role='status'></p>${b}</section>`;
+    // On the language page the buttons themselves are the language choice, so the language buttons are not repeated there.
+    const langs = this.lp ? '' : `<div class='lang' role='group' aria-label='Language'>${LANGS.map(x => `<button type='button' data-lang='${x.id}' lang='${x.id}' aria-pressed='${this.l === x.id}'>${x.name}</button>`).join('')}</div>`;
+    const disp = `<details class='disp'><summary>${I('palette', 20)}${this.u('colours')}</summary><fieldset class='panel'><legend class='sr'>${this.u('colours')}</legend>${THEMES.map(t => `<label><input type='radio' name='th' value='${t}' ${this.theme === t ? 'checked' : ''}><span class='sw' aria-hidden='true'>${SWATCH[t].map(c => `<i style='background:${c}'></i>`).join('')}</span><span>${this.u('th_' + t)}</span></label>`).join('')}</fieldset></details>`;
+    // The caption box shows, as text, everything that is being spoken, and a clear "Listening" state (for deaf and hard-of-hearing people).
+    // It is aria-hidden because screen-reader users already hear the same words; the short role=status line below is for them.
+    const cap = `<div class='cap' id='cap' data-state='idle' aria-hidden='true'><span class='ic'></span><div><span class='k'></span><span class='t'></span></div><span class='lvl'><i></i><i></i><i></i><i></i></span></div>`;
+    this.r.innerHTML = `<style>${CSS}</style><section lang='${this.l}' data-theme='${this.theme || 'auto'}'${this.pref.large ? " style='font-size:1.375rem'" : ''}><div class='bar'>${langs}${disp}</div>${tools}${cap}<p class='status' id='live' role='status'></p>${b}</section>`;
     this.bind(s);
-    if (!this.said) { this.said = true; setTimeout(() => { if (this.welcome) this.askRA(); else this.say(this.u('intro')); }, 800); }
+    if (!this.said) { this.said = true; setTimeout(() => { if (this.lp) this.askLang(); else if (this.welcome) this.askRA(); else this.say(this.u('intro')); }, 800); }
     this.vtries = 0;
     const quiet = this.quiet; this.quiet = false;
     if (this.rm && this.moved && !quiet) this.readPage(s, this.done ? null : () => this.listenAnswer());
     else if (this.err && this.moved && !quiet && (this.vm || this.usedRead)) this.readErr();
   }
 
+  // Colour theme: the person's own choice (saved on this device) wins over the site's theme attribute.
+  setTheme(t) {
+    this.theme = THEMES.includes(t) ? t : 'auto';
+    try { localStorage.setItem('db-form-theme', this.theme); } catch (x) { /* private mode: the choice lasts for this page only */ }
+    const sec = this.r.querySelector('section'); if (sec) sec.dataset.theme = this.theme;
+    // Tell the host page, so its header, nav and footer can use the same colours.
+    this.dispatchEvent(new CustomEvent('db-theme', { detail: { theme: this.theme }, bubbles: true, composed: true }));
+  }
+
+  // Caption box. state: speaking | listening | idle.
+  cap(state, text, lang) {
+    const c = this.r && this.r.querySelector && this.r.querySelector('#cap'); if (!c) return;
+    c.dataset.state = state;
+    if (state === 'idle') return;
+    c.querySelector('.ic').innerHTML = I(state === 'listening' ? 'mic' : 'speaker');
+    c.querySelector('.k').textContent = state === 'listening' ? '' : this.u('reading');
+    const t = c.querySelector('.t'); t.textContent = state === 'listening' ? this.u('listening') : text || '';
+    if (lang) t.setAttribute('lang', lang); else t.removeAttribute('lang');
+  }
+
   bind(s) {
     const q = x => this.r.querySelector(x), on = (x, fn) => q(x) && q(x).addEventListener('click', fn);
-    if (q('form')) q('form').addEventListener('submit', e => { e.preventDefault(); this.next(s); });
+    if (q('form')) q('form').addEventListener('submit', e => { e.preventDefault(); if (this.composing || Date.now() - (this.composedAt || 0) < 80) return; this.next(s); });
     this.r.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => { this.keep(s); this.l = b.dataset.lang; this.err = ''; this.moved = true; this.draw(); }));
     on('[data-back]', () => this.goBack(s));
     on('[data-skip]', () => this.skipStep(s));
@@ -307,6 +703,8 @@ class DbForm extends HTMLElement {
     on('[data-mic]', () => this.listen());
     on('[data-rm]', () => { this.rm = true; this.moved = true; this.draw(); });
     on('[data-stoprm]', () => { if (this.welcome && this.ra < 2) { this.stopRA(); this.say(this.u('stopped')); } else this.stopRead(); });
+    this.r.querySelectorAll('input[name=th]').forEach(x => x.addEventListener('change', () => this.setTheme(x.value)));
+    this.r.querySelectorAll('[data-pick]').forEach(b => b.addEventListener('click', () => this.chooseLang(b.dataset.pick)));
     this.r.querySelectorAll('[data-ra]').forEach(b => b.addEventListener('click', () => { this.stopRA(); this.raDone(b.dataset.ra); }));
     on('[data-send]', () => this.send());
     this.r.querySelectorAll('[data-start]').forEach(b => b.addEventListener('click', () => this.startForm(b.dataset.start === 'v')));
@@ -318,7 +716,7 @@ class DbForm extends HTMLElement {
 
   next(s) {
     const c = [...this.r.querySelectorAll('input:checked')].map(x => x.value);
-    const v = s.type === 'text' ? this.r.querySelector('#f').value.trim() : s.type === 'radio' ? (c[0] || '') : c;
+    const v = s.type === 'text' ? this.r.querySelector('#f').value.normalize('NFC').trim() : s.type === 'radio' ? (c[0] || '') : c;
     const empty = !v || !v.length;
     this.err = ''; this.errKey = '';
     if (empty && !s.optional) { this.err = this.u('need'); this.errKey = 'need'; }
@@ -331,13 +729,14 @@ class DbForm extends HTMLElement {
 
   speak(t, id, cb) {
     const live = this.r.querySelector('#live'), base = this.getAttribute('audio'), k = ++this.tok;
-    if (cb) { const c = cb; cb = () => { if (k === this.tok) c(); }; }
+    { const c = cb; cb = () => { if (k === this.tok) { this.cap('idle'); if (c) c(); } }; }
     if (this.aud) this.aud.pause();
     if (window.speechSynthesis) speechSynthesis.cancel();
     live.textContent = this.u('reading');
+    this.cap('speaking', t, this.l);
     if (base && id && id !== 'review') {
       let used = false; const fb = () => { if (!used) { used = true; this.tts(t, live, cb); } };
-      this.aud = new Audio(base + '/' + this.l + '/' + id + '.mp3'); this.aud.onerror = fb; if (cb) this.aud.onended = cb; this.aud.play().catch(fb); return;
+      this.aud = new Audio(base + '/' + this.al() + '/' + id + '.mp3'); this.aud.onerror = fb; this.aud.onended = cb; this.aud.play().catch(fb); return;
     }
     this.tts(t, live, cb);
   }
@@ -345,20 +744,20 @@ class DbForm extends HTMLElement {
   tts(t, live, cb) {
     if (!window.speechSynthesis) { live.textContent = this.u('novoice'); if (cb) cb(); return; }
     const vs = speechSynthesis.getVoices();
-    if (vs.length && !vs.some(v => v.lang.toLowerCase().startsWith(this.l))) {
+    if (vs.length && !vs.some(v => this.vmatch(v))) {
       live.textContent = this.u('novoicehere');
       if (!this.noticed && vs.some(v => v.lang.toLowerCase().startsWith('en'))) {
         this.noticed = true; const n = new SpeechSynthesisUtterance(UI.novoicehere.en); n.lang = 'en-US'; n.onend = () => { if (cb) cb(); }; speechSynthesis.speak(n); } else if (cb) cb();
       return;
     }
-    const u = new SpeechSynthesisUtterance(t); u.lang = this.sl(); if (cb) u.onend = cb; speechSynthesis.speak(u);
+    const u = new SpeechSynthesisUtterance(t); u.lang = this.sl(); if (cb) { u.onend = cb; u.onerror = cb; } speechSynthesis.speak(u);
   }
 
   // True while the form is reading, listening, or in hands-free mode.
   active() { return !!(this.rm || this.vrec || (window.speechSynthesis && speechSynthesis.speaking) || (this.aud && !this.aud.paused && !this.aud.ended)); }
 
   // Stop all speech and listening right now.
-  halt() { this.tok++; if (window.speechSynthesis) speechSynthesis.cancel(); if (this.aud) this.aud.pause(); this.stopVoice(); }
+  halt() { this.tok++; if (window.speechSynthesis) speechSynthesis.cancel(); if (this.aud) this.aud.pause(); this.stopVoice(); this.cap('idle'); }
 
   // The Stop reading button, the Escape key and the voice word "stop": stop now and leave hands-free mode.
   stopRead() { this.rm = false; this.moved = true; this.draw(); this.say(this.u('stopped')); }
@@ -382,7 +781,8 @@ class DbForm extends HTMLElement {
     const mb = this.r.querySelector('.mic'); if (mb) mb.classList.remove('on');
   }
 
-  norm(t) { return String(t || '').toLowerCase().replace(/[.,!?፣።፤፦"'()\-]/g, ' ').replace(/\s+/g, ' ').trim(); }
+  // Speech and keyboards produce different apostrophes (' ’ ʼ) and Ethiopic punctuation (፡ ፧): all become spaces.
+  norm(t) { return String(t || '').normalize('NFC').toLowerCase().replace(/[.,!?፣።፤፦፡፧"'’‘ʼ`()\-]/g, ' ').replace(/\s+/g, ' ').trim(); }
 
   // Which options did the person say? By number ("2", "two", "ሁለት") or by name (best word match).
   pick(t, s) {
@@ -409,12 +809,12 @@ class DbForm extends HTMLElement {
     if (!HASV() || this.vno || this.done || this.welcome && this.ra < 2) return;
     const cur = this.steps[this.i];
     if (cur && cur.novoice) return;
-    this.listen(true);
+    this.cue(() => this.listen(true));
   }
 
-  say2(m, id) { this.speak(m, id || null, () => this.listen(true)); this.say(m); }
+  say2(m, id) { this.speak(m, id || null, () => this.cue(() => this.listen(true))); this.say(m); }
 
-  hasVoice() { const vs = window.speechSynthesis ? speechSynthesis.getVoices() : []; return vs.some(v => v.lang.toLowerCase().startsWith(this.l)); }
+  hasVoice() { const vs = window.speechSynthesis ? speechSynthesis.getVoices() : []; return vs.some(v => this.vmatch(v)); }
 
   // Read the current page. An error is read first, from its own recorded clip, so it is heard even without a device voice.
   readPage(s, cb) {
@@ -435,14 +835,15 @@ class DbForm extends HTMLElement {
     const base = this.getAttribute('audio'), live = this.r.querySelector('#live'), k = ++this.tok;
     if (this.aud) this.aud.pause();
     if (window.speechSynthesis) speechSynthesis.cancel();
-    if (cb) { const c = cb; cb = () => { if (k === this.tok) c(); }; }
+    { const c = cb; cb = () => { if (k === this.tok) { this.cap('idle'); if (c) c(); } }; }
+    this.cap('speaking', text, this.l);
     if (!base) { this.tts(text, live, cb); return; }
     let n = 0, bad = false;
     const fail = () => { if (!bad && k === this.tok) { bad = true; this.tts(text, live, cb); } };
     const go = () => {
       if (k !== this.tok || bad) return;
       if (n >= ids.length) { if (cb) cb(); return; }
-      const a = this.aud = new Audio(base + '/' + this.l + '/' + ids[n++] + '.mp3');
+      const a = this.aud = new Audio(base + '/' + this.al() + '/' + ids[n++] + '.mp3');
       a.onended = go; a.onerror = fail; a.play().catch(fail);
     };
     go();
@@ -455,12 +856,12 @@ class DbForm extends HTMLElement {
     const s = this.steps[this.i], t = this.norm(raw), w = t ? t.split(' ') : [];
     const lim = s && s.type === 'text' ? 1 : 3;
     const is = c => w.length > 0 && w.length <= lim && w.some(x => CMD[c].includes(x));
-    const again = () => this.readPage(s, () => this.listen(true));
+    const again = () => this.readPage(s, () => this.cue(() => this.listen(true)));
     if (this.welcome) { if (is('start') || is('next')) this.startForm(false); else this.say2(this.u('sayWelcome'), 'sayWelcome'); return; }
     if (!s) {
       const rv = this.steps.map((x, n) => [x, n]).filter(([x]) => !x.local), yn = this.ans(raw);
       const num = w.map(x => (/^\d+$/.test(x) ? +x : NUM[x] || 0)).find(n => n >= 1 && n <= rv.length);
-      if (w.some(x => CMD.restart.includes(x)) || (w.some(x => x === 'start' || x === 'ጀምር') && w.some(x => x === 'again' || x === 'እንደገና'))) return this.restart();
+      if (w.some(x => CMD.restart.includes(x)) || (w.some(x => CMD.start.includes(x)) && w.some(x => CMD.again.includes(x)))) return this.restart();
       if (is('stop')) return this.stopRead();
       if (num) return this.edit(rv[num - 1][1]);
       if (is('send') || (!this.rs && yn === 'y')) return this.send();
@@ -486,7 +887,7 @@ class DbForm extends HTMLElement {
     else hit.forEach(n => { ins[n].checked = !ins[n].checked; });
     const sel = ins.map((el, n) => (el.checked ? T(s.options[n][1], this.l) : null)).filter(Boolean);
     const nums = ins.map((el, n) => (el.checked ? 'n' + (n + 1) : null)).filter(Boolean), m = sel.length ? this.u('chose', { x: sel.join(', ') }) : this.u('noneSel');
-    this.say(m); this.seq(sel.length ? ['choseA', ...nums, 'choseB'] : ['noneSel'], m, () => this.listen(true));
+    this.say(m); this.seq(sel.length ? ['choseA', ...nums, 'choseB'] : ['noneSel'], m, () => this.cue(() => this.listen(true)));
   }
 
   listen(auto) {
@@ -499,13 +900,14 @@ class DbForm extends HTMLElement {
     const rec = new R(); rec.lang = this.sl(); rec.interimResults = false;
     this.vrec = rec;
     let got = false;
-    const mb = this.r.querySelector('.mic'), off = () => mb && mb.classList.remove('on');
+    const mb = this.r.querySelector('.mic'), off = () => { if (mb) mb.classList.remove('on'); if (this.vrec === rec || !this.vrec) this.cap('idle'); };
     if (mb) mb.classList.add('on');
     live.textContent = this.u('listening');
+    this.cap('listening');
     rec.onresult = e => { got = true; off(); this.vrec = null; this.heard(e.results[0][0].transcript); };
     rec.onerror = e => {
       if (e.error === 'no-speech') return;
-      got = true; this.vno = auto || this.vno;
+      got = true; this.vno = auto || this.vno; off();
       live.textContent = this.u(e.error === 'not-allowed' || e.error === 'service-not-allowed' ? 'micblocked' : e.error === 'language-not-supported' ? 'nolang' : 'novoice') + ' (' + e.error + ')';
     };
     rec.onend = () => {
@@ -518,7 +920,12 @@ class DbForm extends HTMLElement {
   }
 
   async send() {
+    if (this.sending) return;
     const out = {}; this.steps.filter(s => !s.local).forEach(s => { out[s.id] = this.a[s.id]; });
+    // Sending state: the button is disabled and says "Sending…" so a second press cannot send twice.
+    this.sending = true;
+    const btn = this.r.querySelector && this.r.querySelector('[data-send]');
+    if (btn) { btn.disabled = true; btn.textContent = this.u('sending'); this.say(this.u('sending')); }
     try {
       const base = this.getAttribute('api');
       if (base) {
@@ -531,7 +938,9 @@ class DbForm extends HTMLElement {
       this.err = this.u('fail'); this.errKey = 'fail';
       this.dispatchEvent(new CustomEvent('db-error', { bubbles: true, composed: true }));
     }
+    this.sending = false;
     this.draw();
   }
 }
 customElements.define('db-form', DbForm);
+}

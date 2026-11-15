@@ -1,23 +1,166 @@
 <!doctype html>
-<html lang='en'>
+<html lang='en' data-theme='auto'>
 <head>
 <meta charset='utf-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
-<title>Addis Community Learning Hub (demo host site)</title>
-<style>body{font-family:Georgia,serif;margin:0;color:#222}header{background:#2d5a27;color:#fff;padding:1rem}main{max-width:44rem;margin:auto;padding:1rem}a{color:#0b4f9c}pre{overflow-x:auto;background:#f3f3f3;padding:1rem}</style>
+<title>Join our programme · Addis Community Learning Hub (demo partner site)</title>
+<!-- Fonts are the partner site's choice. The plugin uses them when present and falls back to system fonts. -->
+<link rel='preconnect' href='https://fonts.googleapis.com'>
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+<link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Noto+Sans+Ethiopic:wght@400;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap'>
+<link rel='stylesheet' href='site.css'>
+<script src='site.js'></script>
 </head>
 <body>
-<header><strong>Addis Community Learning Hub</strong> (a pretend partner website)</header>
-<main>
-  <h1>Join our programme</h1>
-  <p>This page belongs to a different website. It adds two lines of HTML to get accessible sign-up.</p>
-  <nav aria-label='Forms'><a href='?flow=signup'>Sign up</a> | <a href='?flow=job'>Apply for a job</a> | <a href='?flow=employer'>Employer</a></nav>
-  <db-form api='http://localhost:3000/v1' audio='http://localhost:3000/audio'></db-form>
-  <h2>How a partner installs it</h2>
-  <pre>&lt;script src='http://localhost:3000/db-form.js'&gt;&lt;/script&gt;
-&lt;db-form flow='signup' lang='en' api='http://localhost:3000/v1'&gt;&lt;/db-form&gt;</pre>
+<a class='skip' href='#form'>Skip to the form</a>
+<header class='site'>
+  <div class='wrap top'>
+    <a class='brand' href='./'>
+      <svg width='40' height='40' viewBox='0 0 56 56' aria-hidden='true' focusable='false'><circle cx='28' cy='12' r='8' fill='currentColor'/><path d='M6 22c14 0 20 8 22 26C26 30 20 24 6 22zM50 22c-14 0-20 8-22 26 2-18 8-24 22-26z' fill='currentColor' opacity='.75'/></svg>
+      <span><strong>Addis Community Learning Hub</strong><small>A pretend partner website for the demo</small></span>
+    </a>
+    <nav class='util' aria-label='Language'>
+      <ul>
+        <li><a data-lang='en' lang='en' hreflang='en' href='?lang=en'>English</a></li>
+        <li><a data-lang='am' lang='am' hreflang='am' href='?lang=am'>አማርኛ</a></li>
+        <li><a data-lang='om' lang='om' hreflang='om' href='?lang=om'>Afaan Oromoo</a></li>
+        <li><a data-lang='ti' lang='ti' hreflang='ti' href='?lang=ti'>ትግርኛ</a></li>
+        <li><a data-lang='so' lang='so' hreflang='so' href='?lang=so'>Soomaali</a></li>
+      </ul>
+    </nav>
+  </div>
+  <nav class='primary' aria-label='Main'>
+    <div class='wrap'>
+      <ul>
+        <li><a data-flow='signup' href='?flow=signup'>Join the programme</a></li>
+        <li><a data-flow='job' href='?flow=job'>Apply for a job</a></li>
+        <li><a data-flow='employer' href='?flow=employer'>For employers</a></li>
+        <li><a href='design-system.html'>Design system</a></li>
+      </ul>
+    </div>
+  </nav>
+</header>
+
+<main id='main' class='wrap'>
+  <div class='layout'>
+    <div class='intro'>
+      <h1 id='title'>Join our programme</h1>
+      <p class='lead' id='lead'>Free digital-skills classes in Bole. Sign up in a few minutes, by typing or by voice, in your own language.</p>
+      <dl class='facts'>
+        <div><dt>Time</dt><dd>About 3 minutes, one question at a time.</dd></div>
+        <div><dt>You need</dt><dd>Nothing. No ID is needed to start.</dd></div>
+        <div><dt>Languages</dt><dd>English, አማርኛ, Afaan Oromoo, ትግርኛ, Soomaali.</dd></div>
+        <div><dt>Help</dt><dd>Call 0911 000 000, or visit us. Ethiopian Sign Language support on Thursdays.</dd></div>
+      </dl>
+      <p class='note'>Your support needs are optional and only seen by the organisers.</p>
+    </div>
+    <div id='form' tabindex='-1'>
+      <db-form api='http://localhost:3000/v1' audio='http://localhost:3000/audio'></db-form>
+    </div>
+  </div>
+
+  <section class='dev' aria-labelledby='dev-h'>
+    <header>
+      <h2 id='dev-h'>For partner developers</h2>
+      <p>This page is not part of the plugin. It shows how any website adds the accessible form with two lines of HTML.</p>
+      <p><a href='design-system.html'>See the design system</a> for colours, type and components.</p>
+    </header>
+    <figure class='code'>
+      <figcaption><span>Add to your page</span><button type='button' class='btn' id='copy' data-state='idle'>Copy code</button></figcaption>
+      <pre><code id='snippet'>&lt;script src='http://localhost:3000/db-form.js'&gt;&lt;/script&gt;
+&lt;db-form flow='signup' api='http://localhost:3000/v1' audio='http://localhost:3000/audio'&gt;&lt;/db-form&gt;</code></pre>
+    </figure>
+    <div class='scroll'>
+      <table>
+        <caption>Attributes</caption>
+        <thead><tr><th scope='col'>Attribute</th><th scope='col'>Values</th><th scope='col'>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>flow</code></td><td>signup, job, employer</td><td>Which form to show.</td></tr>
+          <tr><td><code>lang</code></td><td>en, am, om, ti, so</td><td>Starting language. The person can change it at any time.</td></tr>
+          <tr><td><code>lang-ask</code></td><td>no</td><td>Skip the first page that asks for the language.</td></tr>
+          <tr><td><code>theme</code></td><td>auto, standard, dark, contrast, rg, by</td><td>Starting colours. The person's own choice in the Colours menu wins.</td></tr>
+          <tr><td><code>api</code></td><td>URL</td><td>Where answers are sent.</td></tr>
+          <tr><td><code>audio</code></td><td>URL</td><td>Folder of read-aloud clips.</td></tr>
+          <tr><td><code>hide</code></td><td>question ids</td><td>Leave out optional questions.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
 </main>
-<script>document.querySelector('db-form').setAttribute('flow', new URLSearchParams(location.search).get('flow') || 'signup');</script>
+
+<footer class='site'>
+  <div class='wrap'>
+    <div class='fgrid'>
+      <section aria-labelledby='f1'>
+        <h2 id='f1'>Visit us</h2>
+        <address>
+          <strong>Addis Community Learning Hub</strong>
+          <span>Bole sub-city, Woreda 03, near the youth centre</span>
+          <span>Step-free entrance on the side street</span>
+        </address>
+        <dl class='hours'><dt>Mon–Fri</dt><dd>8:30–17:00</dd><dt>Sat</dt><dd>9:00–12:00</dd></dl>
+      </section>
+      <section aria-labelledby='f2'>
+        <h2 id='f2'>Get help</h2>
+        <ul>
+          <li><a href='tel:+251911000000'>Call 0911 000 000</a></li>
+          <li><a href='sms:+251911000000'>Send an SMS</a></li>
+          <li>Sign language support: Thursdays</li>
+        </ul>
+      </section>
+      <section aria-labelledby='f3'>
+        <h2 id='f3'>For partners</h2>
+        <ul>
+          <li><a href='#dev-h'>Install the form</a></li>
+          <li><a href='design-system.html'>Design system</a></li>
+          <li><a href='http://localhost:3000/v1/health'>API status</a></li>
+        </ul>
+      </section>
+    </div>
+    <div class='small'>
+      <p>Demo only. Answers are kept in memory and are deleted when the server stops.</p>
+      <p>Inclusive Access plugin</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    // ?flow= and ?lang=: keep both when the visitor switches form or language.
+    const p = new URLSearchParams(location.search), LANG_IDS = ['en', 'am', 'om', 'ti', 'so'];
+    const flow = ['signup', 'job', 'employer'].includes(p.get('flow')) ? p.get('flow') : 'signup';
+    const lang = LANG_IDS.includes(p.get('lang')) ? p.get('lang') : 'en';
+    const form = document.querySelector('db-form');
+    form.setAttribute('flow', flow); form.setAttribute('lang', lang);
+    // Coming from the language links above, the visitor already chose: skip the form's own language page.
+    if (p.has('lang')) form.setAttribute('lang-ask', 'no');
+    const copy = {
+      signup: ['Join our programme', 'Free digital-skills classes in Bole. Sign up in a few minutes, by typing or by voice, in your own language.'],
+      job: ['Apply for a job', 'Jobs from local employers that offer adjustments. Your support needs stay on your device and are only used to show suitable jobs.'],
+      employer: ['Post a job', 'Tell job seekers which adjustments you offer. People only see jobs that fit their needs.'],
+    }[flow];
+    document.getElementById('title').textContent = copy[0];
+    document.getElementById('lead').textContent = copy[1];
+    document.title = copy[0] + ' · Addis Community Learning Hub (demo partner site)';
+    document.querySelectorAll('a[data-flow]').forEach(a => {
+      a.href = '?flow=' + a.dataset.flow + (p.has('lang') ? '&lang=' + lang : '');
+      if (a.dataset.flow === flow) a.setAttribute('aria-current', 'page');
+    });
+    document.querySelectorAll('a[data-lang]').forEach(a => {
+      a.href = '?flow=' + flow + '&lang=' + a.dataset.lang;
+      if (p.has('lang') && a.dataset.lang === lang) a.setAttribute('aria-current', 'true');
+    });
+    // Copy button: idle -> done / error, announced by its own label.
+    const b = document.getElementById('copy');
+    b.addEventListener('click', () => {
+      const t = document.getElementById('snippet').textContent;
+      (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject())
+        .then(() => { b.dataset.state = 'done'; b.textContent = 'Copied'; })
+        .catch(() => { b.dataset.state = 'error'; b.textContent = 'Select the code and copy it'; })
+        .finally(() => setTimeout(() => { b.dataset.state = 'idle'; b.textContent = 'Copy code'; }, 2500));
+    });
+  })();
+</script>
 <script src='http://localhost:3000/db-form.js'></script>
 </body>
 </html>
