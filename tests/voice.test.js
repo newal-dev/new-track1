@@ -65,4 +65,64 @@ test('Ethiopian phone numbers need 10 digits (or 251 and 9 digits), or an email'
   const ok = step('contact').check;
   assert.ok(ok('0911000000') && ok('0911 000 000') && ok('+251 911 000 000') && ok('name@example.com'));
   assert.ok(!ok('091100000') && !ok('09110000000') && !ok('911000000') && !ok('hello'));
+});test('language page: a spoken language name picks that language; unclear or two names pick nothing', () => {
+  const d = make();
+  assert.equal(d.pickLang('Amharic'), 'am');
+  assert.equal(d.pickLang('Afaan Oromoo please'), 'om');
+  assert.equal(d.pickLang('tigrinya'), 'ti');
+  assert.equal(d.pickLang('Af-Soomaali'), 'so');
+  assert.equal(d.pickLang('English'), 'en');
+  assert.equal(d.pickLang('banana'), '');
+  assert.equal(d.pickLang('English or Somali'), '');
+});
+test('choosing a language leaves the language page and switches every text', () => {
+  const d = make({ lp: true, welcome: true, l: 'en', ra: 0 }); d.stopRA = () => {}; d.askRA = () => d.log.push('askRA');
+  assert.ok(/Which language/.test(d.pageText(undefined)));
+  d.chooseLang('so');
+  assert.equal(d.l, 'so'); assert.equal(d.lp, false); assert.ok(d.log.includes('askRA'));
+  assert.equal(d.u('next'), 'Xiga');
+  d.chooseLang('xx'); assert.equal(d.l, 'en');
+});
+test('voice commands and answers work in the new languages', () => {
+  assert.equal(pick('lama', 'idRoute', 'om'), '1');
+  assert.equal(pick('ክልተ', 'idRoute', 'ti'), '1');
+  assert.equal(pick('laba', 'idRoute', 'so'), '1');
+  let d = make({ l: 'so', i: 2 }); d.heard('jooji'); assert.equal(d.rm, false);
+  d = make({ l: 'om', a: { fullName: 'A', contact: '0911223344', idRoute: 'kebele', support: [] }, i: 5, rs: 1 }); d.heard("irra deebi'ii jalqabi"); assert.equal(d.i, 0);
+  d = make({ l: 'ti', a: { fullName: 'A', contact: '0911223344', idRoute: 'kebele', support: [] }, i: 5 }); d.heard('እወ'); assert.ok(d.log.includes('SEND'));
+});
+test('Tab focus: a choice is read as number + name + state, in the chosen language', () => {
+  const d = make({ l: 'am', i: 3, welcome: false });
+  const el = { dataset: {}, name: 'f', value: 'refugee', checked: false };
+  assert.deepEqual(d.focusItems(el).map(x => x.id), ['n2', 'o_idRoute_refugee', 'unsel']);
+  assert.equal(d.focusItems(el)[1].t, 'የስደተኛ ወይም ተመላሽ መታወቂያ');
+  assert.equal(d.focusItems({ ...el, checked: true })[2].id, 'sel');
+});
+test('Tab focus: buttons, answer boxes and language buttons get their own clips', () => {
+  const d = make({ l: 'so', i: 1, welcome: false });
+  assert.deepEqual(d.focusItems({ dataset: { next: '' } }).map(x => [x.id, x.t]), [['b_next', 'Xiga']]);
+  assert.deepEqual(d.focusItems({ dataset: { back: '' } }).map(x => x.id), ['b_back']);
+  assert.deepEqual(d.focusItems({ dataset: {}, id: 'f', value: ' Abebe ' }).map(x => [x.id, x.t]), [['q_fullName', 'Waa maxay magacaaga oo buuxa?'], [null, 'Abebe']]);
+  assert.deepEqual(d.focusItems({ dataset: { pick: 'ti' } }).map(x => [x.l, x.id]), [['ti', 'langName']]);
+});
+test('Tab focus is read only while the voice is in use', () => {
+  const played = [], d = make({ rm: false, welcome: false, i: 1 }); d.playList = it => played.push(it);
+  d.readFocus({ dataset: { next: '' } }); assert.equal(played.length, 0);
+  d.rm = true; d.readFocus({ dataset: { next: '' } }); assert.equal(played.length, 1);
+  const w = make({ rm: false, welcome: true, lp: true }); w.playList = it => played.push(it);
+  w.readFocus({ dataset: { pick: 'am' } }); assert.equal(played.length, 2);
+});
+test('the microphone opens only after "Speak now" and the beep', async () => {
+  const order = [], d = make({ l: 'om' });
+  d.playList = (items, cb) => { order.push(items[0].id + ':' + items[0].t); cb(); };
+  d.beep = () => order.push('beep');
+  await new Promise(r => d.cue(() => { order.push('listen'); r(); }));
+  assert.deepEqual(order, ['speakNow:Amma dubbadhu.', 'beep', 'listen']);
+});
+test('different keyboards: full-width and Arabic-Indic digits, full-width @, and other apostrophes are accepted', () => {
+  const ok = step('contact').check;
+  assert.ok(ok('０９１１００００００') && ok('٠٩١١٠٠٠٠٠٠') && ok('name＠example.com'));
+  const d = make({ l: 'om' });
+  assert.equal(d.norm('Irra deebi’ii jalqabi'), d.norm("Irra deebi'ii jalqabi"));
+  assert.equal(d.norm('ሰላም፡ዓለም፧'), 'ሰላም ዓለም');
 });
