@@ -68,7 +68,7 @@ This file tells you exactly what each audio clip must say. It is **generated** f
 ## Languages and voices
 | Language | Code | Folder | Voice |
 |---|---|---|---|
-| English | \`en\` | \`public/audio/en/\` | The device voice (every phone and laptop has one). Clips are optional. |
+| English | \`en\` | \`public/audio/en/\` | Generated clips (\`facebook/mms-tts-eng\`), so English sounds like the other four languages; the device voice if a clip is missing. |
 | አማርኛ Amharic | \`am\` | \`public/audio/am/\` | **Generated clips** (Meta MMS, \`facebook/mms-tts-amh\`). Few devices have an Amharic voice. |
 | Afaan Oromoo | \`om\` | \`public/audio/om/\` | Generated clips (\`facebook/mms-tts-orm\`); the device voice if a clip is missing. |
 | ትግርኛ Tigrinya | \`ti\` | \`public/audio/ti/\` | Generated clips (\`facebook/mms-tts-tir\`); the device voice if a clip is missing. |
@@ -81,7 +81,7 @@ When a clip is missing **and** the device has no voice for the language, the plu
 2. Open https://colab.research.google.com, choose **New notebook**.
 3. Optional but faster: **Runtime, Change runtime type, T4 GPU**.
 4. Open \`tools/colab_generate_audio.py\`, copy **all** of it, paste it into the first cell, and press Run. The first run downloads the voice models (a few minutes).
-5. When it finishes, \`audio.zip\` downloads. Unzip it **into \`public/audio/\`**, so you get for example \`public/audio/am/fullName.mp3\`.
+5. When it finishes, \`audio.zip\` downloads. **Delete the old clips** in \`public/audio/en/\`, \`am/\`, \`om/\`, \`ti/\` and \`so/\` (keep the \`.gitkeep\` files), then unzip it **into \`public/audio/\`**, so you get for example \`public/audio/am/fullName.mp3\`.
 6. Test: open the demo page, choose a language, choose Yes, read aloud, and listen to every page.
 7. A native speaker must listen to every clip. If a word is wrong, fix the text in \`public/db-form.js\` (not here), then repeat from step 1.
 
