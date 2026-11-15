@@ -17,9 +17,8 @@ Re-run everything: `npm run test:all` and `npm run contrast`.
 
 | Who | Device and assistive technology | What they did | Result |
 |---|---|---|---|
-| Tinsae (co-designer) | Their own device: **[team to fill in: phone or laptop, browser, screen reader]** | Reviewed the design and the sign-up flow | Approved the design. Asked for larger text to enlarge the **whole page, navigation included**: built the same day (text size 100%, 150%, 200% for the whole page, no sideways scrolling) |
-| Tinsae (co-designer), final gate test | **[team to fill in after the session]** | The main task: sign up unaided | **[team to fill in: finished yes or no, time taken, where they hesitated, what they could not do]** |
-| Team, automated | Chromium with axe-core 4.14.0 and Playwright | Every flow, state and theme; keyboard only; 200% and 400% zoom; sound off; a blank host page | 32 of 32 pass, 0 axe violations of any impact |
+| Tinsae (co-designer) | Not recorded | Reviewed the design and the sign-up flow during the event | Liked the design. Asked for **larger text**, for the whole page and not only the form: built the same day (text size 100%, 150% and 200% for the whole page, navigation included, with no sideways scrolling) |
+| Team, automated | Chromium with axe-core 4.14.0 and Playwright | Every flow, state and theme; keyboard only; 200% and 400% zoom; sound off; a blank host page; inside the official Savanna starter | 32 of 32 pass, 0 axe violations of any impact |
 | Team, Amharic | A native Amharic speaker on the team | Checked every Amharic text; chose the Amharic number voices by ear | Amharic text verified; Afaan Oromoo, Tigrinya, Somali and Sidaamu Afoo still drafts |
 
-**What we could not test:** NVDA and TalkBack sessions with the co-designer are recorded above only once they have happened. We tested inside the official Savanna starter pages and through LTI 1.3, not on the live Savanna platform.
+**What was not tested, honestly:** the gate test (the co-designer completing the main task unaided with NVDA or TalkBack, keyboard only, 200% zoom and sound off) was **not run before submission**, so we do not claim it. No session with NVDA or TalkBack has been recorded yet. We tested inside the official Savanna starter pages and through LTI 1.3, not on the live Savanna platform.
