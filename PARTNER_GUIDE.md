@@ -7,6 +7,7 @@ What your visitors get:
 - They can **type or speak** their answers, and have every page **read aloud**.
 - **Captions** of everything spoken, a clear **Listening** sign, and a **Colours** menu (dark, high contrast, and two colour-blind-safe themes).
 - Full **keyboard** use: Tab and Shift+Tab read each choice aloud in the chosen language.
+- **Nothing is sent without their agreement**, answers are **kept on their phone** if they stop or lose the connection, and dates use the **Ethiopian calendar**.
 
 Contents:
 1. [The 2-minute install](#1-the-2-minute-install)
@@ -20,6 +21,10 @@ Contents:
 9. [Test it before you go live](#9-test-it-before-you-go-live)
 10. [Troubleshooting](#10-troubleshooting)
 11. [Before production](#11-before-production)
+12. [Offline use (service worker)](#12-offline-use-service-worker)
+13. [Learning platforms: LTI 1.3 and Savanna](#13-learning-platforms-lti-13-and-savanna)
+14. [Job boards: schema.org/JobPosting](#14-job-boards-schemaorgjobposting)
+15. [Consent and privacy for partners](#15-consent-and-privacy-for-partners)
 
 ---
 
@@ -28,19 +33,23 @@ Contents:
 Paste these **two lines** where the form should appear on your page. Replace `YOUR-HOST` with the address you got from the team (see section 2).
 
 ```html
-<script src='https://YOUR-HOST/db-form.js'></script>
-<db-form flow='signup' api='https://YOUR-HOST/v1' audio='https://YOUR-HOST/audio'></db-form>
+<script src='https://YOUR-HOST/widget.js'></script>
+<db-onboarding api='https://YOUR-HOST/v1' audio='https://YOUR-HOST/audio' partner='Your organisation name'></db-onboarding>
 ```
 
 That is all. Save, open the page, and you should see **"Which language would you like to use?"**.
 
 - The `<script>` line loads the form. Put it once per page, anywhere (end of the page is best).
-- The `<db-form>` line is the form itself. It appears exactly where you put it.
+- The second line is the form itself. It appears exactly where you put it. Choose the tag:
+  - `<db-onboarding>`: sign-up for your programme.
+  - `<db-career-gateway>`: job search (filtered privately on the visitor's phone) and application.
+  - `<db-form flow='employer'>`: employers post a job and the adjustments they offer. `<db-form>` takes any `flow`.
+- `widget.js` and `db-form.js` are the same file; older pages with `db-form.js` keep working.
 - The form keeps its own look inside your page: your website's CSS cannot break it, and it cannot change your website.
 
 ## 2. Where the files come from (hosting)
 
-The form needs three things from a server: the script `db-form.js`, the API (`/v1/...`) that receives answers, and the audio folder (`/audio/...`). One small server provides all three.
+The form needs three things from a server: the script `widget.js`, the API (`/v1/...`) that receives answers, and the audio folder (`/audio/...`). One small server provides all three.
 
 **Option A: use the team's server (easiest).** Ask the team for the address, for example `https://forms.example.org`. Use it as `YOUR-HOST`.
 
@@ -50,7 +59,7 @@ The form needs three things from a server: the script `db-form.js`, the API (`/v
    docker compose up --build
    ```
 2. The server now runs at `http://localhost:3000`:
-   - script: `http://localhost:3000/db-form.js`
+   - script: `http://localhost:3000/widget.js`
    - API: `http://localhost:3000/v1` (check `http://localhost:3000/v1/health` says `{"ok":true}`)
    - audio: `http://localhost:3000/audio/...`
 3. On a real server, put it behind **HTTPS** (for example with Caddy or nginx and a free certificate). The microphone only works on HTTPS pages (and on `localhost` for testing).
@@ -70,8 +79,15 @@ Attributes go inside the `<db-form ...>` tag. Only `flow` and `api` are usually 
 | `lang-ask` | `no` | (asks) | Skip the first page that asks for the language. Use this only if your page already lets the visitor choose. |
 | `theme` | `auto`, `standard`, `dark`, `contrast`, `rg`, `by` | `auto` | Starting colours. `auto` follows the device. The visitor's own choice in the **Colours** menu always wins. |
 | `hide` | comma list of question ids | none | Leave out optional questions, for example `hide='idRoute,support'`. `fullName`, `role` and `job` can never be hidden. |
+| `partner` | your organisation's name | "the organisers of this website" | Shown in the consent question: "I agree to send these answers to …". |
+| `sw` | path to your one-line service worker | none | Offline use, see section 12. |
+| `asr` | `browser`, `off`, or a registered name | `browser` | Speech recogniser. `off` hides voice input. See section 15. |
+| `fonts` | `no` | (loads) | Do not load the local Atkinson Hyperlegible and Noto Sans Ethiopic fonts. |
+| `jsonld` | `no` | (adds) | Do not add schema.org/JobPosting to your page in the job flow. |
 
-Question ids you can hide: signup flow `prefs`, `contact`, `idRoute`, `support`; job flow `needs`, `why`; employer flow `offers`.
+You can change `lang` and `theme` later with `element.setAttribute(...)`, for example from your own language menu: the form switches without losing answers.
+
+Question ids you can hide: signup flow `prefs`, `contact`, `idRoute`, `support`; job flow `needs`, `why`; employer flow `offers`, `closes`.
 
 Examples:
 
@@ -101,10 +117,10 @@ Use one `<db-form>` per page.
 
 ### React, Vue, Svelte or other frameworks
 `<db-form>` is a standard Web Component, so it works in any framework.
-1. Load the script once, for example in `index.html`: `<script src='https://YOUR-HOST/db-form.js'></script>`.
+1. Load the script once, for example in `index.html`: `<script src='https://YOUR-HOST/widget.js'></script>`.
 2. Use the tag like any HTML element. Pass values as plain strings:
    ```jsx
-   <db-form flow="signup" api="https://YOUR-HOST/v1" audio="https://YOUR-HOST/audio"></db-form>
+   <db-onboarding api="https://YOUR-HOST/v1" audio="https://YOUR-HOST/audio" partner="Your organisation"></db-onboarding>
    ```
 3. To react to events, add listeners on the element (see section 7). In React, use a `ref` and `addEventListener` in `useEffect`.
 4. Set the attributes **before** the element is added to the page. Changing them later does not restart the form; to switch flows, render a new `<db-form>` (for example with a different `key` in React).
@@ -152,12 +168,19 @@ The form tells your page what happened. Listen on the element:
 <script>
   const form = document.querySelector('db-form');
   form.addEventListener('db-complete', e => {
-    // The answers were saved. e.detail.answers holds exactly what was sent to the API.
+    // The answers were saved. e.detail.answers holds exactly what was sent to the API;
+    // e.detail.id and e.detail.receipt identify the record (the visitor also sees the receipt).
     // It can include the visitor's support needs: do not log it, send it to analytics or store it on your side.
     console.log('Done', e.detail.answers);
   });
   form.addEventListener('db-error', () => {
     // Sending failed. The form already shows "We could not send your answers. Nothing is lost. Please try again."
+  });
+  form.addEventListener('db-queued', () => {
+    // The visitor is offline: the answers are kept on their device and will be sent automatically.
+  });
+  form.addEventListener('db-sent', e => {
+    // Answers saved while offline were sent. e.detail.ok is true if the server accepted them.
   });
   form.addEventListener('db-theme', e => {
     // The visitor chose new colours: e.detail.theme is auto | standard | dark | contrast | rg | by
@@ -166,9 +189,10 @@ The form tells your page what happened. Listen on the element:
 ```
 
 What is sent to the API, per flow:
-- `signup` → `POST /v1/learners`: `fullName`, `contact`, `idRoute`, `support` (support needs go to a separate private store that no route returns).
+- `signup` → `POST /v1/learners`: `fullName`, `contact`, `idRoute`, and `support` **only if the visitor ticked the second consent box** (stored separately; no route returns it).
 - `job` → `POST /v1/applications`: `role`, `why`. The visitor's work needs **stay on their device** and are only used to filter the job list.
-- `employer` → `POST /v1/employer/jobs`: `job`, `offers`.
+- `employer` → `POST /v1/employer/jobs`: `job`, `offers`, `closes` (Gregorian date, converted from the Ethiopian date the employer chose).
+- Every request also carries `consent`: `{ given: true, scope: ['answers'] or ['answers', 'support'], version, lang, partner, at }`.
 
 The first question of the signup flow (`prefs`: larger text, pictures) is never sent. The full API is described in [`openapi.yaml`](openapi.yaml).
 
@@ -180,6 +204,8 @@ The first question of the signup flow (`prefs`: larger text, pictures) is never 
   script-src 'self' https://YOUR-HOST;
   connect-src 'self' https://YOUR-HOST;
   media-src  'self' https://YOUR-HOST;
+  font-src   'self' https://YOUR-HOST;
+  worker-src 'self';
   ```
   The form also uses inline styles inside its own shadow DOM; with a very strict `style-src`, add `'unsafe-inline'` for styles.
 - **CORS:** the server already allows requests from any website. To limit it to your own domain, the team can restrict the `cors()` setting in `server.js`.
@@ -211,6 +237,11 @@ Do this once on a computer and once on a phone. It takes about 15 minutes.
 - [ ] Each option in the **Colours** menu changes the form, and the choice is remembered after reloading.
 - [ ] At 200% browser zoom nothing is cut off; on a phone the form fits the screen.
 
+**Consent, drafts and offline**
+- [ ] Pressing **Yes, submit** without ticking the consent box shows an error and sends nothing.
+- [ ] Reloading halfway shows "Welcome back" and **Continue where I stopped** brings the answers back.
+- [ ] With the network off (phone in flight mode), sending says the answers are saved on the device; they arrive when it is back online.
+
 **Screen readers**
 - [ ] NVDA (Windows) or TalkBack (Android): every question, hint, choice and error is read.
 
@@ -220,7 +251,7 @@ Automated checks for developers: `npm test` (with the server running) and `npx p
 
 | What you see | Why | What to do |
 |---|---|---|
-| Nothing appears where the form should be | The script did not load, or the page blocks scripts | Open `https://YOUR-HOST/db-form.js` in the browser: you should see code. Check your CSP (section 8). In WordPress, check that `<script>` was not removed. |
+| Nothing appears where the form should be | The script did not load, or the page blocks scripts | Open `https://YOUR-HOST/widget.js` in the browser: you should see code. Check your CSP (section 8). In WordPress, check that `<script>` was not removed. |
 | "We could not send your answers" | The API address is wrong or the server is down | Check the `api` attribute ends in `/v1`, and that `/v1/health` works. |
 | No Speak button | This browser has no voice recognition (Firefox, some Safari versions) | Normal: visitors type instead. Chrome and Edge support voice. |
 | "The microphone is blocked" | The visitor said No to the microphone, or the page is not HTTPS | Allow the microphone in the browser's address bar; use HTTPS. |
@@ -230,6 +261,8 @@ Automated checks for developers: `npm test` (with the server running) and `npx p
 | The job list is empty in the job flow | The API has no jobs yet | Add jobs with the employer flow. Until then visitors can type a job title. |
 | Colours look different from your site | The visitor chose a theme in the Colours menu | That is intended: their choice wins. |
 | The language page appears although your site already chose | | Add `lang-ask='no'`. |
+| "Please tick the box to agree" | The visitor did not give consent | Intended: nothing is sent without it. |
+| LTI launch says "Launch failed" | The platform's issuer, client id, keys URL or deployment id do not match | Check the `LTI_*` settings (section 13) and launch again from the course. |
 
 ## 11. Before production
 
@@ -237,5 +270,68 @@ The demo server is for trying things out. Before real people use it:
 - **Storage:** answers are kept in memory and are lost when the server restarts. Connect a database.
 - **Authentication:** the API has no login. Add authentication for any route that reads data.
 - **Language review:** native speakers must check all text marked `VERIFY_NATIVE` and the Amharic, then remake the clips.
-- **Accessibility report:** fill in [`CONFORMANCE.md`](CONFORMANCE.md) after testing with real users, including Deaf and blind co-designers.
+- **Accessibility report:** fill in section 1.2 of [`docs/WCAG-2.2-AA-Report.md`](docs/WCAG-2.2-AA-Report.md) after testing with real users, including Deaf and blind co-designers ([`docs/manual-test-script.md`](docs/manual-test-script.md)).
+- **Settings:** set `PUBLIC_URL` (the address people use), `APP_SECRET` (keeps receipts valid across restarts), `ADMIN_TOKEN` (protects the consent log) and `ALLOWED_ORIGINS` (your sites only).
 - **Licences:** check the licences listed in the README.
+
+## 12. Offline use (service worker)
+
+Without anything extra, answers are saved on the visitor's device as they go, and a form sent while offline is queued and sent automatically later. To make the **page itself** open without a connection (the widget, fonts, job list and any clip already heard), add one small file to **your own** website. Browsers only allow a service worker from your own address.
+
+1. Create `db-sw.js` in the top folder of your site:
+   ```js
+   self.DB_FORM_HOST = 'https://YOUR-HOST';
+   importScripts('https://YOUR-HOST/db-sw.js');
+   ```
+2. Add `sw='/db-sw.js'` to the tag.
+3. Test: open the page once, turn the network off, and reload.
+
+The service worker never sees or stores answers: it does not touch `POST` requests.
+
+## 13. Learning platforms: LTI 1.3 and Savanna
+
+Any LTI 1.3 platform (Moodle, Canvas, Open edX, and others) can add the form as an external tool. In the platform's tool settings, enter:
+
+| Setting | Value |
+|---|---|
+| Tool URL / target link URI / redirect URI | `https://YOUR-HOST/lti/launch` |
+| OpenID Connect login (initiate login) URL | `https://YOUR-HOST/lti/login` |
+| Public keyset URL | `https://YOUR-HOST/lti/jwks.json` |
+| Custom parameter | `flow=signup` (or `job`, `employer`) |
+
+The full configuration is at `https://YOUR-HOST/lti/config.json`. Then give the server the platform's details (they are on the platform's tool settings page):
+
+```
+LTI_ISSUER=https://your-lms.example
+LTI_CLIENT_ID=the client id the platform gave you
+LTI_AUTH_URL=https://your-lms.example/mod/lti/auth.php
+LTI_JWKS_URL=https://your-lms.example/mod/lti/certs.php
+LTI_DEPLOYMENT_ID=1
+```
+
+The form opens in the course language when it is one of the five, and skips the language page. It uses only the course language and the `flow` parameter: the learner's name and email from the platform are not used. This is a launch only: there is no grade passback or deep linking. Try it first with the built-in demo platform at `https://YOUR-HOST/demo/lms`.
+
+**ALX Savanna.** Savanna can use either way: paste the two lines from section 1 into a course page (see `demo-host/savanna.html`), or register the LTI tool as above. We have not yet tested inside the real Savanna.
+
+## 14. Job boards: schema.org/JobPosting
+
+Jobs posted with the employer form are published as schema.org/JobPosting, so search engines and other job boards can read them:
+
+- `https://YOUR-HOST/v1/jobs?format=jsonld`: every job.
+- `https://YOUR-HOST/v1/jobs/{id}?format=jsonld`: one job.
+- In the job flow, the widget also adds the same JSON-LD to your page (turn off with `jsonld='no'`).
+
+Each posting includes the title, employer, location (Addis Ababa, ET), date posted, closing date, the adjustments offered (`jobBenefits`) and `TELECOMMUTE` when work from home is offered. It never includes anything about job seekers. Check it with https://validator.schema.org.
+
+## 15. Consent and privacy for partners
+
+- The visitor must tick **"I agree to send these answers to {partner}"** before anything is sent. Support choices need a **second** tick. If they do not tick it, support choices are not sent at all.
+- After sending, the visitor sees a **receipt code**. With it, the record can be deleted: `DELETE https://YOUR-HOST/v1/records/{id}` with the header `X-Receipt: <code>`. Answers and support needs are erased, and the consent log keeps only the time of withdrawal.
+- **Consent log for audits:** `GET https://YOUR-HOST/v1/consents` (send `Authorization: Bearer <ADMIN_TOKEN>` when it is set). Each entry has the record id, form, scope, consent text version, language, partner and time, but no names, contacts or answers.
+- **Do not copy support needs** into your own systems, analytics or logs. If you listen to `db-complete`, `e.detail.answers` can contain them.
+- **Speech recogniser:** `asr='off'` removes voice input. A developer can plug in a self-hosted recogniser so no audio goes to a browser provider:
+  ```js
+  // A factory returns an object like SpeechRecognition: start(), abort(), onresult, onerror, onend.
+  customElements.get('db-form').registerASR('local', (lang, element) => new MyRecogniser({ lang }));
+  ```
+  Then use `asr='local'` on the tag.
