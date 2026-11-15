@@ -192,3 +192,17 @@ test('language page: a recogniser language the browser does not support falls ba
   const chosen = await new Promise(res => { d.chooseLang = res; d.listenLang(['so-SO', 'en-US'], () => res('miss'), 0); });
   assert.equal(chosen, 'so'); assert.deepEqual(heard, ['so-SO', 'en-US']);
 });
+test('phone page in Amharic: "ቀጥል" (however the recogniser spells it) goes on, and never replaces the number', () => {
+  const box = { value: '0911223344' }, r = { querySelector: q => (q === '#f' ? box : null), querySelectorAll: () => [] };
+  for (const said of ['ቀጥል', 'ቀጠለ', 'ቀጥሎ', 'ቅጥል', 'ቀጣይ']) {
+    const d = make({ l: 'am', i: 2 }); d.r = r; let went = false; d.next = () => { went = true; };
+    d.heard(said); assert.ok(went, said); assert.equal(box.value, '0911223344', said);
+  }
+  // Among the recogniser's guesses, a command wins over a word that could be an answer.
+  const d = make({ l: 'am', i: 2 }); d.r = r;
+  assert.equal(d.bestAlt(['ቀጠለው እ', 'ቀጥል']), 'ቀጥል');
+  assert.equal(d.bestAlt(['ዜሮ ዘጠኝ 11 22 33 44', 'ቀጥል ዘጠኝ']), 'ዜሮ ዘጠኝ 11 22 33 44');
+  // A word that is not a number or email leaves a good number in the box.
+  const e = make({ l: 'am', i: 2 }); e.r = r; e.heard('ሰላም'); assert.equal(box.value, '0911223344');
+  assert.deepEqual(e.played[0].map(x => x.id), ['heardB']);
+});

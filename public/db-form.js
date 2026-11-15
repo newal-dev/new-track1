@@ -670,7 +670,7 @@ const STOP = ['use', 'the', 'and', 'for', 'you', 'can', 'not', 'don', 'have', 'p
   'ama', 'iyo', 'aan', 'fadlan']; // so, VERIFY_NATIVE
 // Voice commands. Words are compared one by one after norm(), which turns apostrophes into spaces, so no entry contains one.
 const CMD = {
-  next: ['next', 'continue', 'done', 'finished', 'ቀጥል', 'ቀጥሉ', 'ጨርሻለሁ',
+  next: ['next', 'continue', 'done', 'finished', 'ቀጥል', 'ቀጥሉ', 'ቀጥይ', 'ቀጣይ', 'ጨርሻለሁ',
     'fufi', 'ቀጽል', 'ቀጽሉ', 'xiga'], // om ti so, VERIFY_NATIVE
   back: ['back', 'previous', 'ተመለስ', 'ኋላ',
     'duubatti', 'ተመለሱ', 'noqo'], // om ti so, VERIFY_NATIVE
@@ -689,6 +689,11 @@ const CMD = {
   stop: ['stop', 'ቁም', 'አቁም',
     'dhaabi', 'ኣቋርጽ', 'ደው', 'jooji'], // om ti so, VERIFY_NATIVE
 };
+// Speech recognisers spell a spoken Ge'ez word in several ways (ቀጥል, ቀጠለ, ቀጥሎ, ቅጥል): the vowels differ, the consonants
+// do not. So a one-word Ge'ez command also counts when its consonants match one in CMD.
+const skel = w => romanize(w).toLowerCase().replace(/[aeiou]/g, '');
+const CMD_SKEL = Object.fromEntries(Object.entries(CMD).map(([k, ws]) => [k, new Set(ws.filter(x => GEEZ.test(x)).map(skel).filter(x => x.length >= 2))]));
+const isCmd = (c, w) => w.some(x => CMD[c].includes(x) || (GEEZ.test(x) && CMD_SKEL[c].has(skel(x))));
 // Yes / No for the first question and the review page.
 const YES = ['አዎ', 'አዎን', 'ይሁን', 'yes', 'yeah', 'yep', 'ok', 'okay', 'sure',
   'eeyyee', 'eeyye', 'eeyee', 'እወ', 'እዉ', 'haa', 'haye', 'haah', 'ee']; // om ti so sid, VERIFY_NATIVE
@@ -1408,10 +1413,13 @@ class DbForm extends HTMLElement {
   // matches, a valid phone number or email, a yes/no or number on the review page). Free text: the first guess.
   bestAlt(list) {
     if (!list || list.length < 2) return (list && list[0]) || '';
-    const s = this.steps[this.i], cmd = w => Object.values(CMD).some(c => w.some(y => c.includes(y)));
+    const s = this.steps[this.i], cmd = w => w.length <= (s && s.type === 'text' ? 1 : 3) && Object.keys(CMD).some(c => isCmd(c, w));
+    // A command in any guess wins (on every page, the phone page too), then a guess that fits the page.
+    const hit = list.find(x => cmd(this.norm(x).split(' ')));
+    if (hit) return hit;
     const ok = x => {
       const t = this.norm(x), w = t.split(' ');
-      if (!s) return !!this.ans(x) || cmd(w) || w.some(y => /^\d+$/.test(y) || NUM[y]);
+      if (!s) return !!this.ans(x) || w.some(y => /^\d+$/.test(y) || NUM[y]);
       if (s.spoken === 'contact') return !!s.check(spokenContact(x));
       if (s.type === 'text') return false;
       return cmd(w) || this.pick(t, s).length > 0;
@@ -1479,7 +1487,7 @@ class DbForm extends HTMLElement {
     if (this.done) return;
     const s = this.steps[this.i], t = this.norm(raw), w = t ? t.split(' ') : [];
     const lim = s && s.type === 'text' ? 1 : 3;
-    const is = c => w.length > 0 && w.length <= lim && w.some(x => CMD[c].includes(x));
+    const is = c => w.length > 0 && w.length <= lim && isCmd(c, w);
     const again = () => this.readPage(s, () => this.cue(() => this.listen(true)));
     if (this.welcome) { if (this.draft && is('next')) this.resume(); else if (is('start') || is('next')) { if (this.draft) { this.dropDraft(); this.a = {}; this.i = 0; } this.startForm(false); } else this.say2(this.u('sayWelcome'), 'sayWelcome'); return; }
     if (!s) {
@@ -1515,6 +1523,8 @@ class DbForm extends HTMLElement {
     if (s.type === 'text') {
       // Phone or email: spoken digits and "at" / "dot" become the text the box needs.
       const v = s.spoken === 'contact' ? spokenContact(raw) : String(raw).trim(), f = this.r.querySelector('#f');
+      // A word that is not a phone number or email never replaces a good number already in the box.
+      if (s.spoken === 'contact' && !s.check(v) && f && f.value && s.check(f.value)) return this.playList([{ l: this.l, id: 'heardB', t: this.u('heardB') }], () => this.cue(() => this.listen(true)));
       if (f) f.value = v;
       // Read it back from clips ("We heard" + the answer + "Say Next..."); a phone number is read digit by digit.
       const m = this.u('heardNext', { x: v }); this.say(m);
