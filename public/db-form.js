@@ -637,6 +637,18 @@ const NUM = {
   mitto: 1, lame: 2, sase: 3, shoole: 4, onte: 5, lee: 6, lamala: 7, sette: 8, // sid, VERIFY_NATIVE
 };
 const NUM1 = { won: 1, to: 2, too: 2, for: 4 };
+// Ordinals ("the first one"): English, and Amharic stems (አንደኛ, ሁለተኛ ...; the ending is cut off by numOf).
+const ORD = { first: 1, second: 2, third: 3, fourth: 4, fifth: 5, sixth: 6, seventh: 7, eighth: 8,
+  'አንደ': 1, 'ሁለተ': 2, 'ሦስተ': 3, 'ሶስተ': 3, 'አራተ': 4, 'አምስተ': 5, 'ስድስተ': 6, 'ሰባተ': 7, 'ስምንተ': 8 };
+// Amharic joins small words to a number: አንድና (one-and), ሁለቱም (both), ሁለትን, አንደኛው. Cut those endings off.
+const NUM_END = /(ኛውን|ኛውም|ኛውና|ኛው|ኛና|ኛን|ኛ|ውን|ንም|ና|ን|ም|ው)$/;
+// A number word, digit or ordinal -> its value (0 if it is none). one = the only word said (then "to" = 2 is allowed).
+const numOf = (x, one) => {
+  if (/^\d+$/.test(x)) return +x;
+  if (NUM[x] || ORD[x] || (one && NUM1[x])) return NUM[x] || ORD[x] || NUM1[x];
+  for (let y = x, k = 0; k < 2 && NUM_END.test(y); k++) { y = y.replace(NUM_END, ''); if (NUM[y] || ORD[y]) return NUM[y] || ORD[y]; }
+  return 0;
+};
 // Digits said aloud, for the phone number: 0-9 in every language (om, ti, so, sid: VERIFY_NATIVE).
 const DIGITS = [
   ['zero', 'oh', 'ዜሮ', 'ዜሮው', 'zeeroo', 'zeero', 'eber'],
@@ -720,6 +732,19 @@ const clipAudio = url => {
   CLIP_CACHE.set(url, a);
   if (CLIP_CACHE.size > 80) CLIP_CACHE.delete(CLIP_CACHE.keys().next().value);
   return a;
+};
+// Phone numbers are said in groups: 0902 57 65 70 (10 digits), 251 902 57 65 70 (12 digits), else threes.
+const phoneGroups = ds => (ds.length === 10 ? [4, 2, 2, 2] : ds.length === 12 ? [3, 3, 2, 2, 2] : []).reduce((g, n) => { g.parts.push(g.rest.slice(0, n)); g.rest = g.rest.slice(n); return g; }, { parts: [], rest: ds }).parts.concat(ds.length === 10 || ds.length === 12 ? [] : ds.match(/.{1,3}/g) || []).filter(Boolean);
+// Decoded digit clips (Web Audio), cut to the voice itself so digits can be joined with even, short gaps.
+const DIGIT_BUF = new Map();
+const digitBuf = (ctx, url) => {
+  if (!DIGIT_BUF.has(url)) DIGIT_BUF.set(url, fetch(url).then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); }).then(b => ctx.decodeAudioData(b)).then(buf => {
+    const ch = buf.getChannelData(0); let peak = 0; for (let i = 0; i < ch.length; i++) peak = Math.max(peak, Math.abs(ch[i]));
+    const thr = peak * 0.03; let a = 0, z = ch.length - 1; while (a < z && Math.abs(ch[a]) < thr) a++; while (z > a && Math.abs(ch[z]) < thr) z--;
+    const pad = Math.round(buf.sampleRate * 0.02); a = Math.max(0, a - pad); z = Math.min(ch.length - 1, z + pad);
+    return { rate: buf.sampleRate, data: ch.slice(a, z + 1) };
+  }).catch(e => { DIGIT_BUF.delete(url); throw e; }));
+  return DIGIT_BUF.get(url);
 };
 const preload = url => { if (url && typeof Audio !== 'undefined' && !CLIP_CACHE.has(url) && !CLIP_MISSING.has(url)) clipAudio(url); };
 const QUEUE = 'db-form-queue';
@@ -1002,7 +1027,7 @@ class DbForm extends HTMLElement {
   // caption: the text shown in the caption box (default: every item's text).
   playList(items, cb, caption) {
     const base = this.getAttribute('audio'), k = ++this.tok, vs = window.speechSynthesis ? speechSynthesis.getVoices() : [];
-    if (this.aud) this.aud.pause();
+    if (this.aud) this.aud.pause(); this.stopDigits();
     if (window.speechSynthesis) speechSynthesis.cancel();
     items = items.filter(x => x && x.t != null && /[\p{L}\p{N}]/u.test(String(x.t))); // nothing to say in "." or ""
     let n = 0;
@@ -1013,6 +1038,7 @@ class DbForm extends HTMLElement {
       if (n >= items.length) { this.cap('idle'); if (cb) cb(); return; }
       const it = items[n++], src = url(it);
       preload(url(items[n]));
+      if (it.digits) { this.playDigits(it, go, k); return; }
       let used = false;
       const fb = () => {
         if (used || k !== this.tok) return; used = true;
@@ -1028,6 +1054,28 @@ class DbForm extends HTMLElement {
     };
     go();
   }
+
+  // A phone number as one recording: the digit clips (n0-n9), cut to the voice, with a short even gap between digits and
+  // a longer one between groups. Without Web Audio or clips, the digits are played one by one instead.
+  playDigits(it, done, k) {
+    const base = this.getAttribute('audio'), C = window.AudioContext || window.webkitAudioContext, l = LANG_RE.test(it.l) ? it.l : 'en';
+    const oneByOne = () => this.playList([...it.digits].map(d => ({ l, id: 'n' + d, t: d })), done);
+    if (!base || !C) return oneByOne();
+    const ctx = this.ac || (this.ac = new C());
+    Promise.all([...it.digits].map(d => digitBuf(ctx, base + '/' + l + '/n' + d + '.mp3'))).then(parts => {
+      if (k !== this.tok) return;
+      const rate = parts[0].rate, groups = phoneGroups(it.digits), ends = new Set(); let c = 0;
+      groups.forEach(g => { c += g.length; ends.add(c - 1); });
+      const gap = i => Math.round(rate * (i === parts.length - 1 ? 0 : ends.has(i) ? 0.38 : 0.07));
+      const out = ctx.createBuffer(1, parts.reduce((t, p, i) => t + p.data.length + gap(i), 0), rate), ch = out.getChannelData(0);
+      let at = 0; parts.forEach((p, i) => { ch.set(p.data, at); at += p.data.length + gap(i); });
+      const src = this.digitSrc = ctx.createBufferSource(); src.buffer = out; src.connect(ctx.destination);
+      src.onended = () => { if (this.digitSrc === src) this.digitSrc = null; if (k === this.tok) done(); };
+      if (ctx.state === 'suspended') ctx.resume();
+      src.start();
+    }).catch(() => { if (k === this.tok) oneByOne(); });
+  }
+  stopDigits() { const s = this.digitSrc; this.digitSrc = null; if (s) { s.onended = null; try { s.stop(); } catch (x) { /* already stopped */ } } }
 
   // What to say when a control gets keyboard focus: [{ l: language, id: clip id (null = device voice only), t: text }].
   focusItems(el) {
@@ -1075,7 +1123,8 @@ class DbForm extends HTMLElement {
   // A typed or spoken answer: a phone number digit by digit (clips n0-n9), anything else by a voice.
   valueItems(v, s) {
     const l = this.l, t = String(v == null ? '' : v).trim();
-    if (s && s.spoken === 'contact' && /^[0-9+\s-]+$/.test(ascii(t))) return ascii(t).replace(/\D/g, '').split('').map(d => ({ l, id: 'n' + d, t: d }));
+    // A phone number: one item; playList joins the digit clips into one smooth recording, grouped like 0902 57 65 70.
+    if (s && s.spoken === 'contact' && /^[0-9+\s-]+$/.test(ascii(t))) { const ds = ascii(t).replace(/\D/g, ''); return ds ? [{ l, id: null, digits: ds, t: phoneGroups(ds).join(' ') }] : []; }
     return t ? [{ l, id: null, t, any: true }] : [];
   }
   // The answer to one question, as it is shown on the review page.
@@ -1099,7 +1148,7 @@ class DbForm extends HTMLElement {
   // "We heard: ... Say Next to continue, or say your answer again." If no voice at all can say the answer, say so instead.
   heardItems(v, s) {
     const l = this.l, mid = this.valueItems(v, s);
-    const silent = mid.some(x => !x.id) && !this.canSay(l) && !this.canSay('en');
+    const silent = mid.some(x => !x.id && !x.digits) && !this.canSay(l) && !this.canSay('en');
     return silent ? [{ l, id: 'heardGeneric', t: this.u('heardGeneric') }] : [{ l, id: 'heardA', t: this.u('heardA') }, ...mid, { l, id: 'heardB', t: this.u('heardB') }];
   }
   canSay(l) { const vs = window.speechSynthesis ? speechSynthesis.getVoices() : []; return vs.some(v => this.vmatch(v, l)); }
@@ -1214,7 +1263,7 @@ class DbForm extends HTMLElement {
   stopRA() {
     this.manual = true; this.cap('idle');
     if (window.speechSynthesis) speechSynthesis.cancel();
-    if (this.aud) this.aud.pause();
+    if (this.aud) this.aud.pause(); this.stopDigits();
     if (this.rec) { this.rec.onend = null; this.rec.onerror = null; this.rec.onresult = null; try { this.rec.abort(); } catch (x) { /* ignore */ } }
   }
 
@@ -1338,7 +1387,7 @@ class DbForm extends HTMLElement {
   speak(t, id, cb) {
     const live = this.r.querySelector('#live'), base = this.getAttribute('audio'), k = ++this.tok;
     { const c = cb; cb = () => { if (k === this.tok) { this.cap('idle'); if (c) c(); } }; }
-    if (this.aud) this.aud.pause();
+    if (this.aud) this.aud.pause(); this.stopDigits();
     if (window.speechSynthesis) speechSynthesis.cancel();
     live.textContent = this.u('reading');
     this.cap('speaking', t, this.l);
@@ -1363,10 +1412,10 @@ class DbForm extends HTMLElement {
   }
 
   // True while the form is reading, listening, or in hands-free mode.
-  active() { return !!(this.rm || this.vrec || (window.speechSynthesis && speechSynthesis.speaking) || (this.aud && !this.aud.paused && !this.aud.ended)); }
+  active() { return !!(this.rm || this.vrec || this.digitSrc || (window.speechSynthesis && speechSynthesis.speaking) || (this.aud && !this.aud.paused && !this.aud.ended)); }
 
   // Stop all speech and listening right now.
-  halt() { this.tok++; if (window.speechSynthesis) speechSynthesis.cancel(); if (this.aud) this.aud.pause(); this.stopVoice(); this.cap('idle'); }
+  halt() { this.tok++; if (window.speechSynthesis) speechSynthesis.cancel(); if (this.aud) this.aud.pause(); this.stopDigits(); this.stopVoice(); this.cap('idle'); }
 
   // The Stop reading button, the Escape key and the voice word "stop": stop now and leave hands-free mode.
   stopRead() { this.rm = false; this.moved = true; this.draw(); this.say(this.u('stopped')); }
@@ -1396,9 +1445,12 @@ class DbForm extends HTMLElement {
   // Which options did the person say? By number ("2", "two", "ሁለት") or by name (best word match).
   pick(t, s) {
     const opts = s.options || [], w = t.split(' ').filter(Boolean), hit = [];
+    const add = n => { if (n >= 1 && n <= opts.length && !hit.includes(n - 1)) hit.push(n - 1); };
     w.forEach(x => {
-      const n = /^\d+$/.test(x) ? +x : (NUM[x] || (w.length === 1 && NUM1[x]) || 0);
-      if (n >= 1 && n <= opts.length && !hit.includes(n - 1)) hit.push(n - 1);
+      const n = numOf(x, w.length === 1);
+      // "1 2" said quickly often comes back as "12": with fewer choices than that, each digit is a choice.
+      if (s.type === 'checkbox' && /^\d{2,}$/.test(x) && n > opts.length && [...x].every(d => +d >= 1 && +d <= opts.length)) [...x].forEach(d => add(+d));
+      else add(n);
     });
     if (hit.length) return s.type === 'radio' ? hit.slice(0, 1) : hit;
     const sc = opts.map(([, lab]) => {
@@ -1466,7 +1518,7 @@ class DbForm extends HTMLElement {
   // Play several recorded clips one after another. If one is missing, read the whole message with the device voice instead.
   seq(ids, text, cb) {
     const base = this.getAttribute('audio'), live = this.r.querySelector('#live'), k = ++this.tok;
-    if (this.aud) this.aud.pause();
+    if (this.aud) this.aud.pause(); this.stopDigits();
     if (window.speechSynthesis) speechSynthesis.cancel();
     { const c = cb; cb = () => { if (k === this.tok) { this.cap('idle'); if (c) c(); } }; }
     this.cap('speaking', text, this.l);
@@ -1503,7 +1555,7 @@ class DbForm extends HTMLElement {
         if (yn) { this.sup = 0; if (yn === 'y') tick('s'); return this.send(); }
         return this.say2(this.u('askSupport'), 'askSupport');
       }
-      const num = w.map(x => (/^\d+$/.test(x) ? +x : NUM[x] || 0)).find(n => n >= 1 && n <= rv.length);
+      const num = w.map(x => numOf(x)).find(n => n >= 1 && n <= rv.length);
       if (w.some(x => CMD.restart.includes(x)) || (w.some(x => CMD.start.includes(x)) && w.some(x => CMD.again.includes(x)))) return this.restart();
       if (is('stop')) return this.stopRead();
       if (num) return this.edit(rv[num - 1][1]);
@@ -1550,7 +1602,7 @@ class DbForm extends HTMLElement {
     this.stopVoice();
     this.tok++;
     if (window.speechSynthesis) speechSynthesis.cancel();
-    if (this.aud) this.aud.pause();
+    if (this.aud) this.aud.pause(); this.stopDigits();
     const rec = this.recog(this.sl());
     if (!rec) { live.textContent = this.u('novoice'); return; }
     this.vrec = rec;

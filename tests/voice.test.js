@@ -44,7 +44,8 @@ test('contact question can be spoken: digits and emails are turned into text and
   assert.ok(/Speak your answer/i.test(make({ i: 2 }).pageText(step('contact'))));
   const box = { value: '' }, d = make({ i: 2 }); d.r = { querySelector: q => (q === '#f' ? box : null) };
   d.heard('zero nine one one 22 33 44'); assert.equal(box.value, '0911223344');
-  assert.deepEqual(d.played[0].map(x => x.id), ['heardA', 'n0', 'n9', 'n1', 'n1', 'n2', 'n2', 'n3', 'n3', 'n4', 'n4', 'heardB']);
+  assert.deepEqual(d.played[0].map(x => x.id), ['heardA', null, 'heardB']);
+  assert.equal(d.played[0][1].digits, '0911223344'); assert.equal(d.played[0][1].t, '0911 22 33 44'); // grouped like a phone number
   d.heard('abebe at gmail dot com'); assert.equal(box.value, 'abebe@gmail.com');
   const a = make({ l: 'am', i: 2 }); a.r = d.r; a.heard('ዜሮ ዘጠኝ 11 22 33 44'); assert.equal(box.value, '0911223344');
   assert.ok(step('contact').check(box.value));
@@ -101,7 +102,7 @@ test('the English language question names only English; each language invites it
 test('review by voice is put together from recorded clips, never one device-voice sentence', () => {
   const d = make({ l: 'am', a: { fullName: 'ሳሙኤል', contact: '0911223344', idRoute: 'refugee', support: ['large'] }, i: 5 });
   const ids = d.reviewItems().map(x => x.id);
-  assert.deepEqual(ids, ['reviewH', 'n1', 'q_fullName', null, 'n2', 'q_contact', 'n0', 'n9', 'n1', 'n1', 'n2', 'n2', 'n3', 'n3', 'n4', 'n4',
+  assert.deepEqual(ids, ['reviewH', 'n1', 'q_fullName', null, 'n2', 'q_contact', null,
     'n3', 'q_idRoute', 'o_idRoute_refugee', 'n4', 'q_support', 'o_support_large', 'reviewKeys', 'consentOrg', 'reviewAsk']);
   assert.equal(d.reviewItems()[3].any, true); // the typed name: read by any voice there is, never silent
   const p = make({ l: 'am', a: {}, i: 5 }); p.getAttribute = k => (k === 'partner' ? 'AAAPD' : null);
@@ -205,4 +206,20 @@ test('phone page in Amharic: "ቀጥል" (however the recogniser spells it) goes
   // A word that is not a number or email leaves a good number in the box.
   const e = make({ l: 'am', i: 2 }); e.r = r; e.heard('ሰላም'); assert.equal(box.value, '0911223344');
   assert.deepEqual(e.played[0].map(x => x.id), ['heardB']);
+});
+
+test('choosing by number: Amharic endings and ordinals, and "12" for 1 and 2 on a multiple-choice page', () => {
+  assert.equal(pick('አንድና ሁለት', 'prefs', 'am'), '0,1');
+  assert.equal(pick('አንደኛውና ሁለተኛው', 'prefs', 'am'), '0,1');
+  assert.equal(pick('12', 'prefs', 'am'), '0,1');
+  assert.equal(pick('135', 'support'), '0,2,4');
+  assert.equal(pick('ሁለተኛው', 'idRoute', 'am'), '1');
+  assert.equal(pick('12', 'idRoute'), ''); // one choice only: "12" is not a choice there
+  assert.equal(pick('the second one', 'idRoute'), '1');
+});
+test('phone numbers are grouped for reading aloud like they are written', () => {
+  const g = globalThis.phoneGroups;
+  assert.deepEqual(g('0902576570'), ['0902', '57', '65', '70']);
+  assert.deepEqual(g('251902576570'), ['251', '902', '57', '65', '70']);
+  assert.deepEqual(g('12345'), ['123', '45']);
 });
