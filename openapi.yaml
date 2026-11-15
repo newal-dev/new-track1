@@ -1,0 +1,82 @@
+openapi: 3.0.3
+info:
+  title: Inclusive Access API
+  version: 1.0.0
+  description: Backend for the db-form plugin. Demo only - no authentication, in-memory storage.
+servers:
+  - url: http://localhost:3000
+paths:
+  /v1/health:
+    get:
+      summary: Check the server is up
+      responses:
+        '200': { description: OK }
+  /v1/jobs:
+    get:
+      summary: List jobs and the accommodations each offers
+      responses:
+        '200':
+          description: Array of jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Job' }
+  /v1/learners:
+    post:
+      summary: Submit a registration (fullName required)
+      requestBody: { $ref: '#/components/requestBodies/Form' }
+      responses:
+        '201': { $ref: '#/components/responses/Created' }
+        '422': { $ref: '#/components/responses/Invalid' }
+  /v1/applications:
+    post:
+      summary: Submit a job application (role required)
+      requestBody: { $ref: '#/components/requestBodies/Form' }
+      responses:
+        '201': { $ref: '#/components/responses/Created' }
+        '422': { $ref: '#/components/responses/Invalid' }
+  /v1/employer/jobs:
+    post:
+      summary: Post a job and its accommodations (job required, offers optional list)
+      requestBody: { $ref: '#/components/requestBodies/Form' }
+      responses:
+        '201': { $ref: '#/components/responses/Created' }
+        '422': { $ref: '#/components/responses/Invalid' }
+components:
+  schemas:
+    Job:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        titleAm: { type: string, description: Optional Amharic title }
+        offers: { type: array, items: { type: string } }
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+  requestBodies:
+    Form:
+      required: true
+      content:
+        application/json:
+          schema: { type: object, additionalProperties: true }
+  responses:
+    Created:
+      description: Created
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              id: { type: string }
+    Invalid:
+      description: Validation failed
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }

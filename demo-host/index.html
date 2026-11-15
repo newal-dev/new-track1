@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang='en'>
+<head>
+<meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>Addis Community Learning Hub (demo host site)</title>
+<style>body{font-family:Georgia,serif;margin:0;color:#222}header{background:#2d5a27;color:#fff;padding:1rem}main{max-width:44rem;margin:auto;padding:1rem}a{color:#0b4f9c}pre{overflow-x:auto;background:#f3f3f3;padding:1rem}</style>
+</head>
+<body>
+<header><strong>Addis Community Learning Hub</strong> (a pretend partner website)</header>
+<main>
+  <h1>Join our programme</h1>
+  <p>This page belongs to a different website. It adds two lines of HTML to get accessible sign-up.</p>
+  <nav aria-label='Forms'><a href='?flow=signup'>Sign up</a> | <a href='?flow=job'>Apply for a job</a> | <a href='?flow=employer'>Employer</a></nav>
+  <db-form api='http://localhost:3000/v1' audio='http://localhost:3000/audio'></db-form>
+  <h2>How a partner installs it</h2>
+  <pre>&lt;script src='http://localhost:3000/db-form.js'&gt;&lt;/script&gt;
+&lt;db-form flow='signup' lang='en' api='http://localhost:3000/v1'&gt;&lt;/db-form&gt;</pre>
+</main>
+<script>document.querySelector('db-form').setAttribute('flow', new URLSearchParams(location.search).get('flow') || 'signup');</script>
+<script src='http://localhost:3000/db-form.js'></script>
+</body>
+</html>

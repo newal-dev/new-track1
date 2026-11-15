@@ -1,0 +1,11 @@
+services:
+  web:
+    build: .
+    ports:
+      - '3000:3000'
+  host:
+    image: nginx:alpine
+    ports:
+      - '8080:80'
+    volumes:
+      - ./demo-host:/usr/share/nginx/html:ro
