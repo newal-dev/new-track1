@@ -1,11 +1,32 @@
+# One command: docker compose up --build
+#   http://localhost:8080  demo partner site (also /savanna.html and /design-system.html)
+#   http://localhost:3000  plugin server: /widget.js, /v1 API, /openapi.yaml, /demo/lms (LTI 1.3), /demo/sms-inbox
+# Optional: docker compose --profile test run --rm tests   (all unit, API and browser accessibility tests)
 services:
   web:
     build: .
     ports:
       - '3000:3000'
+    environment:
+      PUBLIC_URL: http://localhost:3000
+      # ALLOWED_ORIGINS: https://partner.example   (default: any site may embed the plugin)
+      # ADMIN_TOKEN: change-me                     (protects GET /v1/consents)
   host:
     image: nginx:alpine
     ports:
       - '8080:80'
     volumes:
       - ./demo-host:/usr/share/nginx/html:ro
+    depends_on:
+      web:
+        condition: service_healthy
+  tests:
+    profiles: ['test']
+    image: mcr.microsoft.com/playwright:v1.65.1-noble
+    working_dir: /work
+    volumes:
+      - .:/work
+      - /work/node_modules
+    environment:
+      CI: '1'
+    command: sh -c "npm ci && npm test && npx playwright test"
