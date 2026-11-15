@@ -589,7 +589,7 @@ dl.review{margin:var(--s4) 0 0;border-top:1px solid var(--line)}
 fieldset.consent{margin-top:var(--s5);padding:var(--s4);border:var(--bw) solid var(--line-strong);border-radius:var(--r2)}
 fieldset.consent legend{font-size:1.0625em;padding:0 var(--s2);margin-bottom:var(--s2)}
 .consent .opt{margin-top:var(--s2)}
-.consent .opt span{flex:1}
+.consent .opt span:not(.tick){flex:1;min-width:0}
 .consent p{font-size:.9375em;color:var(--ink-2);margin-top:var(--s3)}
 /* Ethiopian date: three labelled selects */
 .ecd{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(8.5rem,100%),1fr));gap:var(--s3)}
