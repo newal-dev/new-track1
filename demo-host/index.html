@@ -4,10 +4,7 @@
 <meta charset='utf-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <title>Join our programme · Addis Community Learning Hub (demo partner site)</title>
-<!-- Fonts are the partner site's choice. The plugin uses them when present and falls back to system fonts. -->
-<link rel='preconnect' href='https://fonts.googleapis.com'>
-<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
-<link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Noto+Sans+Ethiopic:wght@400;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap'>
+<!-- No external font service: the display font is local, and the plugin loads Atkinson Hyperlegible and Noto Sans Ethiopic from its own server. -->
 <link rel='stylesheet' href='site.css'>
 <script src='site.js'></script>
 </head>
@@ -35,6 +32,7 @@
         <li><a data-flow='signup' href='?flow=signup'>Join the programme</a></li>
         <li><a data-flow='job' href='?flow=job'>Apply for a job</a></li>
         <li><a data-flow='employer' href='?flow=employer'>For employers</a></li>
+        <li><a href='savanna.html'>Inside a course (Savanna-style)</a></li>
         <li><a href='design-system.html'>Design system</a></li>
       </ul>
     </div>
@@ -55,7 +53,7 @@
       <p class='note'>Your support needs are optional and only seen by the organisers.</p>
     </div>
     <div id='form' tabindex='-1'>
-      <db-form api='http://localhost:3000/v1' audio='http://localhost:3000/audio'></db-form>
+      <db-form api='http://localhost:3000/v1' audio='http://localhost:3000/audio' partner='Addis Community Learning Hub' sw='db-sw.js'></db-form>
     </div>
   </div>
 
@@ -67,10 +65,11 @@
     </header>
     <figure class='code'>
       <figcaption><span>Add to your page</span><button type='button' class='btn' id='copy' data-state='idle'>Copy code</button></figcaption>
-      <pre><code id='snippet'>&lt;script src='http://localhost:3000/db-form.js'&gt;&lt;/script&gt;
-&lt;db-form flow='signup' api='http://localhost:3000/v1' audio='http://localhost:3000/audio'&gt;&lt;/db-form&gt;</code></pre>
+      <pre tabindex='0' aria-label='Install code'><code id='snippet'>&lt;script src='http://localhost:3000/widget.js'&gt;&lt;/script&gt;
+&lt;db-onboarding api='http://localhost:3000/v1' audio='http://localhost:3000/audio' partner='Your organisation'&gt;&lt;/db-onboarding&gt;</code></pre>
     </figure>
-    <div class='scroll'>
+    <p>Tags: <code>&lt;db-onboarding&gt;</code> (sign-up), <code>&lt;db-career-gateway&gt;</code> (jobs), or <code>&lt;db-form flow='…'&gt;</code> for any flow. Full guide: <code>PARTNER_GUIDE.md</code> in the repository.</p>
+    <div class='scroll' tabindex='0' role='region' aria-label='Attributes table'>
       <table>
         <caption>Attributes</caption>
         <thead><tr><th scope='col'>Attribute</th><th scope='col'>Values</th><th scope='col'>What it does</th></tr></thead>
@@ -82,6 +81,9 @@
           <tr><td><code>api</code></td><td>URL</td><td>Where answers are sent.</td></tr>
           <tr><td><code>audio</code></td><td>URL</td><td>Folder of read-aloud clips.</td></tr>
           <tr><td><code>hide</code></td><td>question ids</td><td>Leave out optional questions.</td></tr>
+          <tr><td><code>partner</code></td><td>text</td><td>Your name, shown in the consent question before anything is sent.</td></tr>
+          <tr><td><code>sw</code></td><td>path</td><td>Your one-line service worker file, for offline use.</td></tr>
+          <tr><td><code>asr</code></td><td>browser, off, or a registered name</td><td>Which speech recogniser to use. <code>off</code> hides voice input.</td></tr>
         </tbody>
       </table>
     </div>
@@ -114,6 +116,10 @@
           <li><a href='#dev-h'>Install the form</a></li>
           <li><a href='design-system.html'>Design system</a></li>
           <li><a href='http://localhost:3000/v1/health'>API status</a></li>
+          <li><a href='http://localhost:3000/openapi.yaml'>OpenAPI specification</a></li>
+          <li><a href='http://localhost:3000/demo/lms'>Launch through LTI 1.3 (demo LMS)</a></li>
+          <li><a href='http://localhost:3000/v1/jobs?format=jsonld'>Jobs as schema.org/JobPosting</a></li>
+          <li><a href='http://localhost:3000/demo/sms-inbox'>Simulated SMS inbox</a></li>
         </ul>
       </section>
     </div>
@@ -146,10 +152,19 @@
       a.href = '?flow=' + a.dataset.flow + (p.has('lang') ? '&lang=' + lang : '');
       if (a.dataset.flow === flow) a.setAttribute('aria-current', 'page');
     });
-    document.querySelectorAll('a[data-lang]').forEach(a => {
+    // Language links change the form's language in place, so answers are kept. The link still works without JavaScript.
+    const links = document.querySelectorAll('a[data-lang]');
+    const mark = l => links.forEach(a => { if (a.dataset.lang === l) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current'); });
+    links.forEach(a => {
       a.href = '?flow=' + flow + '&lang=' + a.dataset.lang;
-      if (p.has('lang') && a.dataset.lang === lang) a.setAttribute('aria-current', 'true');
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        form.setAttribute('lang', a.dataset.lang); mark(a.dataset.lang);
+        history.replaceState(null, '', a.href);
+        document.getElementById('form').focus();
+      });
     });
+    if (p.has('lang')) mark(lang);
     // Copy button: idle -> done / error, announced by its own label.
     const b = document.getElementById('copy');
     b.addEventListener('click', () => {
@@ -161,6 +176,6 @@
     });
   })();
 </script>
-<script src='http://localhost:3000/db-form.js'></script>
+<script src='http://localhost:3000/widget.js'></script>
 </body>
 </html>
