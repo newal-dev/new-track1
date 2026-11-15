@@ -782,7 +782,7 @@ class DbForm extends HTMLElement {
     if (this.f) { window.addEventListener('online', this.onOnline); return; } // moved within the page: keep the current state
     if (this.getAttribute('fonts') !== 'no') loadFonts();
     const sw = this.getAttribute('sw');
-    if (sw && typeof navigator !== 'undefined' && navigator.serviceWorker) navigator.serviceWorker.register(sw).catch(() => { /* drafts still work without it */ });
+    if (sw && typeof navigator !== 'undefined' && navigator.serviceWorker) navigator.serviceWorker.register(sw, { updateViaCache: 'none' }).catch(() => { /* drafts still work without it */ });
     const d = store.get(this.draftKey);
     this.draft = d && d.v === 1 && Date.now() - d.at < DRAFT_DAYS * 864e5 ? d : null;
     if (d && !this.draft) this.dropDraft();

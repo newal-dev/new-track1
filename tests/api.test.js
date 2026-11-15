@@ -33,6 +33,13 @@ describe('health and widget', () => {
     assert.match(r.headers.get('content-type'), /javascript/);
     assert.ok((await r.arrayBuffer()).byteLength < 250 * 1024);
   });
+  test('after an update browsers get the new widget and clips: re-checked each load, offline cache named after the release', async () => {
+    for (const u of ['/widget.js', '/db-form.js', '/db-sw.js', '/audio/am/langSelf.mp3']) assert.equal((await fetch(U + u)).headers.get('cache-control'), 'no-cache', u);
+    const sw = await (await fetch(U + '/db-sw.js')).text();
+    assert.match(sw, /const DB_CACHE = 'db-form-[0-9a-f]{12}';/);
+    assert.doesNotMatch(sw, /db-form-v\d/);
+    assert.match(sw, /cache: 'no-cache'/);
+  });
   test('db-form.js is still served (old install snippet)', async () => { assert.equal((await fetch(U + '/db-form.js')).status, 200); });
   test('OpenAPI spec is served', async () => { const t = await (await fetch(U + '/openapi.yaml')).text(); assert.match(t, /openapi: 3/); });
   test('service worker and local fonts are served', async () => {

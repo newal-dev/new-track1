@@ -2,12 +2,24 @@
 // Storage is in memory only. Nothing is sent to any other service: there are no paid or external APIs.
 import express from 'express';
 import cors from 'cors';
-import { randomUUID, randomBytes, createHmac, timingSafeEqual } from 'node:crypto';
+import { randomUUID, randomBytes, createHmac, createHash, timingSafeEqual } from 'node:crypto';
+import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { generateKeyPair, exportJWK, SignJWT, jwtVerify, createLocalJWKSet, createRemoteJWKSet } from 'jose';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
+// Release number: a hash of the widget, the service worker and every audio clip. It changes whenever any of them changes.
+const RELEASE = (() => {
+  const h = createHash('sha256'), add = f => { h.update(f); h.update(fs.readFileSync(f)); };
+  ['public/db-form.js', 'public/db-sw.js'].forEach(f => add(path.join(ROOT, f)));
+  const audio = path.join(ROOT, 'public/audio');
+  if (fs.existsSync(audio)) for (const l of fs.readdirSync(audio).sort()) {
+    const d = path.join(audio, l); if (!fs.statSync(d).isDirectory()) continue;
+    for (const f of fs.readdirSync(d).sort()) if (f.endsWith('.mp3')) add(path.join(d, f));
+  }
+  return h.digest('hex').slice(0, 12);
+})();
 const OFFERS = ['stepfree', 'reader', 'interp', 'hours', 'remote'];
 const OFFER_EN = { stepfree: 'Step-free workplace', reader: 'Screen-reader friendly tools', interp: 'Sign language interpreter', hours: 'Flexible hours', remote: 'Work from home' };
 const SUPPORT = ['screenreader', 'large', 'voice', 'sign', 'simple', 'human'];
@@ -71,9 +83,14 @@ export async function createApp(opt = {}) {
   const fail = (res, status, code, message, field) => res.status(status).json({ error: { code, message, ...(field ? { field } : {}) } });
 
   // ---- widget, docs, fonts, audio ----
-  app.get('/widget.js', (q, r) => r.type('application/javascript').set('Cache-Control', 'public, max-age=3600').sendFile(path.join(ROOT, 'public/db-form.js')));
+  // After an update, browsers must get the new widget and the new clips (clips keep their file names when their words
+  // change). So the widget and the clips are re-checked on every load (a cheap 304 when nothing changed), and the
+  // offline service worker gets a release number made from their content: a new release empties its old cache.
+  const fresh = r => r.set('Cache-Control', 'no-cache');
+  app.get(['/widget.js', '/db-form.js'], (q, r) => fresh(r.type('application/javascript')).sendFile(path.join(ROOT, 'public/db-form.js')));
+  app.get('/db-sw.js', (q, r) => fresh(r.type('application/javascript')).send(fs.readFileSync(path.join(ROOT, 'public/db-sw.js'), 'utf8').replace(/const DB_CACHE = '[^']*';/, `const DB_CACHE = 'db-form-${RELEASE}';`)));
   app.get('/openapi.yaml', (q, r) => r.type('text/yaml').sendFile(path.join(ROOT, 'openapi.yaml')));
-  app.use(express.static(path.join(ROOT, 'public'), { maxAge: '1h' }));
+  app.use(express.static(path.join(ROOT, 'public'), { maxAge: '1h', setHeaders: (r, p) => { if (/[\\/]audio[\\/]/.test(p)) fresh(r); } }));
   app.get('/', (q, r) => r.type('text').send(`Inclusive Access plugin server.
 Widget: ${BASE}/widget.js   (also /db-form.js)
 API: ${BASE}/v1/health, ${BASE}/v1/jobs   OpenAPI: ${BASE}/openapi.yaml

@@ -253,6 +253,7 @@ Automated checks for developers: `npm test` (with the server running) and `npx p
 
 | What you see | Why | What to do |
 |---|---|---|
+| After an update, the old text or old voice is still there | The browser or the offline service worker still has the old copy | Reload the page twice: the first reload installs the new release, the second shows it. The plugin server names the offline cache after the release, so old clips are then deleted. Testers can use a private (incognito) window, or DevTools, Application, **Clear site data**. If you serve `db-sw.js` from your own server, change `DB_CACHE` in it on every update. |
 | Nothing appears where the form should be | The script did not load, or the page blocks scripts | Open `https://YOUR-HOST/widget.js` in the browser: you should see code. Check your CSP (section 8). In WordPress, check that `<script>` was not removed. |
 | "We could not send your answers" | The API address is wrong or the server is down | Check the `api` attribute ends in `/v1`, and that `/v1/health` works. |
 | No Speak button | This browser has no voice recognition (Firefox, some Safari versions) | Normal: visitors type instead. Chrome and Edge support voice. |
