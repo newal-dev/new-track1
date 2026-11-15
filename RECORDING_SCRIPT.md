@@ -24,7 +24,7 @@ When a clip is missing **and** the device has no voice for the language, the plu
 7. A native speaker must listen to every clip. If a word is wrong, fix the text in `public/db-form.js` (not here), then repeat from step 1.
 
 ## What to produce
-- **679 files in total**: 114 for `en`, 114 for `am`, 113 for `om`, 113 for `ti`, 112 for `so`, 113 for `sid`.
+- **685 files in total**: 115 for `en`, 115 for `am`, 114 for `om`, 114 for `ti`, 113 for `so`, 114 for `sid`.
 - Format: **mp3**, mono, 64 kbps or lower (small for 3G). The Colab script makes 48 kbps.
 - File name = the **ID** in the first column, plus `.mp3`. Example: `public/audio/am/fullName.mp3`. Use exactly this spelling and capital letters.
 - The plugin loads them from the `audio` attribute: `audio='http://localhost:3000/audio'` (the server serves the `public` folder).
@@ -114,6 +114,7 @@ When a clip is missing **and** the device has no voice for the language, the plu
 | `heardA` | Read-back of a spoken answer, first part ("We heard") | - | en, am, om, ti, so, sid |
 | `heardB` | Read-back of a spoken answer, last part | - | en, am, om, ti, so, sid |
 | `display` | Focus: the "Colours and text size" menu | - | en, am, om, ti, so, sid |
+| `textSize` | Focus: the "Text size" choice (100%, 150%, 200%) in that menu | - | en, am, om, ti, so, sid |
 | `th_auto` | Focus: colour theme "Same as my device" | - | en, am, om, ti, so, sid |
 | `th_standard` | Focus: colour theme "Standard" | - | en, am, om, ti, so, sid |
 | `th_dark` | Focus: colour theme "Dark" | - | en, am, om, ti, so, sid |
@@ -1543,6 +1544,32 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/display.mp3`
 
 > Kuulla nna borrote lowina
+
+### `textSize`: Focus: the "Text size" choice (100%, 150%, 200%) in that menu
+
+**English** → `public/audio/en/textSize.mp3`
+
+> Text size
+
+**አማርኛ (checked by a native speaker)** → `public/audio/am/textSize.mp3`
+
+> የጽሑፍ መጠን
+
+**Afaan Oromoo (draft, VERIFY_NATIVE)** → `public/audio/om/textSize.mp3`
+
+> Guddina barreeffamaa
+
+**ትግርኛ (draft, VERIFY_NATIVE)** → `public/audio/ti/textSize.mp3`
+
+> ዓቐን ጽሑፍ
+
+**Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/textSize.mp3`
+
+> Cabbirka qoraalka
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/textSize.mp3`
+
+> Borrote lowina
 
 ### `th_auto`: Focus: colour theme "Same as my device"
 

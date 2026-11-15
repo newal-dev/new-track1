@@ -117,6 +117,8 @@ const UI = {
   keysSay: { en: 'On a keyboard: press Tab to go down, Shift and Tab to go up, Space or Enter to choose, and Escape to stop the voice.', am: 'በቁልፍ ሰሌዳ፦ ወደ ታች ለመሄድ Tab፣ ወደ ላይ ለመመለስ Shift እና Tab፣ ለመምረጥ Space ወይም Enter፣ ድምፁን ለማቆም Escape ይጫኑ።', om: "Kiiboordii irratti: gara gadiitti deemuuf Tab, gara oliitti deebi'uuf Shift fi Tab, filachuuf Space ykn Enter, sagalee dhaabuuf Escape tuqi.", ti: 'ብኪቦርድ፦ ናብ ታሕቲ ንምኻድ Tab፣ ናብ ላዕሊ ንምምላስ Shift ምስ Tab፣ ንምምራጽ Space ወይ Enter፣ ድምጺ ንምቁራጽ Escape ጠውቑ።', so: 'Kiiboodhka: riix Tab si aad hoos ugu dhaqaaqdo, Shift iyo Tab si aad kor ugu dhaqaaqdo, Space ama Enter si aad u doorato, iyo Escape si aad u joojiso codka.' }, // VERIFY_NATIVE (om ti so)
   // Review page: how to change one answer with the keyboard (shown and spoken).
   reviewKeys: { en: 'To change an answer with the keyboard, press Tab until you reach its Change button, then press Enter.', am: 'መልስ በቁልፍ ሰሌዳ ለመቀየር፣ የመልሱ «ቀይር» ቁልፍ ላይ እስኪደርሱ Tab ይጫኑ፤ ከዚያ Enter ይጫኑ።', om: 'Deebii kiiboordiin jijjiiruuf, hanga qabduu Jijjiiri isaa geessutti Tab tuqi, achiis Enter tuqi.', ti: 'መልሲ ብኪቦርድ ንምቕያር፣ ክሳብ «ቀይር» ዝብል መጠወቒኡ ትበጽሑ Tab ጠውቑ፣ ድሕሪኡ Enter ጠውቑ።', so: 'Si aad jawaab ugu beddesho kiiboodhka, riix Tab ilaa aad gaarto badhankeeda Beddel, kadibna riix Enter.' }, // VERIFY_NATIVE (om ti so)
+  // Text size choice in the Display menu: the percentages themselves need no translation.
+  textSize: { en: 'Text size', am: 'የጽሑፍ መጠን', om: 'Guddina barreeffamaa', ti: 'ዓቐን ጽሑፍ', so: 'Cabbirka qoraalka' }, // VERIFY_NATIVE (om ti so)
   // Display menu (colours and text size). The larger-text choice uses the same words as the first question's choice.
   display: { en: 'Colours and text size', am: 'ቀለምና የጽሑፍ መጠን', om: 'Halluu fi guddina barreeffamaa', ti: 'ሕብርን ዓቐን ጽሑፍን', so: 'Midabka iyo cabbirka qoraalka' }, // VERIFY_NATIVE (om ti so)
   // Spoken read-back of an answer, in two recorded parts around the answer itself (so it works without a device voice).
@@ -321,6 +323,7 @@ const SID = {
     display: 'Kuulla nna borrote lowina',
     heardA: 'Macciishshoonnihu',
     heardB: 'Albisate Albisi yi, woy dawarokki wole yi.',
+    textSize: 'Borrote lowina',
     reviewKeys: 'Dawaro keyboordetenni soorrate, Soorri ilkaawa iillitto geeshsha Tab xiiwi, aanchite Enter xiiwi.',
     askSupport: 'Kaa\'lo doorte. Kaa\'lo qixxeessanno gede kaa\'lo doorshoyyikki qixxeessitootira qoolate hasatto? Ee woy Dee\'ni yi.',
     next: 'Albisi',
@@ -469,6 +472,7 @@ section[data-theme=by]{${TOKENS.by}}
 :lang(am),:lang(ti){line-height:1.8}
 *{box-sizing:border-box}
 svg{flex:none}
+h2,legend,p,label,button,dd,dt{overflow-wrap:break-word;hyphens:auto}
 h2,legend{font-size:1.375em;line-height:1.3;font-weight:700;letter-spacing:-.005em;margin:0;padding:0;color:var(--ink)}
 p{margin:0}
 fieldset{border:0;padding:0;margin:0;min-width:0}
@@ -509,7 +513,11 @@ button:disabled,button[aria-disabled=true]{opacity:.55;cursor:not-allowed;transf
 .keys li{display:inline-flex;flex-wrap:wrap;gap:var(--s1);align-items:center}
 .keys .kh{font-weight:700;color:var(--ink)}
 kbd{font:inherit;font-size:.9em;font-weight:700;color:var(--ink);padding:0 .4em;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:3px;background:var(--surface);white-space:nowrap}
-.disp .panel fieldset+label{margin-top:var(--s2);border-top:1px solid var(--line);padding-top:var(--s2);border-radius:0}
+.disp .ts{margin-top:var(--s2);padding-top:var(--s2);border-top:1px solid var(--line)}
+.disp .ts legend{font-weight:700;padding:0 var(--s2);margin-bottom:var(--s1)}
+.tsr{display:flex;flex-wrap:wrap;gap:var(--s1)}
+.tsr label{flex:1 1 4.5em;flex-direction:column;justify-content:center;gap:2px;padding:var(--s2) var(--s1);border:var(--bw) solid var(--line);text-align:center}
+.tsr .aa{font-weight:700;line-height:1;font-family:var(--font)}
 
 /* captions: everything spoken is also shown (for deaf and hard-of-hearing people) */
 .cap{display:none;gap:var(--s3);align-items:flex-start;margin:0 0 var(--s4);padding:var(--s3) var(--s4);border-radius:var(--r2);border:1px solid var(--line);background:var(--surface-2);color:var(--ink)}
@@ -584,7 +592,7 @@ fieldset.consent legend{font-size:1.0625em;padding:0 var(--s2);margin-bottom:var
 .consent .opt span{flex:1}
 .consent p{font-size:.9375em;color:var(--ink-2);margin-top:var(--s3)}
 /* Ethiopian date: three labelled selects */
-.ecd{display:grid;grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr));gap:var(--s3)}
+.ecd{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(8.5rem,100%),1fr));gap:var(--s3)}
 .ecd label{display:flex;flex-direction:column;gap:var(--s1);font-size:.9375em;font-weight:700;color:var(--ink-2)}
 select{font:inherit;font-weight:400;min-height:52px;padding:.5rem .6rem;border:var(--bw) solid var(--line-strong);border-radius:var(--r1);background:var(--surface);color:var(--ink)}
 select:hover{border-color:var(--ink)}
@@ -748,6 +756,8 @@ const digitBuf = (ctx, url) => {
 };
 const preload = url => { if (url && typeof Audio !== 'undefined' && !CLIP_CACHE.has(url) && !CLIP_MISSING.has(url)) clipAudio(url); };
 const QUEUE = 'db-form-queue';
+// Text size: 100%, 150% or 200% of the form's normal text (WCAG 1.4.4 asks for 200% without loss).
+const SIZES = [1, 1.5, 2];
 const CONSENT_VERSION = '2026-11-15';
 // An Ethiopian date the person chose, with "Not sure" filled in: no day = last day of the month (approximate),
 // no year = the next time that month comes round.
@@ -836,7 +846,7 @@ class DbForm extends HTMLElement {
     if (this.lp) this.l = 'en';
     this.hide = (this.getAttribute('hide') || '').split(',').map(x => x.trim()).filter(x => x && !['fullName', 'role', 'job'].includes(x));
     // Larger text chosen in the Display menu (or in the first question) is kept on this device.
-    if (store.get('db-form-large')) this.pref.large = true;
+    { const z = +store.get('db-form-size'); this.size = SIZES.includes(z) ? z : store.get('db-form-large') ? 1.5 : 1; this.pref.large = this.size > 1; this.announceSize(); }
     // Chrome loads its list of device voices late: ask for it now, so the first page knows whether a voice exists.
     if (typeof window !== 'undefined' && window.speechSynthesis) { try { speechSynthesis.getVoices(); speechSynthesis.addEventListener('voiceschanged', () => speechSynthesis.getVoices()); } catch (x) { /* old browsers */ } }
     this.addEventListener('keydown', e => {
@@ -933,7 +943,7 @@ class DbForm extends HTMLElement {
   }
 
   field(s, n) {
-    const v = this.a[s.id] || (s.id === 'prefs' && this.pref.large ? ['large'] : s.type === 'checkbox' ? [] : '');
+    const v = this.a[s.id] || (s.id === 'prefs' && this.size > 1 ? ['large'] : s.type === 'checkbox' ? [] : '');
     const inp = s.type === 'ecdate' ? this.dateHTML(this.a[s.id]) : s.type === 'text'
       ? `<input id='f' type='text' value='${esc(v)}' aria-labelledby='h' aria-describedby='hint err' ${this.err ? "aria-invalid='true'" : ''} lang='${this.l}' dir='auto' ${INPUT_HINTS[s.id] || "autocomplete='off' spellcheck='false'"}>`
       : `<div class='opts'>${s.options.map(([k, t]) => `<label class='opt'><input type='${s.type}' name='f' value='${esc(k)}' ${[].concat(v).includes(k) ? 'checked' : ''}>${this.pref.simple && P[k] ? `<span class='pic'>${I(k, 28)}</span>` : ''}<span>${esc(T(t, this.l))}</span><span class='tick'>${I('check', 20)}</span></label>`).join('')}</div>`;
@@ -1088,7 +1098,7 @@ class DbForm extends HTMLElement {
     if ('resume' in d) return [it('b_draftGo', this.u('draftGo'))];
     const state = () => it(el.checked ? 'sel' : 'unsel', this.u(el.checked ? 'sel' : 'unsel'));
     if (d.consent) return [...this.consentItems(d.consent), state()];
-    if ('large' in d) return [it('o_prefs_large', T(FLOWS.signup.steps[0].options[0][1], l)), state()];
+    if (el.name === 'ts') return [it('textSize', this.u('textSize')), { l, id: null, t: Math.round(+el.value * 100) + '%', any: true }, state()];
     if (el.tagName === 'SUMMARY') return [it('display', this.u('display'))];
     if (el.tagName === 'SELECT') { const lab = el.closest('label'); return [{ l, id: null, t: lab ? lab.firstChild.textContent : '', any: true }, { l, id: null, t: el.selectedOptions[0] ? el.selectedOptions[0].textContent : '', any: true }]; }
     if (d.start) return [it(d.start === 'v' ? 'b_startVoice' : 'b_start', this.u(d.start === 'v' ? 'startVoice' : 'start'))];
@@ -1292,13 +1302,13 @@ class DbForm extends HTMLElement {
     // On the language page the buttons themselves are the language choice, so the language buttons are not repeated there.
     const langs = this.lp ? '' : `<div class='lang' role='group' aria-label='Language'>${LANGS.map(x => `<button type='button' data-lang='${x.id}' lang='${x.id}' aria-pressed='${this.l === x.id}'>${x.name}</button>`).join('')}</div>`;
     // Display menu: colour themes, and larger text (also offered by the first sign-up question). Both are kept on this device.
-    const disp = `<details class='disp'><summary>${I('palette', 20)}${this.u('display')}</summary><div class='panel'><fieldset><legend class='sr'>${this.u('colours')}</legend>${THEMES.map(t => `<label><input type='radio' name='th' value='${t}' ${this.theme === t ? 'checked' : ''}><span class='sw' aria-hidden='true'>${SWATCH[t].map(c => `<i style='background:${c}'></i>`).join('')}</span><span>${this.u('th_' + t)}</span></label>`).join('')}</fieldset><label><input type='checkbox' data-large ${this.pref.large ? 'checked' : ''}><span class='sw' aria-hidden='true'>${I('large', 20)}</span><span>${esc(T(FLOWS.signup.steps[0].options[0][1], this.l))}</span></label></div></details>`;
+    const disp = `<details class='disp'><summary>${I('palette', 20)}${this.u('display')}</summary><div class='panel'><fieldset><legend class='sr'>${this.u('colours')}</legend>${THEMES.map(t => `<label><input type='radio' name='th' value='${t}' ${this.theme === t ? 'checked' : ''}><span class='sw' aria-hidden='true'>${SWATCH[t].map(c => `<i style='background:${c}'></i>`).join('')}</span><span>${this.u('th_' + t)}</span></label>`).join('')}</fieldset><fieldset class='ts'><legend>${this.u('textSize')}</legend><div class='tsr'>${SIZES.map(z => `<label><input type='radio' name='ts' value='${z}' ${this.size === z ? 'checked' : ''}><span class='aa' aria-hidden='true' style='font-size:${0.75 + z * 0.25}em'>A</span><span>${z * 100}%</span></label>`).join('')}</div></fieldset></div></details>`;
     // Keyboard help on every page, in the chosen language: what Tab, Shift+Tab, Space/Enter and Esc do.
     const keys = this.done ? '' : `<ul class='keys' aria-label='${esc(this.u('keysH'))}'><li class='kh' aria-hidden='true'>${esc(this.u('keysH'))}:</li><li><kbd>Tab</kbd> ${esc(this.u('keyTab'))}</li><li><kbd>Shift</kbd>+<kbd>Tab</kbd> ${esc(this.u('keyShiftTab'))}</li><li><kbd>Space</kbd>/<kbd>Enter</kbd> ${esc(this.u('keyEnter'))}</li><li><kbd>Esc</kbd> ${esc(this.u('keyEsc'))}</li></ul>`;
     // The caption box shows, as text, everything that is being spoken, and a clear "Listening" state (for deaf and hard-of-hearing people).
     // It is aria-hidden because screen-reader users already hear the same words; the short role=status line below is for them.
     const cap = `<div class='cap' id='cap' data-state='idle' aria-hidden='true'><span class='ic'></span><div><span class='k'></span><span class='t'></span></div><span class='lvl'><i></i><i></i><i></i><i></i></span></div>`;
-    this.r.innerHTML = `<style>${CSS}</style><section lang='${this.l}' data-theme='${this.theme || 'auto'}'${this.pref.large ? " style='font-size:1.375rem'" : ''}><div class='bar'>${langs}${disp}</div>${keys}${tools}${cap}<p class='status' id='live' role='status'></p>${b}</section>`;
+    this.r.innerHTML = `<style>${CSS}</style><section lang='${this.l}' data-theme='${this.theme || 'auto'}'${this.sizeStyle()}><div class='bar'>${langs}${disp}</div>${keys}${tools}${cap}<p class='status' id='live' role='status'></p>${b}</section>`;
     this.bind(s);
     if (!this.said) {
       this.said = true;
@@ -1326,6 +1336,24 @@ class DbForm extends HTMLElement {
     this.dispatchEvent(new CustomEvent('db-theme', { detail: { theme: this.theme }, bubbles: true, composed: true }));
   }
 
+  // Text size. The host page is told (event 'db-textsize', detail.scale). A host that enlarges its own page with it
+  // (its header, nav and footer too) calls preventDefault(): the form's text is in rem, so it grows with the page and
+  // must not be enlarged twice. Otherwise the form enlarges itself.
+  announceSize() {
+    if (typeof this.dispatchEvent !== 'function') return;
+    const e = new CustomEvent('db-textsize', { detail: { scale: this.size }, bubbles: true, composed: true, cancelable: true });
+    this.hostSized = !this.dispatchEvent(e);
+  }
+  sizeStyle() { return this.size > 1 && !this.hostSized ? ` style='font-size:calc(1.125rem * ${this.size})'` : ''; }
+  setSize(z, quiet) {
+    this.size = SIZES.includes(z) ? z : 1; this.pref.large = this.size > 1;
+    store.set('db-form-size', this.size); store.del('db-form-large');
+    this.announceSize();
+    const sec = this.r.querySelector && this.r.querySelector('section');
+    if (sec && !quiet) sec.style.fontSize = this.size > 1 && !this.hostSized ? `calc(1.125rem * ${this.size})` : '';
+    const p = this.r.querySelector && this.r.querySelector('input[name=f][value=large]'); if (p && this.steps[this.i] && this.steps[this.i].id === 'prefs') p.checked = this.size > 1;
+  }
+
   // Caption box. state: speaking | listening | idle.
   cap(state, text, lang) {
     const c = this.r && this.r.querySelector && this.r.querySelector('#cap'); if (!c) return;
@@ -1348,12 +1376,7 @@ class DbForm extends HTMLElement {
     on('[data-rm]', () => { this.rm = true; this.moved = true; this.draw(); });
     on('[data-stoprm]', () => { if (this.welcome && this.ra < 2) { this.stopRA(); this.say(this.u('stopped')); } else this.stopRead(); });
     this.r.querySelectorAll('input[name=th]').forEach(x => x.addEventListener('change', () => this.setTheme(x.value)));
-    this.r.querySelectorAll('[data-large]').forEach(x => x.addEventListener('change', () => {
-      this.pref.large = x.checked; store.set('db-form-large', x.checked);
-      const sec = this.r.querySelector('section'); if (sec) sec.style.fontSize = x.checked ? '1.375rem' : '';
-      // Keep the first question's "Larger text" choice the same as this menu.
-      const p = this.r.querySelector("input[name=f][value=large]"); if (p && this.steps[this.i] && this.steps[this.i].id === 'prefs') p.checked = x.checked;
-    }));
+    this.r.querySelectorAll('input[name=ts]').forEach(x => x.addEventListener('change', () => this.setSize(+x.value)));
     this.r.querySelectorAll('[data-pick]').forEach(b => b.addEventListener('click', () => this.chooseLang(b.dataset.pick)));
     this.r.querySelectorAll('[data-ra]').forEach(b => b.addEventListener('click', () => { this.stopRA(); this.raDone(b.dataset.ra); }));
     on('[data-send]', () => this.send());
@@ -1379,7 +1402,7 @@ class DbForm extends HTMLElement {
     else if (!empty && s.check && !s.check(v)) { this.err = this.u(s.bad); this.errKey = s.bad; }
     else if (!empty && s.type === 'ecdate' && !v.m) { this.err = this.u('dateBad'); this.errKey = 'dateBad'; }
     this.a[s.id] = v; this.moved = true;
-    if (s.id === 'prefs') { this.pref = { large: v.includes('large'), simple: v.includes('simple') }; store.set('db-form-large', this.pref.large); }
+    if (s.id === 'prefs') { this.pref = { large: v.includes('large'), simple: v.includes('simple') }; if (this.pref.large !== this.size > 1) this.setSize(this.pref.large ? 1.5 : 1, true); }
     if (!this.err) this.advance();
     this.draw();
   }

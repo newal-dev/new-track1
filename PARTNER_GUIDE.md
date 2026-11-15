@@ -185,6 +185,13 @@ The form tells your page what happened. Listen on the element:
   form.addEventListener('db-theme', e => {
     // The visitor chose new colours: e.detail.theme is auto | standard | dark | contrast | rg | by
   });
+  // Text size (100%, 150% or 200%), also sent once when the form loads. Make your WHOLE page follow it, so your
+  // header, menu and footer grow too, and call preventDefault() so the form is not enlarged a second time.
+  // This works when your page uses rem units; if you do not listen, the form enlarges only itself.
+  document.addEventListener('db-textsize', e => {
+    document.documentElement.style.fontSize = e.detail.scale > 1 ? e.detail.scale * 100 + '%' : '';
+    e.preventDefault();
+  });
 </script>
 ```
 
@@ -358,4 +365,5 @@ pages, job boards).
 - **Zoom to 200% and 400%:** no sideways scrolling, nothing cut off. Use relative units (`rem`, `%`), not fixed heights.
 - **Help in more than English:** link to help and contact details in the languages your learners use, by phone as well as email.
 - **Follow the person's colour choice:** listen to the `db-theme` event (section 7) so your header and footer match the colours they picked.
+- **Follow the person's text size:** listen to the `db-textsize` event (section 7) so the whole page, navigation included, grows to 150% or 200% with the form. Size text in `rem`, let menus wrap instead of scrolling sideways, and let long words break (`overflow-wrap:anywhere`), so nothing is cut off on a phone.
 - **Test** with the checklist in section 9, with axe DevTools (free browser extension), and with one real user of a screen reader.

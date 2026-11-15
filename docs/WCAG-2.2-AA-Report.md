@@ -53,7 +53,7 @@ The pass/fail gate needs these results. Fill each row after the session using `d
 | 1.4.1 Use of colour | A | Supports | Selected = tick icon + thicker border; error = icon + left bar + text; current language = bold + border + `aria-pressed` |
 | 1.4.2 Audio control | A | Supports | Speech starts only after a key press or tap. "Stop reading" and Escape stop all audio at once; the "read aloud?" question offers No |
 | 1.4.3 Contrast (minimum) | AA | Supports | 75 of 75 pairs pass (section 4); axe `color-contrast` passes in all six themes, including error states |
-| 1.4.4 Resize text | AA | Supports | rem/em sizing; 200% test passes with no loss; optional "Larger text" choice |
+| 1.4.4 Resize text | AA | Supports | rem/em sizing; browser zoom to 200% passes with no loss. A Text size choice (100%, 150%, 200%, shown as percentages) enlarges the whole host page with the form, navigation included; checked at 320, 360 and 1280 px with no sideways scrolling (test "text size 200%") |
 | 1.4.5 Images of text | AA | Supports | None used |
 | 1.4.10 Reflow | AA | Supports | At 320 px wide, `scrollWidth` = viewport width and the Next button is fully visible (test "400% zoom"). The install code block scrolls on its own and can be focused |
 | 1.4.11 Non-text contrast | AA | Supports | Borders, focus ring, tick, error bar at least 3:1 in every theme (section 4) |

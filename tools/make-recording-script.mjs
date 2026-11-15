@@ -56,6 +56,7 @@ add('askSupport', 'Review by voice: also share support choices? (asked after Yes
 add('heardA', 'Read-back of a spoken answer, first part ("We heard")', l => u('heardA', l));
 add('heardB', 'Read-back of a spoken answer, last part', l => u('heardB', l));
 add('display', 'Focus: the "Colours and text size" menu', l => u('display', l));
+add('textSize', 'Focus: the "Text size" choice (100%, 150%, 200%) in that menu', l => u('textSize', l));
 for (const t of ['auto', 'standard', 'dark', 'contrast', 'rg', 'by']) add('th_' + t, `Focus: colour theme "${UI['th_' + t].en}"`, l => u('th_' + t, l));
 add('reviewFix', 'Review page, second part (after the person says No to submitting)', l => u('reviewFix', l));
 add('done', 'Thank-you page', l => u('thanks', l));

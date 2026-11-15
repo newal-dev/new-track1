@@ -297,14 +297,17 @@ test('keyboard: Tab visits every radio choice, Enter chooses it, Enter again goe
   await axe(page, 'Amharic review with keyboard help');
 });
 
-test('Display menu: larger text is kept on this device', async ({ page }) => {
+test('text size 200%: the whole page grows (header and nav too), the form is not doubled, and it is kept', async ({ page }) => {
   await toForm(page);
   await F(page).locator('details.disp summary').click();
-  await F(page).locator('[data-large]').check();
-  await expect(F(page).locator('section')).toHaveCSS('font-size', '22px');
-  await axe(page, 'Display menu open');
+  await F(page).locator('input[name=ts][value="2"]').check();
+  const sizes = () => page.evaluate(() => ({ html: getComputedStyle(document.documentElement).fontSize, nav: getComputedStyle(document.querySelector('nav.primary a')).fontSize, form: getComputedStyle(document.querySelector('db-form').shadowRoot.querySelector('section')).fontSize, side: document.documentElement.scrollWidth > innerWidth }));
+  expect(await sizes()).toEqual({ html: '32px', nav: '34px', form: '36px', side: false });
+  await axe(page, 'Display menu open, text 200%');
   await page.reload();
-  await expect(F(page).locator('section')).toHaveCSS('font-size', '22px');
+  expect(await sizes()).toEqual({ html: '32px', nav: '34px', form: '36px', side: false });
+  await page.setViewportSize({ width: 360, height: 800 });
+  expect((await sizes()).side).toBe(false);
 });
 
 test('review page by voice: every clip it plays exists, in every language', async ({ page, request }) => {

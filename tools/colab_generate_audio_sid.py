@@ -123,6 +123,7 @@ CLIPS = json.loads(r'''{
   "heardA": "Macciishshoonnihu",
   "heardB": "Albisate Albisi yi, woy dawarokki wole yi.",
   "display": "Kuulla nna borrote lowina",
+  "textSize": "Borrote lowina",
   "th_auto": "Uduunnichoyi'ya gede",
   "th_standard": "Rosu",
   "th_dark": "Tuqa",

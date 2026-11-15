@@ -54,7 +54,7 @@ Or everything inside Docker: `docker compose --profile test run --rm tests`.
 - `<db-onboarding>` is sign-up and `<db-career-gateway>` is jobs. `<db-form flow='signup|job|employer'>` gives any flow.
 - Everything runs in an open Shadow DOM: the host's CSS cannot break it, and it cannot change the host.
 - Attributes: `api`, `audio`, `partner` (name in the consent question), `lang` (en, am, om, ti, so, sid), `lang-ask='no'`, `theme` (auto, standard, dark, contrast, rg, by), `hide`, `sw` (offline), `asr` (browser, off, or a registered recogniser), `fonts='no'`, `jsonld='no'`.
-- Events: `db-complete`, `db-error`, `db-queued`, `db-sent`, `db-theme`. CSS hooks: `--db-accent`, `--db-font`.
+- Events: `db-complete`, `db-error`, `db-queued`, `db-sent`, `db-theme`, `db-textsize` (the host can enlarge its whole page with the form; see PARTNER_GUIDE.md section 7). CSS hooks: `--db-accent`, `--db-font`.
 - Size: `widget.js` is about 155 kB uncompressed (under 250 kB). Fonts are fetched only when needed, and the Ethiopic font only when Ge'ez text is shown.
 
 **Level 2: REST API and OpenAPI.** [`openapi.yaml`](openapi.yaml) (OpenAPI 3.0.3, validated). Routes:
@@ -89,7 +89,7 @@ A **keyboard help strip** at the top of every page says this in the chosen langu
 | Errors | `role='alert'` box with icon and text. Focus moves to the field (or to the consent box) |
 | Status | `role='status'` for Sending, Listening, Saved on this device, Reading stopped |
 | Language buttons | `role='group'`, `aria-pressed`, `lang` on each button |
-| Colours and text size menu | `<details>` with a `<fieldset>` of theme radios and a **Larger text** checkbox. Both are saved on the device; the host can follow the colours (`db-theme`) |
+| Colours and text size menu | `<details>` with a `<fieldset>` of theme radios and a **Text size** group: 100%, 150%, 200%, labelled with the percentage. Both are saved on the device; the host page follows both (`db-theme`, `db-textsize`), so its header, navigation and footer grow with the form |
 | Keyboard help | `<ul aria-label='Keyboard'>` with `<kbd>` keys, in the chosen language |
 | Captions | Visible caption box of everything spoken, and a large Listening banner. `aria-hidden`, because screen-reader users already hear it |
 | Host pages | Skip link, `nav` with `aria-label`, `aria-current` on the current page and language |
