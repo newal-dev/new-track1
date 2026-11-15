@@ -115,6 +115,8 @@ const UI = {
   keyEnter: { en: 'choose', am: 'ለመምረጥ', om: 'filachuuf', ti: 'ንምምራጽ', so: 'dooro' }, // VERIFY_NATIVE (om ti so)
   keyEsc: { en: 'stop the voice', am: 'ድምፁን ለማቆም', om: 'sagalee dhaabuuf', ti: 'ድምጺ ንምቁራጽ', so: 'jooji codka' }, // VERIFY_NATIVE (om ti so)
   keysSay: { en: 'On a keyboard: press Tab to go down, Shift and Tab to go up, Space or Enter to choose, and Escape to stop the voice.', am: 'በቁልፍ ሰሌዳ፦ ወደ ታች ለመሄድ Tab፣ ወደ ላይ ለመመለስ Shift እና Tab፣ ለመምረጥ Space ወይም Enter፣ ድምፁን ለማቆም Escape ይጫኑ።', om: "Kiiboordii irratti: gara gadiitti deemuuf Tab, gara oliitti deebi'uuf Shift fi Tab, filachuuf Space ykn Enter, sagalee dhaabuuf Escape tuqi.", ti: 'ብኪቦርድ፦ ናብ ታሕቲ ንምኻድ Tab፣ ናብ ላዕሊ ንምምላስ Shift ምስ Tab፣ ንምምራጽ Space ወይ Enter፣ ድምጺ ንምቁራጽ Escape ጠውቑ።', so: 'Kiiboodhka: riix Tab si aad hoos ugu dhaqaaqdo, Shift iyo Tab si aad kor ugu dhaqaaqdo, Space ama Enter si aad u doorato, iyo Escape si aad u joojiso codka.' }, // VERIFY_NATIVE (om ti so)
+  // Review page: how to change one answer with the keyboard (shown and spoken).
+  reviewKeys: { en: 'To change an answer with the keyboard, press Tab until you reach its Change button, then press Enter.', am: 'መልስ በቁልፍ ሰሌዳ ለመቀየር፣ የመልሱ «ቀይር» ቁልፍ ላይ እስኪደርሱ Tab ይጫኑ፤ ከዚያ Enter ይጫኑ።', om: 'Deebii kiiboordiin jijjiiruuf, hanga qabduu Jijjiiri isaa geessutti Tab tuqi, achiis Enter tuqi.', ti: 'መልሲ ብኪቦርድ ንምቕያር፣ ክሳብ «ቀይር» ዝብል መጠወቒኡ ትበጽሑ Tab ጠውቑ፣ ድሕሪኡ Enter ጠውቑ።', so: 'Si aad jawaab ugu beddesho kiiboodhka, riix Tab ilaa aad gaarto badhankeeda Beddel, kadibna riix Enter.' }, // VERIFY_NATIVE (om ti so)
   // Display menu (colours and text size). The larger-text choice uses the same words as the first question's choice.
   display: { en: 'Colours and text size', am: 'ቀለምና የጽሑፍ መጠን', om: 'Halluu fi guddina barreeffamaa', ti: 'ሕብርን ዓቐን ጽሑፍን', so: 'Midabka iyo cabbirka qoraalka' }, // VERIFY_NATIVE (om ti so)
   // Spoken read-back of an answer, in two recorded parts around the answer itself (so it works without a device voice).
@@ -319,6 +321,7 @@ const SID = {
     display: 'Kuulla nna borrote lowina',
     heardA: 'Macciishshoonnihu',
     heardB: 'Albisate Albisi yi, woy dawarokki wole yi.',
+    reviewKeys: 'Dawaro keyboordetenni soorrate, Soorri ilkaawa iillitto geeshsha Tab xiiwi, aanchite Enter xiiwi.',
     askSupport: 'Kaa\'lo doorte. Kaa\'lo qixxeessanno gede kaa\'lo doorshoyyikki qixxeessitootira qoolate hasatto? Ee woy Dee\'ni yi.',
     next: 'Albisi',
     back: 'Higi',
@@ -960,7 +963,7 @@ class DbForm extends HTMLElement {
     if (!s) {
       if (this.rs) return err + n('reviewFix');
       const rv = this.steps.filter(x => !x.local);
-      return err + j([n('review'), ...rv.map((x, k) => (k + 1) + ': ' + T(x.q, l) + ': ' + this.show(x)), this.u('consentSend', { p: this.partner() }), n('reviewAsk')]);
+      return err + j([n('review'), ...rv.map((x, k) => (k + 1) + ': ' + T(x.q, l) + ': ' + this.show(x)), n('reviewKeys'), this.u('consentSend', { p: this.partner() }), n('reviewAsk')]);
     }
     const opts = (s.options || []).map((p, i) => (v ? (i + 1) + ': ' : '') + T(p[1], l));
     const f = this.i ? '' : '1', ins = !v ? '' : s.novoice ? n('sayType') : s.type === 'text' ? n('sayText' + f) : n('sayChoose' + f) + (s.optional ? ' ' + n('saySkip') : '');
@@ -1091,7 +1094,7 @@ class DbForm extends HTMLElement {
     const l = this.l, rv = this.steps.filter(x => !x.local);
     return [{ l, id: 'reviewH', t: this.u('review') },
       ...rv.flatMap((x, k) => [{ l, id: 'n' + (k + 1), t: String(k + 1) }, { l, id: 'q_' + x.id, t: T(x.q, l) }, ...this.answerItems(x)]),
-      ...this.consentItems('a'), { l, id: 'reviewAsk', t: this.u('reviewAsk') }];
+      { l, id: 'reviewKeys', t: this.u('reviewKeys') }, ...this.consentItems('a'), { l, id: 'reviewAsk', t: this.u('reviewAsk') }];
   }
   // "We heard: ... Say Next to continue, or say your answer again." If no voice at all can say the answer, say so instead.
   heardItems(v, s) {
@@ -1227,6 +1230,7 @@ class DbForm extends HTMLElement {
       const rv = st.map((x, n) => [x, n]).filter(([x]) => !x.local);
       b = `<h2 id='h' tabindex='-1'>${this.u('review')}</h2><dl class='review'>${rv.map(([x, n], k) =>
         `<div class='item'><dt>${k + 1}. ${esc(T(x.q, this.l))}</dt><dd><span>${esc(this.show(x))}</span><button type='button' data-edit='${n}'>${this.u('change')}<span class='sr'> ${k + 1}</span></button></dd></div>`).join('')}</dl>
+      <p class='after'>${this.u('reviewKeys')}</p>
       ${this.consentHTML()}
       <p class='after'>${this.u(this.rs ? 'reviewFix' : 'reviewAsk')}</p>
       ${this.errHTML()}

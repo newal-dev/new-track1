@@ -47,6 +47,7 @@ for (let n = 0; n <= 9; n++) add('n' + n, 'Number ' + n + ' (confirmation, revie
 // person's own words (device voice), then the consent sentence (around the partner's name) and the question.
 add('reviewH', 'Review page: heading "Check your answers"', l => u('review', l));
 add('skipped', 'Review page: a question that was skipped', l => u('skipped', l));
+add('reviewKeys', 'Review page: how to change an answer with the keyboard', l => u('reviewKeys', l));
 add('consentOrg', 'Consent sentence when the site gives no partner name', l => u('consentSend', l).replace('{p}', u('org', l)));
 add('consentSendA', 'Consent sentence, part before the partner name (the name is read by a voice)', l => u('consentSend', l).split('{p}')[0]);
 add('consentSendB', 'Consent sentence, part after the partner name (only where words follow the name)', l => u('consentSend', l).split('{p}')[1], { langs: ALL.filter(l => /\p{L}/u.test(u('consentSend', l).split('{p}')[1])) });
@@ -129,6 +130,8 @@ When a clip is missing **and** the device has no voice for the language, the plu
 - The **language page** asks in English for English only (\`langAsk\`); each other language then names itself in its own voice (\`langSelf\`). If no language is heard, \`langAgain\` asks again in English and Amharic.
 - If a website hides a question with the \`hide\` attribute, the clips still describe the full list.
 - The **Stop reading** button and the Escape key stop any clip or voice at any time.
+- **Key names** (Tab, Shift, Space, Enter, Escape, Esc) are said by the **English** voice inside every language's clip, because people know the keys by their English names. The generator does this by itself (\`KEY_WORDS\` in \`tools/colab_template.py\`). A person recording by hand should say them the English way too.
+- **Words the voice mispronounces**: the romaniser adds a vowel after every vowelless Ge'ez letter (ሁለት became "hulate"). Put the right Latin spelling for such a word in \`PRONOUNCE\` in \`tools/colab_template.py\`, chosen by a native speaker by ear, then remake those clips.
 
 ## Not recorded (they change each time)
 - **review** (the last page) as one recording: it holds the person's own answers. It is put together instead from short clips: \`reviewH\`, then for each answer \`n1\`… + \`q_<question>\` + the chosen \`o_…\` clip (or \`skipped\`, or the digits), then \`consentOrg\` (or \`consentSendA\` + the partner's name + \`consentSendB\`) and \`reviewAsk\`. Typed words such as a name are read by the device voice; when there is no voice for the language, an English voice reads them (Ge'ez in Latin letters).

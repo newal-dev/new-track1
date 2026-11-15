@@ -61,6 +61,13 @@ NUMBERS = {
 }
 AT_SIGN = {"en": "at", "am": "at", "om": "at", "ti": "at", "so": "at", "sid": "at"}
 
+# Key names are said with the English voice in every language: people know the keys by their English names.
+KEY_WORDS = r"\b(Tab|Shift|Space|Enter|Escape|Esc)\b"
+# Words the romaniser spells badly for the voice (uroman adds a vowel after every vowelless Ge'ez letter, so ሁለት became
+# "hulate"). Whole phrase -> the Latin spelling the voice model is given instead. Chosen by a native speaker, by ear.
+PRONOUNCE = {
+    "am": {},
+}
 CLIPS = json.loads(r'''{
  "en": {
   "langAsk": "Which language would you like to use? For English, say English, or press the English button.",
@@ -108,6 +115,7 @@ CLIPS = json.loads(r'''{
   "n9": "Nine",
   "reviewH": "Check your answers",
   "skipped": "(skipped)",
+  "reviewKeys": "To change an answer with the keyboard, press Tab until you reach its Change button, then press Enter.",
   "consentOrg": "I agree to send these answers to the organisers of this website.",
   "consentSendA": "I agree to send these answers to ",
   "consentSupport": "Also share my support choices with the organisers, so they can prepare help. If you leave this empty, your support choices are not sent.",
@@ -222,6 +230,7 @@ CLIPS = json.loads(r'''{
   "n9": "ዘጠኝ",
   "reviewH": "መልሶችዎን ያረጋግጡ",
   "skipped": "(ተዘሏል)",
+  "reviewKeys": "መልስ በቁልፍ ሰሌዳ ለመቀየር፣ የመልሱ «ቀይር» ቁልፍ ላይ እስኪደርሱ Tab ይጫኑ፤ ከዚያ Enter ይጫኑ።",
   "consentOrg": "እነዚህን መልሶች ለየዚህ ድረ-ገጽ አዘጋጆች ለመላክ እስማማለሁ።",
   "consentSendA": "እነዚህን መልሶች ለ",
   "consentSendB": " ለመላክ እስማማለሁ።",
@@ -336,6 +345,7 @@ CLIPS = json.loads(r'''{
   "n9": "Sagal",
   "reviewH": "Deebii kee mirkaneessi",
   "skipped": "(darbameera)",
+  "reviewKeys": "Deebii kiiboordiin jijjiiruuf, hanga qabduu Jijjiiri isaa geessutti Tab tuqi, achiis Enter tuqi.",
   "consentOrg": "Deebii kana gara qindeessitoota marsariitii kanaa erguuf nan walii gala.",
   "consentSendA": "Deebii kana gara ",
   "consentSendB": " erguuf nan walii gala.",
@@ -450,6 +460,7 @@ CLIPS = json.loads(r'''{
   "n9": "ትሽዓተ",
   "reviewH": "መልስታትኩም ኣረጋግጹ",
   "skipped": "(ተሓሊፉ)",
+  "reviewKeys": "መልሲ ብኪቦርድ ንምቕያር፣ ክሳብ «ቀይር» ዝብል መጠወቒኡ ትበጽሑ Tab ጠውቑ፣ ድሕሪኡ Enter ጠውቑ።",
   "consentOrg": "ነዚ መልስታት ናብ ኣወሃሃድቲ እዚ መርበብ ክለኣኽ እሰማማዕ።",
   "consentSendA": "ነዚ መልስታት ናብ ",
   "consentSendB": " ክለኣኽ እሰማማዕ።",
@@ -564,6 +575,7 @@ CLIPS = json.loads(r'''{
   "n9": "Sagaal",
   "reviewH": "Hubi jawaabahaaga",
   "skipped": "(waa laga booday)",
+  "reviewKeys": "Si aad jawaab ugu beddesho kiiboodhka, riix Tab ilaa aad gaarto badhankeeda Beddel, kadibna riix Enter.",
   "consentOrg": "Waan ku raacsanahay in jawaabahan loo diro qabanqaabiyayaasha boggan.",
   "consentSendA": "Waan ku raacsanahay in jawaabahan loo diro ",
   "consentSupport": "Sidoo kale la wadaag doorashooyinka taageerada qabanqaabiyayaasha, si ay caawimaad u diyaariyaan. Haddii aad tan banaan ka tagto, doorashooyinkaaga taageerada lama diro.",
@@ -677,6 +689,7 @@ CLIPS = json.loads(r'''{
   "n9": "Honse",
   "reviewH": "Dawaro keeshshi buuxi",
   "skipped": "(darbamino)",
+  "reviewKeys": "Dawaro keyboordetenni soorrate, Soorri ilkaawa iillitto geeshsha Tab xiiwi, aanchite Enter xiiwi.",
   "consentOrg": "Kuri dawaro konne weebsaytete qixxeessitootara soyamanno gede ammanaammo.",
   "consentSendA": "Kuri dawaro ",
   "consentSendB": "ra soyamanno gede ammanaammo.",
@@ -806,6 +819,19 @@ def romanise(s, lang):
         romaniser = ur.Uroman()
     return romaniser.romanize_string(s, lcode=UROMAN_CODE[lang])
 
+_eng = {}
+def english_voice():
+    if not _eng:
+        _eng["tok"] = AutoTokenizer.from_pretrained(MODELS["en"])
+        m = VitsModel.from_pretrained(MODELS["en"]).to(device).eval(); m.speaking_rate = SPEAKING_RATE; _eng["model"] = m
+    return _eng["tok"], _eng["model"]
+def synth(tok, model, s):
+    inputs = tok(s, return_tensors="pt").to(device)
+    if inputs["input_ids"].shape[-1] < 2:                                        # nothing the model can say
+        return None
+    set_seed(SEED)
+    with torch.no_grad():
+        return model(**inputs).waveform[0].cpu().numpy().astype(np.float32)
 if os.path.isdir(OUT):
     shutil.rmtree(OUT)
 report, dropped = [], {}
@@ -824,20 +850,29 @@ for lang in LANGS_TO_MAKE:
             continue
         pieces = []
         for phrase, pause in segments(spoken(lang, text)):
-            s = romanise(phrase, lang) if needs_latin else phrase
-            s = s.lower()
-            lost = {c for c in s if c != " " and c not in vocab}
-            if lost:
-                dropped.setdefault(lang, {}).setdefault("".join(sorted(lost)), []).append(cid)
-            inputs = tok(s, return_tensors="pt").to(device)
-            if inputs["input_ids"].shape[-1] < 2:                                # nothing the model can say
-                continue
-            set_seed(SEED)
-            with torch.no_grad():
-                w = model(**inputs).waveform[0].cpu().numpy().astype(np.float32)
-            w = trim(w, rate)
-            if len(w):
-                pieces += [w, np.zeros(int(rate * pause), np.float32)]
+            # A phrase in another language can contain key names: those parts are said by the English voice.
+            parts = re.split(KEY_WORDS, phrase) if lang != "en" else [phrase]
+            ws = []
+            for j, part in enumerate(parts):
+                part = part.strip()
+                if not part:
+                    continue
+                if j % 2 == 1:
+                    et, em = english_voice(); w = synth(et, em, part.lower())
+                else:
+                    fixed = PRONOUNCE.get(lang, {}).get(part.strip(" .,!?።፣"))
+                    s = fixed if fixed else (romanise(part, lang) if needs_latin else part)
+                    s = s.lower()
+                    lost = {c for c in s if c != " " and c not in vocab}
+                    if lost:
+                        dropped.setdefault(lang, {}).setdefault("".join(sorted(lost)), []).append(cid)
+                    w = synth(tok, model, s)
+                if w is not None:
+                    w = trim(w, rate)
+                    if len(w):
+                        ws += [w / (float(np.abs(w).max()) or 1.0) * 0.9, np.zeros(int(rate * 0.06), np.float32)]
+            if ws:
+                pieces += [*ws[:-1], np.zeros(int(rate * pause), np.float32)]
         if not pieces:
             print(f"  !! {cid}: nothing to say, skipped")
             report.append((lang, cid, 0.0, "EMPTY"))

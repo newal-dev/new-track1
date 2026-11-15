@@ -24,7 +24,7 @@ When a clip is missing **and** the device has no voice for the language, the plu
 7. A native speaker must listen to every clip. If a word is wrong, fix the text in `public/db-form.js` (not here), then repeat from step 1.
 
 ## What to produce
-- **673 files in total**: 113 for `en`, 113 for `am`, 112 for `om`, 112 for `ti`, 111 for `so`, 112 for `sid`.
+- **679 files in total**: 114 for `en`, 114 for `am`, 113 for `om`, 113 for `ti`, 112 for `so`, 113 for `sid`.
 - Format: **mp3**, mono, 64 kbps or lower (small for 3G). The Colab script makes 48 kbps.
 - File name = the **ID** in the first column, plus `.mp3`. Example: `public/audio/am/fullName.mp3`. Use exactly this spelling and capital letters.
 - The plugin loads them from the `audio` attribute: `audio='http://localhost:3000/audio'` (the server serves the `public` folder).
@@ -48,6 +48,8 @@ When a clip is missing **and** the device has no voice for the language, the plu
 - The **language page** asks in English for English only (`langAsk`); each other language then names itself in its own voice (`langSelf`). If no language is heard, `langAgain` asks again in English and Amharic.
 - If a website hides a question with the `hide` attribute, the clips still describe the full list.
 - The **Stop reading** button and the Escape key stop any clip or voice at any time.
+- **Key names** (Tab, Shift, Space, Enter, Escape, Esc) are said by the **English** voice inside every language's clip, because people know the keys by their English names. The generator does this by itself (`KEY_WORDS` in `tools/colab_template.py`). A person recording by hand should say them the English way too.
+- **Words the voice mispronounces**: the romaniser adds a vowel after every vowelless Ge'ez letter (ሁለት became "hulate"). Put the right Latin spelling for such a word in `PRONOUNCE` in `tools/colab_template.py`, chosen by a native speaker by ear, then remake those clips.
 
 ## Not recorded (they change each time)
 - **review** (the last page) as one recording: it holds the person's own answers. It is put together instead from short clips: `reviewH`, then for each answer `n1`… + `q_<question>` + the chosen `o_…` clip (or `skipped`, or the digits), then `consentOrg` (or `consentSendA` + the partner's name + `consentSendB`) and `reviewAsk`. Typed words such as a name are read by the device voice; when there is no voice for the language, an English voice reads them (Ge'ez in Latin letters).
@@ -103,6 +105,7 @@ When a clip is missing **and** the device has no voice for the language, the plu
 | `n9` | Number 9 (confirmation, review numbers, phone digits) | - | en, am, om, ti, so, sid |
 | `reviewH` | Review page: heading "Check your answers" | - | en, am, om, ti, so, sid |
 | `skipped` | Review page: a question that was skipped | - | en, am, om, ti, so, sid |
+| `reviewKeys` | Review page: how to change an answer with the keyboard | - | en, am, om, ti, so, sid |
 | `consentOrg` | Consent sentence when the site gives no partner name | - | en, am, om, ti, so, sid |
 | `consentSendA` | Consent sentence, part before the partner name (the name is read by a voice) | - | en, am, om, ti, so, sid |
 | `consentSendB` | Consent sentence, part after the partner name (only where words follow the name) | - | am, om, ti, sid |
@@ -1314,6 +1317,32 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/skipped.mp3`
 
 > (darbamino)
+
+### `reviewKeys`: Review page: how to change an answer with the keyboard
+
+**English** → `public/audio/en/reviewKeys.mp3`
+
+> To change an answer with the keyboard, press Tab until you reach its Change button, then press Enter.
+
+**አማርኛ (draft, must be checked)** → `public/audio/am/reviewKeys.mp3`
+
+> መልስ በቁልፍ ሰሌዳ ለመቀየር፣ የመልሱ «ቀይር» ቁልፍ ላይ እስኪደርሱ Tab ይጫኑ፤ ከዚያ Enter ይጫኑ።
+
+**Afaan Oromoo (draft, VERIFY_NATIVE)** → `public/audio/om/reviewKeys.mp3`
+
+> Deebii kiiboordiin jijjiiruuf, hanga qabduu Jijjiiri isaa geessutti Tab tuqi, achiis Enter tuqi.
+
+**ትግርኛ (draft, VERIFY_NATIVE)** → `public/audio/ti/reviewKeys.mp3`
+
+> መልሲ ብኪቦርድ ንምቕያር፣ ክሳብ «ቀይር» ዝብል መጠወቒኡ ትበጽሑ Tab ጠውቑ፣ ድሕሪኡ Enter ጠውቑ።
+
+**Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/reviewKeys.mp3`
+
+> Si aad jawaab ugu beddesho kiiboodhka, riix Tab ilaa aad gaarto badhankeeda Beddel, kadibna riix Enter.
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/reviewKeys.mp3`
+
+> Dawaro keyboordetenni soorrate, Soorri ilkaawa iillitto geeshsha Tab xiiwi, aanchite Enter xiiwi.
 
 ### `consentOrg`: Consent sentence when the site gives no partner name
 

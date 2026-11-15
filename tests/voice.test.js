@@ -102,7 +102,7 @@ test('review by voice is put together from recorded clips, never one device-voic
   const d = make({ l: 'am', a: { fullName: 'ሳሙኤል', contact: '0911223344', idRoute: 'refugee', support: ['large'] }, i: 5 });
   const ids = d.reviewItems().map(x => x.id);
   assert.deepEqual(ids, ['reviewH', 'n1', 'q_fullName', null, 'n2', 'q_contact', 'n0', 'n9', 'n1', 'n1', 'n2', 'n2', 'n3', 'n3', 'n4', 'n4',
-    'n3', 'q_idRoute', 'o_idRoute_refugee', 'n4', 'q_support', 'o_support_large', 'consentOrg', 'reviewAsk']);
+    'n3', 'q_idRoute', 'o_idRoute_refugee', 'n4', 'q_support', 'o_support_large', 'reviewKeys', 'consentOrg', 'reviewAsk']);
   assert.equal(d.reviewItems()[3].any, true); // the typed name: read by any voice there is, never silent
   const p = make({ l: 'am', a: {}, i: 5 }); p.getAttribute = k => (k === 'partner' ? 'AAAPD' : null);
   assert.deepEqual(p.consentItems('a').map(x => [x.id, x.t]), [['consentSendA', 'እነዚህን መልሶች ለ'], [null, 'AAAPD'], ['consentSendB', ' ለመላክ እስማማለሁ።']]);

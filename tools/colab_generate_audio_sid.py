@@ -61,6 +61,13 @@ NUMBERS = {
 }
 AT_SIGN = {"en": "at", "am": "at", "om": "at", "ti": "at", "so": "at", "sid": "at"}
 
+# Key names are said with the English voice in every language: people know the keys by their English names.
+KEY_WORDS = r"\b(Tab|Shift|Space|Enter|Escape|Esc)\b"
+# Words the romaniser spells badly for the voice (uroman adds a vowel after every vowelless Ge'ez letter, so ሁለት became
+# "hulate"). Whole phrase -> the Latin spelling the voice model is given instead. Chosen by a native speaker, by ear.
+PRONOUNCE = {
+    "am": {},
+}
 CLIPS = json.loads(r'''{
  "sid": {
   "langSelf": "Sidaamu Afoo doorate, Sidaamu Afoo yi, woy Sidaamu Afoo yitanno ilkaawa xiiwi.",
@@ -106,6 +113,7 @@ CLIPS = json.loads(r'''{
   "n9": "Honse",
   "reviewH": "Dawaro keeshshi buuxi",
   "skipped": "(darbamino)",
+  "reviewKeys": "Dawaro keyboordetenni soorrate, Soorri ilkaawa iillitto geeshsha Tab xiiwi, aanchite Enter xiiwi.",
   "consentOrg": "Kuri dawaro konne weebsaytete qixxeessitootara soyamanno gede ammanaammo.",
   "consentSendA": "Kuri dawaro ",
   "consentSendB": "ra soyamanno gede ammanaammo.",
@@ -238,6 +246,19 @@ def romanise(s, lang):
         romaniser = ur.Uroman()
     return romaniser.romanize_string(s, lcode=UROMAN_CODE[lang])
 
+_eng = {}
+def english_voice():
+    if not _eng:
+        _eng["tok"] = AutoTokenizer.from_pretrained(MODELS["en"])
+        m = VitsModel.from_pretrained(MODELS["en"]).to(device).eval(); m.speaking_rate = SPEAKING_RATE; _eng["model"] = m
+    return _eng["tok"], _eng["model"]
+def synth(tok, model, s):
+    inputs = tok(s, return_tensors="pt").to(device)
+    if inputs["input_ids"].shape[-1] < 2:                                        # nothing the model can say
+        return None
+    set_seed(SEED)
+    with torch.no_grad():
+        return model(**inputs).waveform[0].cpu().numpy().astype(np.float32)
 if os.path.isdir(OUT):
     shutil.rmtree(OUT)
 report, dropped = [], {}
@@ -256,20 +277,29 @@ for lang in LANGS_TO_MAKE:
             continue
         pieces = []
         for phrase, pause in segments(spoken(lang, text)):
-            s = romanise(phrase, lang) if needs_latin else phrase
-            s = s.lower()
-            lost = {c for c in s if c != " " and c not in vocab}
-            if lost:
-                dropped.setdefault(lang, {}).setdefault("".join(sorted(lost)), []).append(cid)
-            inputs = tok(s, return_tensors="pt").to(device)
-            if inputs["input_ids"].shape[-1] < 2:                                # nothing the model can say
-                continue
-            set_seed(SEED)
-            with torch.no_grad():
-                w = model(**inputs).waveform[0].cpu().numpy().astype(np.float32)
-            w = trim(w, rate)
-            if len(w):
-                pieces += [w, np.zeros(int(rate * pause), np.float32)]
+            # A phrase in another language can contain key names: those parts are said by the English voice.
+            parts = re.split(KEY_WORDS, phrase) if lang != "en" else [phrase]
+            ws = []
+            for j, part in enumerate(parts):
+                part = part.strip()
+                if not part:
+                    continue
+                if j % 2 == 1:
+                    et, em = english_voice(); w = synth(et, em, part.lower())
+                else:
+                    fixed = PRONOUNCE.get(lang, {}).get(part.strip(" .,!?።፣"))
+                    s = fixed if fixed else (romanise(part, lang) if needs_latin else part)
+                    s = s.lower()
+                    lost = {c for c in s if c != " " and c not in vocab}
+                    if lost:
+                        dropped.setdefault(lang, {}).setdefault("".join(sorted(lost)), []).append(cid)
+                    w = synth(tok, model, s)
+                if w is not None:
+                    w = trim(w, rate)
+                    if len(w):
+                        ws += [w / (float(np.abs(w).max()) or 1.0) * 0.9, np.zeros(int(rate * 0.06), np.float32)]
+            if ws:
+                pieces += [*ws[:-1], np.zeros(int(rate * pause), np.float32)]
         if not pieces:
             print(f"  !! {cid}: nothing to say, skipped")
             report.append((lang, cid, 0.0, "EMPTY"))
