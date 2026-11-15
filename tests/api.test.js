@@ -48,10 +48,10 @@ describe('health and widget', () => {
 });
 
 describe('jobs and schema.org/JobPosting', () => {
-  test('jobs list has accommodations and titles in five languages', async () => {
+  test('jobs list has accommodations and titles in every language', async () => {
     const j = await (await fetch(U + '/v1/jobs')).json();
     assert.ok(j.length >= 2 && Array.isArray(j[0].offers));
-    assert.deepEqual(Object.keys(j[0].titles).sort(), ['am', 'en', 'om', 'so', 'ti']);
+    assert.deepEqual(Object.keys(j[0].titles).sort(), ['am', 'en', 'om', 'sid', 'so', 'ti']);
   });
   test('one job by id', async () => { assert.equal((await (await fetch(U + '/v1/jobs/1')).json()).id, 1); });
   test('unknown job is 404 with an error code', async () => {

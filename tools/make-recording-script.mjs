@@ -20,6 +20,7 @@ const NWL = {
   om: ['Tokko', 'Lama', 'Sadii', 'Afur', 'Shan', 'Jaha', 'Torba', 'Saddeet'],
   ti: ['ሓደ', 'ክልተ', 'ሰለስተ', 'ኣርባዕተ', 'ሓሙሽተ', 'ሽዱሽተ', 'ሸውዓተ', 'ሸሞንተ'],
   so: ['Kow', 'Laba', 'Saddex', 'Afar', 'Shan', 'Lix', 'Toddoba', 'Siddeed'],
+  sid: ['Mitto', 'Lame', 'Sase', 'Shoole', 'Onte', 'Lee', 'Lamala', 'Sette'],
 };
 
 // Every clip: id, what it is, which languages need it (default: all), text per language.
@@ -73,6 +74,7 @@ This file tells you exactly what each audio clip must say. It is **generated** f
 | Afaan Oromoo | \`om\` | \`public/audio/om/\` | Generated clips (\`facebook/mms-tts-orm\`); the device voice if a clip is missing. |
 | ትግርኛ Tigrinya | \`ti\` | \`public/audio/ti/\` | Generated clips (\`facebook/mms-tts-tir\`); the device voice if a clip is missing. |
 | Soomaali Somali | \`so\` | \`public/audio/so/\` | Generated clips (\`facebook/mms-tts-som\`); the device voice if a clip is missing. |
+| Sidaamu Afoo Sidama | \`sid\` | \`public/audio/sid/\` | Generated clips (\`facebook/mms-tts-sid\`). The text is a rough draft: a native speaker must correct the SID block first. |
 
 When a clip is missing **and** the device has no voice for the language, the plugin says in English "This device has no voice for this language…" so a blind person knows why, and it still listens for their answer.
 
@@ -130,10 +132,16 @@ fs.writeFileSync('RECORDING_SCRIPT.md', md);
 
 // The Colab script: the template below with the clip text built in.
 const tpl = fs.readFileSync('tools/colab_template.py', 'utf8');
-if (!tpl.includes('__CLIPS_JSON__')) throw new Error('tools/colab_template.py must contain __CLIPS_JSON__');
-const json = JSON.stringify(clips, null, 1);
-if (json.includes("'''")) throw new Error("Clip text must not contain ''' (it would break the Python file)");
-fs.writeFileSync('tools/colab_generate_audio.py', tpl.replace('__CLIPS_JSON__', json));
+if (!tpl.includes('__CLIPS_JSON__') || !tpl.includes('__LANGS__')) throw new Error('tools/colab_template.py must contain __CLIPS_JSON__ and __LANGS__');
+const writePy = (file, langs, only = {}) => {
+  const pick = Object.fromEntries(langs.map(l => [l, only[l] ? Object.fromEntries(only[l].map(id => [id, clips[l][id]])) : clips[l]]));
+  const json = JSON.stringify(pick, null, 1);
+  if (json.includes("'''")) throw new Error("Clip text must not contain ''' (it would break the Python file)");
+  fs.writeFileSync(file, tpl.replace('__LANGS__', JSON.stringify(langs)).replace('__CLIPS_JSON__', json));
+};
+writePy('tools/colab_generate_audio.py', ALL);
+// Only the newest language, plus the English language-page question (it now names Sidama): no need to remake the other clips.
+writePy('tools/colab_generate_audio_sid.py', ['sid', 'en'], { en: ['langAsk'] });
 
 if (process.argv.includes('--json')) console.log(JSON.stringify(clips, null, 2));
-else console.log(`Wrote RECORDING_SCRIPT.md and tools/colab_generate_audio.py: ${total} clips (${ALL.map(l => l + ' ' + count(l)).join(', ')})`);
+else console.log(`Wrote RECORDING_SCRIPT.md, tools/colab_generate_audio.py (all) and tools/colab_generate_audio_sid.py (sid + en/langAsk): ${total} clips (${ALL.map(l => l + ' ' + count(l)).join(', ')})`);

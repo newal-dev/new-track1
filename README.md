@@ -1,6 +1,6 @@
 # Inclusive Access: accessible onboarding and career gateway plug-in (Track 1)
 
-A drop-in plug-in that adds accessible **sign-up**, **job search and application**, and an **employer job form** to any website or learning platform, in **English, አማርኛ, Afaan Oromoo, ትግርኛ and Soomaali**. It is one script and one HTML tag, not a standalone site. People can type, speak, or have every page read aloud. The keyboard, NVDA and TalkBack are fully supported.
+A drop-in plug-in that adds accessible **sign-up**, **job search and application**, and an **employer job form** to any website or learning platform, in **English, አማርኛ, Afaan Oromoo, ትግርኛ, Soomaali and Sidaamu Afoo**. It is one script and one HTML tag, not a standalone site. People can type, speak, or have every page read aloud. The keyboard, NVDA and TalkBack are fully supported.
 
 - Team: _add names_ · Co-designer: _add name_ · Licence: [MIT](LICENSE). The generated voice clips are CC-BY-NC 4.0, see [Build vs reuse](#build-vs-reuse).
 - Partners: step-by-step installation is in **[PARTNER_GUIDE.md](PARTNER_GUIDE.md)**.
@@ -51,7 +51,7 @@ Or everything inside Docker: `docker compose --profile test run --rm tests`.
 ```
 - `<db-onboarding>` is sign-up and `<db-career-gateway>` is jobs. `<db-form flow='signup|job|employer'>` gives any flow.
 - Everything runs in an open Shadow DOM: the host's CSS cannot break it, and it cannot change the host.
-- Attributes: `api`, `audio`, `partner` (name in the consent question), `lang` (en, am, om, ti, so), `lang-ask='no'`, `theme` (auto, standard, dark, contrast, rg, by), `hide`, `sw` (offline), `asr` (browser, off, or a registered recogniser), `fonts='no'`, `jsonld='no'`.
+- Attributes: `api`, `audio`, `partner` (name in the consent question), `lang` (en, am, om, ti, so, sid), `lang-ask='no'`, `theme` (auto, standard, dark, contrast, rg, by), `hide`, `sw` (offline), `asr` (browser, off, or a registered recogniser), `fonts='no'`, `jsonld='no'`.
 - Events: `db-complete`, `db-error`, `db-queued`, `db-sent`, `db-theme`. CSS hooks: `--db-accent`, `--db-font`.
 - Size: `widget.js` is about 125 kB uncompressed (well under 250 kB). Fonts are fetched only when needed, and the Ethiopic font only when Ge'ez text is shown.
 
@@ -93,9 +93,9 @@ There are no time limits anywhere. The same information is in [`openapi.yaml`](o
 
 ## Languages, voice and audio
 - The first page asks for the language in English; then each language invites its own speakers. All non-English text is a **draft** until a native speaker checks it: the Amharic, and every line marked `VERIFY_NATIVE`.
-- **Read aloud** plays clips from `public/audio/{am,om,ti,so}/` (Meta MMS-TTS, made offline in Google Colab). It falls back to the device voice, and says so when there is none. English uses the device voice.
+- **Read aloud** plays clips from `public/audio/{en,am,om,ti,so,sid}/` (Meta MMS-TTS, made offline in Google Colab). It falls back to the device voice, and says so when there is none. English uses the device voice.
 - To regenerate clips: `npm run recording`, then follow "How to make the clips" in [RECORDING_SCRIPT.md](RECORDING_SCRIPT.md). Nine newer clips per language are not yet generated (consent, date and draft messages, `q_role`). Until then the captions and device voice cover them.
-- **Voice input:** after a page is read, the form says "Speak now", beeps, then listens. Answers can be numbers or names, with commands (Next, Back, Skip, Read aloud, Stop) in all five languages. The phone or email question is typed only.
+- **Voice input:** after a page is read, the form says "Speak now", beeps, then listens. Answers can be numbers or names, with commands (Next, Back, Skip, Read aloud, Stop) in all six languages. The phone or email question is typed only.
 - **Different keyboards:** Ge'ez input methods do not submit early; full-width and Arabic-Indic digits are accepted; switching keyboard layout does not stop the voice.
 
 ## Built for Ethiopia

@@ -28,8 +28,8 @@ import torch
 from transformers import VitsModel, AutoTokenizer, set_seed
 
 # ---------------------------------------------------------------- settings --
-# All five languages, so every clip is the same family of voice and the same loudness.
-LANGS_TO_MAKE = ["en", "am", "om", "ti", "so"]
+# Every language, so every clip is the same family of voice and the same loudness.
+LANGS_TO_MAKE = __LANGS__
 ONLY_IDS = []            # e.g. ["fullName", "errBad"] to remake just a few clips; empty = all
 MODELS = {
     "en": "facebook/mms-tts-eng",
@@ -37,8 +37,9 @@ MODELS = {
     "om": "facebook/mms-tts-orm",
     "ti": "facebook/mms-tts-tir",
     "so": "facebook/mms-tts-som",
+    "sid": "facebook/mms-tts-sid",
 }
-UROMAN_CODE = {"en": "eng", "am": "amh", "om": "orm", "ti": "tir", "so": "som"}  # used only if a model expects Latin letters
+UROMAN_CODE = {"en": "eng", "am": "amh", "om": "orm", "ti": "tir", "so": "som", "sid": "sid"}  # used only if a model expects Latin letters
 SPEAKING_RATE = 0.9      # below 1.0 = slower and clearer
 PAUSE_SENTENCE = 0.45    # seconds of silence between sentences and between numbered choices
 PAUSE_COMMA = 0.18       # shorter breath at commas (the models have no comma of their own)
@@ -49,15 +50,16 @@ SEED = 555               # same text -> same voice every run
 SAVE_TO_DRIVE = False    # True = also copy audio.zip to Google Drive (asks for permission)
 OUT = "/content/audio" if os.path.isdir("/content") else os.path.abspath("audio")
 
-# The MMS models have no digits or symbols, so these are spelled out first.  VERIFY_NATIVE (om, ti, so)
+# The MMS models have no digits or symbols, so these are spelled out first.  VERIFY_NATIVE (om, ti, so, sid)
 NUMBERS = {
     "en": ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"],
     "am": ["ዜሮ", "አንድ", "ሁለት", "ሦስት", "አራት", "አምስት", "ስድስት", "ሰባት", "ስምንት", "ዘጠኝ", "አሥር"],
     "om": ["zeeroo", "tokko", "lama", "sadii", "afur", "shan", "jaha", "torba", "saddeet", "sagal", "kudhan"],
     "ti": ["ዜሮ", "ሓደ", "ክልተ", "ሰለስተ", "ኣርባዕተ", "ሓሙሽተ", "ሽዱሽተ", "ሸውዓተ", "ሸሞንተ", "ትሽዓተ", "ዓሰርተ"],
     "so": ["eber", "kow", "laba", "saddex", "afar", "shan", "lix", "toddoba", "siddeed", "sagaal", "toban"],
+    "sid": ["zeero", "mitto", "lame", "sase", "shoole", "onte", "lee", "lamala", "sette", "honse", "tonne"],
 }
-AT_SIGN = {"en": "at", "am": "at", "om": "at", "ti": "at", "so": "at"}
+AT_SIGN = {"en": "at", "am": "at", "om": "at", "ti": "at", "so": "at", "sid": "at"}
 
 CLIPS = json.loads(r'''__CLIPS_JSON__''')
 

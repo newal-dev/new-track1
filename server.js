@@ -12,13 +12,13 @@ const OFFERS = ['stepfree', 'reader', 'interp', 'hours', 'remote'];
 const OFFER_EN = { stepfree: 'Step-free workplace', reader: 'Screen-reader friendly tools', interp: 'Sign language interpreter', hours: 'Flexible hours', remote: 'Work from home' };
 const SUPPORT = ['screenreader', 'large', 'voice', 'sign', 'simple', 'human'];
 const ID_ROUTES = ['kebele', 'refugee', 'other', 'refer'];
-const LANGS = ['en', 'am', 'om', 'ti', 'so'];
+const LANGS = ['en', 'am', 'om', 'ti', 'so', 'sid'];
 export const CONSENT_VERSION = '2026-11-15';
 
-// Seed jobs. Titles in om, ti and so are drafts: VERIFY_NATIVE.
+// Seed jobs. Titles in om, ti, so and sid are drafts: VERIFY_NATIVE.
 const seedJobs = () => [
-  { id: 1, title: 'Customer support agent', titles: { en: 'Customer support agent', am: 'የደንበኞች አገልግሎት ሠራተኛ', om: 'Hojjetaa tajaajila maamilaa', ti: 'ሰራሕተኛ ኣገልግሎት ዓማዊል', so: 'Wakiilka taageerada macaamiisha' }, offers: ['remote', 'hours'], org: 'Addis Community Learning Hub', datePosted: '2026-11-01', validThrough: '2026-12-31' },
-  { id: 2, title: 'Data entry clerk', titles: { en: 'Data entry clerk', am: 'የመረጃ ማስገቢያ ሠራተኛ', om: 'Hojjetaa galmee odeeffannoo', ti: 'ሰራሕተኛ ምእታው ሓበሬታ', so: 'Karraaniga gelinta xogta' }, offers: ['stepfree', 'reader'], org: 'Bole Digital Services', datePosted: '2026-11-05', validThrough: '2027-01-15' },
+  { id: 1, title: 'Customer support agent', titles: { en: 'Customer support agent', am: 'የደንበኞች አገልግሎት ሠራተኛ', om: 'Hojjetaa tajaajila maamilaa', ti: 'ሰራሕተኛ ኣገልግሎት ዓማዊል', so: 'Wakiilka taageerada macaamiisha', sid: 'Maamilu kaa\'lo loosaancho' }, offers: ['remote', 'hours'], org: 'Addis Community Learning Hub', datePosted: '2026-11-01', validThrough: '2026-12-31' },
+  { id: 2, title: 'Data entry clerk', titles: { en: 'Data entry clerk', am: 'የመረጃ ማስገቢያ ሠራተኛ', om: 'Hojjetaa galmee odeeffannoo', ti: 'ሰራሕተኛ ምእታው ሓበሬታ', so: 'Karraaniga gelinta xogta', sid: 'Odeeffo eeshsha loosaancho' }, offers: ['stepfree', 'reader'], org: 'Bole Digital Services', datePosted: '2026-11-05', validThrough: '2027-01-15' },
 ];
 
 const str = (v, max) => (typeof v === 'string' ? v.normalize('NFC').trim().slice(0, max) : undefined);
@@ -187,7 +187,7 @@ Demo partner site: http://localhost:8080`));
   app.get('/lti/jwks.json', (q, r) => r.json({ keys: [toolJwk] }));
   app.get('/lti/config.json', (q, r) => r.json({
     title: 'Inclusive Access: accessible onboarding and career gateway',
-    description: 'One question per screen, five Ethiopian languages, voice and keyboard. Launch only.',
+    description: 'One question per screen, six languages (five Ethiopian), voice and keyboard. Launch only.',
     oidc_initiation_url: BASE + '/lti/login', target_link_uri: BASE + '/lti/launch', redirect_uris: [BASE + '/lti/launch'],
     public_jwk_url: BASE + '/lti/jwks.json', scopes: [], claims: ['iss', 'sub', 'locale'],
     messages: [{ type: 'LtiResourceLinkRequest', custom_parameters: { flow: 'signup' } }],

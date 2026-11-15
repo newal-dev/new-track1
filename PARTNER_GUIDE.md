@@ -3,7 +3,7 @@
 This guide is for the person who looks after a partner organisation's website. You do **not** need to be a programmer. If you can paste text into your website's HTML, you can install the form.
 
 What your visitors get:
-- One question at a time, in **English, አማርኛ, Afaan Oromoo, ትግርኛ or Soomaali**. The first page asks for the language, in English.
+- One question at a time, in **English, አማርኛ, Afaan Oromoo, ትግርኛ, Soomaali or Sidaamu Afoo**. The first page asks for the language, in English.
 - They can **type or speak** their answers, and have every page **read aloud**.
 - **Captions** of everything spoken, a clear **Listening** sign, and a **Colours** menu (dark, high contrast, and two colour-blind-safe themes).
 - Full **keyboard** use: Tab and Shift+Tab read each choice aloud in the chosen language.
@@ -75,7 +75,7 @@ Attributes go inside the `<db-form ...>` tag. Only `flow` and `api` are usually 
 | `flow` | `signup`, `job`, `employer` | `signup` | Which form: register for the programme, apply for a job, or post a job. |
 | `api` | URL ending in `/v1` | none | Where answers are sent. Without it, nothing is sent (useful for testing). |
 | `audio` | URL of the audio folder | none | Recorded read-aloud clips. Without it, the device's own voice reads, if it has one for the language. |
-| `lang` | `en`, `am`, `om`, `ti`, `so` | `en` | Starting language. The visitor can change it at any time. |
+| `lang` | `en`, `am`, `om`, `ti`, `so`, `sid` | `en` | Starting language. The visitor can change it at any time. |
 | `lang-ask` | `no` | (asks) | Skip the first page that asks for the language. Use this only if your page already lets the visitor choose. |
 | `theme` | `auto`, `standard`, `dark`, `contrast`, `rg`, `by` | `auto` | Starting colours. `auto` follows the device. The visitor's own choice in the **Colours** menu always wins. |
 | `hide` | comma list of question ids | none | Leave out optional questions, for example `hide='idRoute,support'`. `fullName`, `role` and `job` can never be hidden. |

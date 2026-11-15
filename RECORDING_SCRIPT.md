@@ -10,6 +10,7 @@ This file tells you exactly what each audio clip must say. It is **generated** f
 | Afaan Oromoo | `om` | `public/audio/om/` | Generated clips (`facebook/mms-tts-orm`); the device voice if a clip is missing. |
 | ትግርኛ Tigrinya | `ti` | `public/audio/ti/` | Generated clips (`facebook/mms-tts-tir`); the device voice if a clip is missing. |
 | Soomaali Somali | `so` | `public/audio/so/` | Generated clips (`facebook/mms-tts-som`); the device voice if a clip is missing. |
+| Sidaamu Afoo Sidama | `sid` | `public/audio/sid/` | Generated clips (`facebook/mms-tts-sid`). The text is a rough draft: a native speaker must correct the SID block first. |
 
 When a clip is missing **and** the device has no voice for the language, the plugin says in English "This device has no voice for this language…" so a blind person knows why, and it still listens for their answer.
 
@@ -23,7 +24,7 @@ When a clip is missing **and** the device has no voice for the language, the plu
 7. A native speaker must listen to every clip. If a word is wrong, fix the text in `public/db-form.js` (not here), then repeat from step 1.
 
 ## What to produce
-- **440 files in total**: 88 for `en`, 88 for `am`, 88 for `om`, 88 for `ti`, 88 for `so`.
+- **528 files in total**: 88 for `en`, 88 for `am`, 88 for `om`, 88 for `ti`, 88 for `so`, 88 for `sid`.
 - Format: **mp3**, mono, 64 kbps or lower (small for 3G). The Colab script makes 48 kbps.
 - File name = the **ID** in the first column, plus `.mp3`. Example: `public/audio/am/fullName.mp3`. Use exactly this spelling and capital letters.
 - The plugin loads them from the `audio` attribute: `audio='http://localhost:3000/audio'` (the server serves the `public` folder).
@@ -56,94 +57,94 @@ When a clip is missing **and** the device has no voice for the language, the plu
 | ID | Page | Optional question? | Languages |
 |---|---|---|---|
 | `langAsk` | Language page: the question, in English only | - | en |
-| `langSelf` | Language page: invitation in the language itself (played after langAsk) | - | am, om, ti, so |
-| `raAsk` | First question in the chosen language (asks if the page should be read aloud) | - | en, am, om, ti, so |
-| `raAgain` | Second ask, if no answer was heard | - | en, am, om, ti, so |
-| `welcome` | Welcome page (after they said Yes to read aloud) | - | en, am, om, ti, so |
-| `prefs` | signup flow, question 1 | yes (includes "Say Skip") | en, am, om, ti, so |
-| `fullName` | signup flow, question 2 | no | en, am, om, ti, so |
-| `contact` | signup flow, question 3 | no | en, am, om, ti, so |
-| `idRoute` | signup flow, question 4 | no | en, am, om, ti, so |
-| `support` | signup flow, question 5 | yes (includes "Say Skip") | en, am, om, ti, so |
-| `needs` | job flow, question 1 | yes (includes "Say Skip") | en, am, om, ti, so |
-| `why` | job flow, question 3 | no | en, am, om, ti, so |
-| `job` | employer flow, question 1 | no | en, am, om, ti, so |
-| `offers` | employer flow, question 2 | yes (includes "Say Skip") | en, am, om, ti, so |
-| `closes` | employer flow, question 3 | yes (includes "Say Skip") | en, am, om, ti, so |
-| `errNeed` | Error: question not answered | - | en, am, om, ti, so |
-| `errBad` | Error: phone number or email not valid | - | en, am, om, ti, so |
-| `errFail` | Error: could not send | - | en, am, om, ti, so |
-| `unclear` | Voice answer not understood | - | en, am, om, ti, so |
-| `noneSel` | Nothing chosen yet | - | en, am, om, ti, so |
-| `idle` | Nothing heard | - | en, am, om, ti, so |
-| `sayWelcome` | Welcome page: say Start | - | en, am, om, ti, so |
-| `reviewAsk` | Review page: do you want to submit? | - | en, am, om, ti, so |
-| `heardGeneric` | Spoken answer received (used when the device has no voice) | - | en, am, om, ti, so |
-| `choseA` | Confirmation, first part ("You chose") | - | en, am, om, ti, so |
-| `choseB` | Confirmation, last part | - | en, am, om, ti, so |
-| `errConsentNeed` | Error: consent box not ticked | - | en, am, om, ti, so |
-| `errDateBad` | Error: date has no month | - | en, am, om, ti, so |
-| `draftH` | Welcome back (answers kept on this device) | - | en, am, om, ti, so |
-| `queued` | Offline: answers saved on the device, sent later | - | en, am, om, ti, so |
-| `sentLater` | Saved answers were sent | - | en, am, om, ti, so |
-| `tapToHear` | Press a key or tap to hear the questions | - | en, am, om, ti, so |
-| `n1` | Number 1 (used in the confirmation) | - | en, am, om, ti, so |
-| `n2` | Number 2 (used in the confirmation) | - | en, am, om, ti, so |
-| `n3` | Number 3 (used in the confirmation) | - | en, am, om, ti, so |
-| `n4` | Number 4 (used in the confirmation) | - | en, am, om, ti, so |
-| `n5` | Number 5 (used in the confirmation) | - | en, am, om, ti, so |
-| `n6` | Number 6 (used in the confirmation) | - | en, am, om, ti, so |
-| `n7` | Number 7 (used in the confirmation) | - | en, am, om, ti, so |
-| `n8` | Number 8 (used in the confirmation) | - | en, am, om, ti, so |
-| `reviewFix` | Review page, second part (after the person says No to submitting) | - | en, am, om, ti, so |
-| `done` | Thank-you page | - | en, am, om, ti, so |
-| `speakNow` | Said just before the microphone opens (then a beep) | - | en, am, om, ti, so |
-| `sel` | Focus: a choice that is ticked | - | en, am, om, ti, so |
-| `unsel` | Focus: a choice that is not ticked | - | en, am, om, ti, so |
-| `langName` | Focus: a language button, in that language | - | en, am, om, ti, so |
-| `b_next` | Focus: the "Next" button | - | en, am, om, ti, so |
-| `b_back` | Focus: the "Back" button | - | en, am, om, ti, so |
-| `b_skip` | Focus: the "Skip" button | - | en, am, om, ti, so |
-| `b_read` | Focus: the "Read aloud" button | - | en, am, om, ti, so |
-| `b_speak` | Focus: the "Speak" button | - | en, am, om, ti, so |
-| `b_readToMe` | Focus: the "Read to me" button | - | en, am, om, ti, so |
-| `b_stopRead` | Focus: the "Stop reading" button | - | en, am, om, ti, so |
-| `b_send` | Focus: the "Yes, submit" button | - | en, am, om, ti, so |
-| `b_noChange` | Focus: the "No, change something" button | - | en, am, om, ti, so |
-| `b_restart` | Focus: the "Start again" button | - | en, am, om, ti, so |
-| `b_change` | Focus: the "Change" button | - | en, am, om, ti, so |
-| `b_start` | Focus: the "Start" button | - | en, am, om, ti, so |
-| `b_startVoice` | Focus: the "Start with voice" button | - | en, am, om, ti, so |
-| `b_raYes` | Focus: the "Yes, read aloud" button | - | en, am, om, ti, so |
-| `b_raNo` | Focus: the "No, thank you" button | - | en, am, om, ti, so |
-| `b_draftGo` | Focus: the "Continue where I stopped" button | - | en, am, om, ti, so |
-| `o_prefs_large` | Focus: choice "Larger text" (question prefs) | - | en, am, om, ti, so |
-| `o_prefs_simple` | Focus: choice "Pictures next to choices" (question prefs) | - | en, am, om, ti, so |
-| `q_fullName` | Focus: the answer box of "What is your full name?" | - | en, am, om, ti, so |
-| `q_contact` | Focus: the answer box of "What phone number or email can we use?" | - | en, am, om, ti, so |
-| `o_idRoute_kebele` | Focus: choice "Kebele ID or passport" (question idRoute) | - | en, am, om, ti, so |
-| `o_idRoute_refugee` | Focus: choice "Refugee or returnee ID" (question idRoute) | - | en, am, om, ti, so |
-| `o_idRoute_other` | Focus: choice "Another document" (question idRoute) | - | en, am, om, ti, so |
-| `o_idRoute_refer` | Focus: choice "I don't have an ID. Refer me through a partner organisation" (question idRoute) | - | en, am, om, ti, so |
-| `o_support_screenreader` | Focus: choice "I use a screen reader" (question support) | - | en, am, om, ti, so |
-| `o_support_large` | Focus: choice "Large text" (question support) | - | en, am, om, ti, so |
-| `o_support_voice` | Focus: choice "I prefer to speak my answers" (question support) | - | en, am, om, ti, so |
-| `o_support_sign` | Focus: choice "Ethiopian Sign Language interpreter" (question support) | - | en, am, om, ti, so |
-| `o_support_simple` | Focus: choice "Simple words and pictures" (question support) | - | en, am, om, ti, so |
-| `o_support_human` | Focus: choice "Please call me to help" (question support) | - | en, am, om, ti, so |
-| `o_needs_stepfree` | Focus: choice "Step-free workplace" (question needs) | - | en, am, om, ti, so |
-| `o_needs_reader` | Focus: choice "Screen-reader friendly tools" (question needs) | - | en, am, om, ti, so |
-| `o_needs_interp` | Focus: choice "Sign language interpreter" (question needs) | - | en, am, om, ti, so |
-| `o_needs_hours` | Focus: choice "Flexible hours" (question needs) | - | en, am, om, ti, so |
-| `o_needs_remote` | Focus: choice "Work from home" (question needs) | - | en, am, om, ti, so |
-| `q_role` | Job page: the question "Which job are you applying for?" (the job titles are read by the device voice) | - | en, am, om, ti, so |
-| `q_why` | Focus: the answer box of "Why do you want this job?" | - | en, am, om, ti, so |
-| `q_job` | Focus: the answer box of "What is the job title?" | - | en, am, om, ti, so |
-| `o_offers_stepfree` | Focus: choice "Step-free workplace" (question offers) | - | en, am, om, ti, so |
-| `o_offers_reader` | Focus: choice "Screen-reader friendly tools" (question offers) | - | en, am, om, ti, so |
-| `o_offers_interp` | Focus: choice "Sign language interpreter" (question offers) | - | en, am, om, ti, so |
-| `o_offers_hours` | Focus: choice "Flexible hours" (question offers) | - | en, am, om, ti, so |
-| `o_offers_remote` | Focus: choice "Work from home" (question offers) | - | en, am, om, ti, so |
+| `langSelf` | Language page: invitation in the language itself (played after langAsk) | - | am, om, ti, so, sid |
+| `raAsk` | First question in the chosen language (asks if the page should be read aloud) | - | en, am, om, ti, so, sid |
+| `raAgain` | Second ask, if no answer was heard | - | en, am, om, ti, so, sid |
+| `welcome` | Welcome page (after they said Yes to read aloud) | - | en, am, om, ti, so, sid |
+| `prefs` | signup flow, question 1 | yes (includes "Say Skip") | en, am, om, ti, so, sid |
+| `fullName` | signup flow, question 2 | no | en, am, om, ti, so, sid |
+| `contact` | signup flow, question 3 | no | en, am, om, ti, so, sid |
+| `idRoute` | signup flow, question 4 | no | en, am, om, ti, so, sid |
+| `support` | signup flow, question 5 | yes (includes "Say Skip") | en, am, om, ti, so, sid |
+| `needs` | job flow, question 1 | yes (includes "Say Skip") | en, am, om, ti, so, sid |
+| `why` | job flow, question 3 | no | en, am, om, ti, so, sid |
+| `job` | employer flow, question 1 | no | en, am, om, ti, so, sid |
+| `offers` | employer flow, question 2 | yes (includes "Say Skip") | en, am, om, ti, so, sid |
+| `closes` | employer flow, question 3 | yes (includes "Say Skip") | en, am, om, ti, so, sid |
+| `errNeed` | Error: question not answered | - | en, am, om, ti, so, sid |
+| `errBad` | Error: phone number or email not valid | - | en, am, om, ti, so, sid |
+| `errFail` | Error: could not send | - | en, am, om, ti, so, sid |
+| `unclear` | Voice answer not understood | - | en, am, om, ti, so, sid |
+| `noneSel` | Nothing chosen yet | - | en, am, om, ti, so, sid |
+| `idle` | Nothing heard | - | en, am, om, ti, so, sid |
+| `sayWelcome` | Welcome page: say Start | - | en, am, om, ti, so, sid |
+| `reviewAsk` | Review page: do you want to submit? | - | en, am, om, ti, so, sid |
+| `heardGeneric` | Spoken answer received (used when the device has no voice) | - | en, am, om, ti, so, sid |
+| `choseA` | Confirmation, first part ("You chose") | - | en, am, om, ti, so, sid |
+| `choseB` | Confirmation, last part | - | en, am, om, ti, so, sid |
+| `errConsentNeed` | Error: consent box not ticked | - | en, am, om, ti, so, sid |
+| `errDateBad` | Error: date has no month | - | en, am, om, ti, so, sid |
+| `draftH` | Welcome back (answers kept on this device) | - | en, am, om, ti, so, sid |
+| `queued` | Offline: answers saved on the device, sent later | - | en, am, om, ti, so, sid |
+| `sentLater` | Saved answers were sent | - | en, am, om, ti, so, sid |
+| `tapToHear` | Press a key or tap to hear the questions | - | en, am, om, ti, so, sid |
+| `n1` | Number 1 (used in the confirmation) | - | en, am, om, ti, so, sid |
+| `n2` | Number 2 (used in the confirmation) | - | en, am, om, ti, so, sid |
+| `n3` | Number 3 (used in the confirmation) | - | en, am, om, ti, so, sid |
+| `n4` | Number 4 (used in the confirmation) | - | en, am, om, ti, so, sid |
+| `n5` | Number 5 (used in the confirmation) | - | en, am, om, ti, so, sid |
+| `n6` | Number 6 (used in the confirmation) | - | en, am, om, ti, so, sid |
+| `n7` | Number 7 (used in the confirmation) | - | en, am, om, ti, so, sid |
+| `n8` | Number 8 (used in the confirmation) | - | en, am, om, ti, so, sid |
+| `reviewFix` | Review page, second part (after the person says No to submitting) | - | en, am, om, ti, so, sid |
+| `done` | Thank-you page | - | en, am, om, ti, so, sid |
+| `speakNow` | Said just before the microphone opens (then a beep) | - | en, am, om, ti, so, sid |
+| `sel` | Focus: a choice that is ticked | - | en, am, om, ti, so, sid |
+| `unsel` | Focus: a choice that is not ticked | - | en, am, om, ti, so, sid |
+| `langName` | Focus: a language button, in that language | - | en, am, om, ti, so, sid |
+| `b_next` | Focus: the "Next" button | - | en, am, om, ti, so, sid |
+| `b_back` | Focus: the "Back" button | - | en, am, om, ti, so, sid |
+| `b_skip` | Focus: the "Skip" button | - | en, am, om, ti, so, sid |
+| `b_read` | Focus: the "Read aloud" button | - | en, am, om, ti, so, sid |
+| `b_speak` | Focus: the "Speak" button | - | en, am, om, ti, so, sid |
+| `b_readToMe` | Focus: the "Read to me" button | - | en, am, om, ti, so, sid |
+| `b_stopRead` | Focus: the "Stop reading" button | - | en, am, om, ti, so, sid |
+| `b_send` | Focus: the "Yes, submit" button | - | en, am, om, ti, so, sid |
+| `b_noChange` | Focus: the "No, change something" button | - | en, am, om, ti, so, sid |
+| `b_restart` | Focus: the "Start again" button | - | en, am, om, ti, so, sid |
+| `b_change` | Focus: the "Change" button | - | en, am, om, ti, so, sid |
+| `b_start` | Focus: the "Start" button | - | en, am, om, ti, so, sid |
+| `b_startVoice` | Focus: the "Start with voice" button | - | en, am, om, ti, so, sid |
+| `b_raYes` | Focus: the "Yes, read aloud" button | - | en, am, om, ti, so, sid |
+| `b_raNo` | Focus: the "No, thank you" button | - | en, am, om, ti, so, sid |
+| `b_draftGo` | Focus: the "Continue where I stopped" button | - | en, am, om, ti, so, sid |
+| `o_prefs_large` | Focus: choice "Larger text" (question prefs) | - | en, am, om, ti, so, sid |
+| `o_prefs_simple` | Focus: choice "Pictures next to choices" (question prefs) | - | en, am, om, ti, so, sid |
+| `q_fullName` | Focus: the answer box of "What is your full name?" | - | en, am, om, ti, so, sid |
+| `q_contact` | Focus: the answer box of "What phone number or email can we use?" | - | en, am, om, ti, so, sid |
+| `o_idRoute_kebele` | Focus: choice "Kebele ID or passport" (question idRoute) | - | en, am, om, ti, so, sid |
+| `o_idRoute_refugee` | Focus: choice "Refugee or returnee ID" (question idRoute) | - | en, am, om, ti, so, sid |
+| `o_idRoute_other` | Focus: choice "Another document" (question idRoute) | - | en, am, om, ti, so, sid |
+| `o_idRoute_refer` | Focus: choice "I don't have an ID. Refer me through a partner organisation" (question idRoute) | - | en, am, om, ti, so, sid |
+| `o_support_screenreader` | Focus: choice "I use a screen reader" (question support) | - | en, am, om, ti, so, sid |
+| `o_support_large` | Focus: choice "Large text" (question support) | - | en, am, om, ti, so, sid |
+| `o_support_voice` | Focus: choice "I prefer to speak my answers" (question support) | - | en, am, om, ti, so, sid |
+| `o_support_sign` | Focus: choice "Ethiopian Sign Language interpreter" (question support) | - | en, am, om, ti, so, sid |
+| `o_support_simple` | Focus: choice "Simple words and pictures" (question support) | - | en, am, om, ti, so, sid |
+| `o_support_human` | Focus: choice "Please call me to help" (question support) | - | en, am, om, ti, so, sid |
+| `o_needs_stepfree` | Focus: choice "Step-free workplace" (question needs) | - | en, am, om, ti, so, sid |
+| `o_needs_reader` | Focus: choice "Screen-reader friendly tools" (question needs) | - | en, am, om, ti, so, sid |
+| `o_needs_interp` | Focus: choice "Sign language interpreter" (question needs) | - | en, am, om, ti, so, sid |
+| `o_needs_hours` | Focus: choice "Flexible hours" (question needs) | - | en, am, om, ti, so, sid |
+| `o_needs_remote` | Focus: choice "Work from home" (question needs) | - | en, am, om, ti, so, sid |
+| `q_role` | Job page: the question "Which job are you applying for?" (the job titles are read by the device voice) | - | en, am, om, ti, so, sid |
+| `q_why` | Focus: the answer box of "Why do you want this job?" | - | en, am, om, ti, so, sid |
+| `q_job` | Focus: the answer box of "What is the job title?" | - | en, am, om, ti, so, sid |
+| `o_offers_stepfree` | Focus: choice "Step-free workplace" (question offers) | - | en, am, om, ti, so, sid |
+| `o_offers_reader` | Focus: choice "Screen-reader friendly tools" (question offers) | - | en, am, om, ti, so, sid |
+| `o_offers_interp` | Focus: choice "Sign language interpreter" (question offers) | - | en, am, om, ti, so, sid |
+| `o_offers_hours` | Focus: choice "Flexible hours" (question offers) | - | en, am, om, ti, so, sid |
+| `o_offers_remote` | Focus: choice "Work from home" (question offers) | - | en, am, om, ti, so, sid |
 
 ---
 
@@ -155,7 +156,7 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 **English** → `public/audio/en/langAsk.mp3`
 
-> Which language would you like to use? Say English, Amharic, Oromo, Tigrinya or Somali, or press a button.
+> Which language would you like to use? Say English, Amharic, Oromo, Tigrinya, Somali or Sidama, or press a button.
 
 ### `langSelf`: Language page: invitation in the language itself (played after langAsk)
 
@@ -174,6 +175,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/langSelf.mp3`
 
 > Af Soomaali: dheh Somali, ama riix badhanka Soomaali.
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/langSelf.mp3`
+
+> Sidaamu Afoo doorate, Sidama yi, woy Sidaamu Afoo yitanno ilkaawa xiiwi.
 
 ### `raAsk`: First question in the chosen language (asks if the page should be read aloud)
 
@@ -197,6 +202,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Ma rabtaa in boggan laguu akhriyo? Fadlan dheh Haa ama Maya, ama riix badhan. Haddii aad doorato Haa, ama aad hadhow riixdo badhanka Hadal, browserkaagu wuxuu codkaaga u diri karaa bixiyahiisa si uu qoraal ugu beddelo. Waxaad dooran kartaa Maya oo aad qori kartaa.
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/raAsk.mp3`
+
+> Kuni qoolu qaalinke nabbawamanno gede hasatto? Ikkitinni Ee woy Dee'ni yi, woy mitte ilkaawa xiiwi. Ee yitto ikkiro, woy gedensaanni Hasaawi xiiwitto ikkiro, barbaarsaasikki qaalekki borrote soorrate abbaasi aana soyannosi. Dee'ni yitte borreessa dandaatto.
+
 ### `raAgain`: Second ask, if no answer was heard
 
 **English** → `public/audio/en/raAgain.mp3`
@@ -218,6 +227,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/raAgain.mp3`
 
 > Jawaab ma aanaan maqal, sidaa darteed waxaan u qaadanaynaa Maya. Haddii aad rabto in boggan laguu akhriyo, hadda dheh Haa, ama riix badhanka Haa.
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/raAgain.mp3`
+
+> Dawaro dimacciishshinoommo, kawule Dee'ni yinoonni gede adhineemmo. Qoolu nabbawamanno gede hasatto ikkiro, xa Ee yi, woy Ee ilkaawa xiiwi.
 
 ### `welcome`: Welcome page (after they said Yes to read aloud)
 
@@ -241,6 +254,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Soo dhawoow! Hab fudud oo aad isku diiwaangeliso oo aad fursado ku hesho. Bilow. Ku bilow cod. Ii akhri. Dheh Bilow si aad u bilowdo.
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/welcome.mp3`
+
+> Dancha dayitine! Borreessamate nna loosu dandoowa afate shota doogo. Hanafi. Qaalinke hanafi. Ane nabbawi. Hanafate Hanafi yi.
+
 ### `prefs`: signup flow, question 1
 
 **English** → `public/audio/en/prefs.mp3`
@@ -262,6 +279,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/prefs.mp3`
 
 > Sidee baad u rabtaa inaad u isticmaasho foomkan? Ikhtiyaari. Waad ka boodi kartaa. 1: Qoraal ka weyn. 2: Sawirro ku xiga doorashooyinka. Dheh lambarka ama magaca doorashadaada. Dheh Xiga si aad u sii socoto, ama Akhri si aad mar kale u maqasho. Dheh Ka bood si aad su'aashan uga boodo.
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/prefs.mp3`
+
+> Konne foormu hiittoo horoonsi'rate hasatto? Dooro. Darba dandaatto. 1: Lowo borro. 2: Doorshu gaxa misilla. Doorshikki kiiro woy su'ma yi. Albisate Albisi, wole macciishshate Qaalinke nabbawi yi. Tenne xa'mo darbate Darbi yi.
 
 ### `fullName`: signup flow, question 2
 
@@ -285,6 +306,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Waa maxay magacaaga oo buuxa? Magaca aad maalin walba isticmaasho waa ku filan yahay. Hadda ku hadal jawaabtaada. Dheh Xiga si aad u sii socoto, Dib u noqo si aad dib ugu noqoto, ama Akhri si aad mar kale u maqasho.
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/fullName.mp3`
+
+> Wo'mu su'mikki ayeti? Barru barrunni horoonsi'ratto su'mu ikkanno. Xa dawarokki hasaawi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi.
+
 ### `contact`: signup flow, question 3
 
 **English** → `public/audio/en/contact.mp3`
@@ -306,6 +331,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/contact.mp3`
 
 > Lambarkee taleefan ama iimayl ayaan isticmaali karnaa? Kaliya si laguula soo xiriiro barnaamijkan. Lambar taleefan wuxuu leeyahay 10 god, wuxuuna ku bilaabmaa 0. Fadlan ku qor jawaabtaada sanduuqa. Kadib riix Enter, ama riix badhanka Xiga.
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/contact.mp3`
+
+> Hiittoo silki kiiro woy imeelenni dandoonketa? Tenne pirogiraame daafira dandoonketa calla. Silki kiiro tonne kiiro afi'rinohanna zeerotenni hanafanno. Ikkitinni dawarokki saaxine giddo borreessi. Aanchite Enter, woy Albisi ilkaawa xiiwi.
 
 ### `idRoute`: signup flow, question 4
 
@@ -329,6 +358,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Sidee baad u rabtaa inaad muujiso cidda aad tahay? 1: Aqoonsiga kebele ama baasaboor. 2: Aqoonsiga qaxootiga ama soo-noqotaha. 3: Dukumenti kale. 4: Ma haysto aqoonsi. Iigu gudbiya hay'ad iskaashi. Dheh lambarka ama magaca doorashadaada. Dheh Xiga si aad u sii socoto, Dib u noqo si aad dib ugu noqoto, ama Akhri si aad mar kale u maqasho.
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/idRoute.mp3`
+
+> Ati ayeti ikkitoota hiittoo leellisate hasatto? 1: Qebeele eeshsha woy paaspoorte. 2: Baqatu woy higgaanchu eeshsha. 3: Wole bortaje. 4: Eeshsha diafi'rino. Jaala dirijjiteenni hoolisi'e. Doorshikki kiiro woy su'ma yi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi.
+
 ### `support`: signup flow, question 5
 
 **English** → `public/audio/en/support.mp3`
@@ -350,6 +383,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/support.mp3`
 
 > Taageero noocee ah ayaa ku caawin lahayd? Dooro mid kasta. Waad ka boodi kartaa. Caddayn looma baahna. Kaliya qabanqaabiyayaashu ayaa arka, si ay kuugu diyaariyaan caawimaad. 1: Waxaan isticmaalaa akhriyaha shaashadda. 2: Qoraal weyn. 3: Waxaan doorbidaa inaan ku hadlo jawaabahayga. 4: Turjubaan Luqadda Calaamadaha Itoobiya. 5: Erayo fudud iyo sawirro. 6: Fadlan ii soo wac si aad ii caawiso. Dheh lambarka ama magaca doorashadaada. Dheh Xiga si aad u sii socoto, Dib u noqo si aad dib ugu noqoto, ama Akhri si aad mar kale u maqasho. Dheh Ka bood si aad su'aashan uga boodo.
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/support.mp3`
+
+> Hiittoo kaa'lo kaa'lannohe? Ayeeno doori. Tenne darba dandaatto. Ragi dihasiissanno. Qixxeessitooti calla la'anno, kaa'lo qixxeessate calla. 1: Leellisaancho nabbawaancho horoonsi'reemmo. 2: Lowo borro. 3: Dawaro qaalinke hasaawa doorreemmo. 4: Itiyoophiyu Malaatu Afoo turjimaancho. 5: Shota qaalla nna misilla. 6: Ikkitinni kaa'lo daafira silki xa'mi. Doorshikki kiiro woy su'ma yi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi. Tenne xa'mo darbate Darbi yi.
 
 ### `needs`: job flow, question 1
 
@@ -373,6 +410,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Taageero noocee ah ayaad ugu baahan tahay shaqada? Dooro mid kasta. Gaar ah. Wuxuu ku jiraa qalabkaaga oo kaliya waxaa loo isticmaalaa in lagu tuso shaqooyin ku habboon. 1: Goob shaqo oo aan jaranjaro lahayn. 2: Qalab ku habboon akhriyaha shaashadda. 3: Turjubaan luqadda calaamadaha. 4: Saacado dabacsan. 5: Ka shaqeyn guriga. Dheh lambarka ama magaca doorashadaada. Dheh Xiga si aad u sii socoto, ama Akhri si aad mar kale u maqasho. Dheh Ka bood si aad su'aashan uga boodo.
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/needs.mp3`
+
+> Loosu aana hiittoo kaa'lo hasiissannohe? Ayeeno doori. Ma'nunni. Konne uduunnichokki aana keeshshanno, coyi'nanno loosuwa leellisate calla. 1: Gadu dinokki loosu bayicho. 2: Leellisaancho nabbawaanchora coyi'nanno uduunnicho. 3: Malaatu afoo turjimaancho. 4: Soorramanno loosu saate. 5: Mineenni loosa. Doorshikki kiiro woy su'ma yi. Albisate Albisi, wole macciishshate Qaalinke nabbawi yi. Tenne xa'mo darbate Darbi yi.
+
 ### `why`: job flow, question 3
 
 **English** → `public/audio/en/why.mp3`
@@ -394,6 +435,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/why.mp3`
 
 > Maxaad u rabtaa shaqadan? Erayo kooban ayaa ku filan. Waad ku hadli kartaa beddelkeeda. Hadda ku hadal jawaabtaada. Dheh Xiga si aad u sii socoto, Dib u noqo si aad dib ugu noqoto, ama Akhri si aad mar kale u maqasho.
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/why.mp3`
+
+> Konne loosu mayira hasatto? Shiima qaalla ikkanno. Hasaawa dandaatto. Xa dawarokki hasaawi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi.
 
 ### `job`: employer flow, question 1
 
@@ -417,6 +462,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Waa maxay magaca shaqada? Hadda ku hadal jawaabtaada. Dheh Xiga si aad u sii socoto, ama Akhri si aad mar kale u maqasho.
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/job.mp3`
+
+> Loosu su'mi ayeti? Xa dawarokki hasaawi. Albisate Albisi, wole macciishshate Qaalinke nabbawi yi.
+
 ### `offers`: employer flow, question 2
 
 **English** → `public/audio/en/offers.mp3`
@@ -438,6 +487,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/offers.mp3`
 
 > Waa maxay hagaajinta ay shaqadani bixin karto? 1: Goob shaqo oo aan jaranjaro lahayn. 2: Qalab ku habboon akhriyaha shaashadda. 3: Turjubaan luqadda calaamadaha. 4: Saacado dabacsan. 5: Ka shaqeyn guriga. Dheh lambarka ama magaca doorashadaada. Dheh Xiga si aad u sii socoto, Dib u noqo si aad dib ugu noqoto, ama Akhri si aad mar kale u maqasho. Dheh Ka bood si aad su'aashan uga boodo.
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/offers.mp3`
+
+> Kuni loosu hiittoo qixxeessuwa aamanno? 1: Gadu dinokki loosu bayicho. 2: Leellisaancho nabbawaanchora coyi'nanno uduunnicho. 3: Malaatu afoo turjimaancho. 4: Soorramanno loosu saate. 5: Mineenni loosa. Doorshikki kiiro woy su'ma yi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi. Tenne xa'mo darbate Darbi yi.
 
 ### `closes`: employer flow, question 3
 
@@ -461,6 +514,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Goormaa la xirayaa codsiyada? Ikhtiyaari. Kalandarka Itoobiya. Haddii aad bisha oo keliya taqaanno, maalinta u dooro 'Ma hubo'. Fadlan ku qor jawaabtaada sanduuqa. Kadib riix Enter, ama riix badhanka Xiga.
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/closes.mp3`
+
+> Xa'muwu ayi yanna gufamanno? Dooro. Itiyoophiyu barru qoodo. Agana calla huvatto ikkiro, barrara Dianfaa'moommo doori. Ikkitinni dawarokki saaxine giddo borreessi. Aanchite Enter, woy Albisi ilkaawa xiiwi.
+
 ### `errNeed`: Error: question not answered
 
 **English** → `public/audio/en/errNeed.mp3`
@@ -482,6 +539,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/errNeed.mp3`
 
 > Fadlan ka jawaab su'aashan, ama riix Dib u noqo.
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/errNeed.mp3`
+
+> Ikkitinni tenne xa'mo dawaari, woy Higi xiiwi.
 
 ### `errBad`: Error: phone number or email not valid
 
@@ -505,6 +566,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Fadlan qor lambar taleefan oo 10 god ah oo ku bilaabmaya eber, ama cinwaan iimayl oo leh calaamadda @.
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/errBad.mp3`
+
+> Ikkitinni zeerotenni hanafanno, tonne kiiro afi'rino silki kiiro borreessi, woy @ malaatto afi'rino imeele borreessi.
+
 ### `errFail`: Error: could not send
 
 **English** → `public/audio/en/errFail.mp3`
@@ -526,6 +591,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/errFail.mp3`
 
 > Ma aanaan diri karin jawaabahaaga. Waxba ma lumin. Fadlan mar kale isku day.
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/errFail.mp3`
+
+> Dawaro keeshshi soya didandiinoommo. Mittunkuri dibaino. Ikkitinni wole paaxi.
 
 ### `unclear`: Voice answer not understood
 
@@ -549,6 +618,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Waan ka xumahay, ma fahmin. Fadlan dheh lambarka doorashadaada.
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/unclear.mp3`
+
+> Hakkaya, dihuvattoommo. Ikkitinni doorshikki kiiro yi.
+
 ### `noneSel`: Nothing chosen yet
 
 **English** → `public/audio/en/noneSel.mp3`
@@ -570,6 +643,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/noneSel.mp3`
 
 > Waxba lama dooran. Dheh lambar ama magac, ama dheh Ka bood.
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/noneSel.mp3`
+
+> Mittunkuri dooraminokki. Kiiro woy su'ma yi, woy Darbi yi.
 
 ### `idle`: Nothing heard
 
@@ -593,6 +670,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Ma aanaan ku maqal. Riix badhanka weyn ee Hadal, ama riix Jooji akhrinta si aad u isticmaasho kiiboodhka.
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/idle.mp3`
+
+> Dimacciishshinoommo. Lowo Hasaawi ilkaawa xiiwi, woy keyboorde horoonsi'rate Nabbawa uurrisi xiiwi.
+
 ### `sayWelcome`: Welcome page: say Start
 
 **English** → `public/audio/en/sayWelcome.mp3`
@@ -614,6 +695,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/sayWelcome.mp3`
 
 > Dheh Bilow si aad u bilowdo.
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/sayWelcome.mp3`
+
+> Hanafate Hanafi yi.
 
 ### `reviewAsk`: Review page: do you want to submit?
 
@@ -637,6 +722,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Ma rabtaa inaad gudbiso jawaabahaaga? Dheh Haa si aad u gudbiso, ama Maya si aad wax u beddesho.
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/reviewAsk.mp3`
+
+> Dawaro keeshshi soyate hasatto? Soyate Ee, mittu coye soorrate Dee'ni yi.
+
 ### `heardGeneric`: Spoken answer received (used when the device has no voice)
 
 **English** → `public/audio/en/heardGeneric.mp3`
@@ -658,6 +747,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/heardGeneric.mp3`
 
 > Waan maqalnay jawaabtaada. Waxay ka muuqataa shaashadda. Dheh Xiga si aad u sii socoto, ama mar kale dheh jawaabtaada.
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/heardGeneric.mp3`
+
+> Dawarokki macciishshinoonni. Leellisaanchu aana leellitanno. Albisate Albisi yi, woy dawarokki wole yi.
 
 ### `choseA`: Confirmation, first part ("You chose")
 
@@ -681,6 +774,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Waxaad dooratay
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/choseA.mp3`
+
+> Doorttohu
+
 ### `choseB`: Confirmation, last part
 
 **English** → `public/audio/en/choseB.mp3`
@@ -702,6 +799,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/choseB.mp3`
 
 > Dheh Xiga si aad u sii socoto, ama mar kale dooro.
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/choseB.mp3`
+
+> Albisate Albisi yi, woy wole doori.
 
 ### `errConsentNeed`: Error: consent box not ticked
 
@@ -725,6 +826,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Fadlan calaamadee sanduuqa si aad u oggolaato ka hor intaadan dirin, ama riix Dib u noqo.
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/errConsentNeed.mp3`
+
+> Ikkitinni soyitto albaanni ammanaate saaxine malaatisi, woy Higi xiiwi.
+
 ### `errDateBad`: Error: date has no month
 
 **English** → `public/audio/en/errDateBad.mp3`
@@ -746,6 +851,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/errDateBad.mp3`
 
 > Fadlan dooro bil, ama maalinta iyo sanadka ka dhig 'Ma hubo'.
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/errDateBad.mp3`
+
+> Ikkitinni agana doori, woy barranna diri Dianfaa'moommo assi.
 
 ### `draftH`: Welcome back (answers kept on this device)
 
@@ -769,6 +878,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Ku soo dhawoow mar kale Jawaabahaagii hore waxay ku kaydsan yihiin qalabkan. Ka sii wad halkii aan ku joogsaday Dib u bilow
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/draftH.mp3`
+
+> Dancha higgite Darbinoha yannaha dawaro keeshshi konne uduunnicho aana agarantino. Uurrinoommohunni albisi Wole hanafi
+
 ### `queued`: Offline: answers saved on the device, sent later
 
 **English** → `public/audio/en/queued.mp3`
@@ -790,6 +903,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/queued.mp3`
 
 > Khadka kama jirtid. Jawaabahaaga waxay ku kaydsan yihiin qalabkan, waxaana la diri doonaa markaad khadka ku soo noqoto.
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/queued.mp3`
+
+> Interneete aana dikiitto. Dawaro keeshshi konne uduunnicho aana agarantino, interneete aana higgitto wote soyamanno.
 
 ### `sentLater`: Saved answers were sent
 
@@ -813,6 +930,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Jawaabahaagii kaydsanaa hadda waa la diray.
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/sentLater.mp3`
+
+> Agarantino dawaro keeshshi xa soyamino.
+
 ### `tapToHear`: Press a key or tap to hear the questions
 
 **English** → `public/audio/en/tapToHear.mp3`
@@ -834,6 +955,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/tapToHear.mp3`
 
 > Riix fure kasta ama taabo shaashadda si aad u maqasho su'aalaha.
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/tapToHear.mp3`
+
+> Xa'muwa macciishshate ayee ilkaawa xiiwi woy leellisaancho kaali.
 
 ### `n1`: Number 1 (used in the confirmation)
 
@@ -857,6 +982,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Kow
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/n1.mp3`
+
+> Mitto
+
 ### `n2`: Number 2 (used in the confirmation)
 
 **English** → `public/audio/en/n2.mp3`
@@ -878,6 +1007,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/n2.mp3`
 
 > Laba
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/n2.mp3`
+
+> Lame
 
 ### `n3`: Number 3 (used in the confirmation)
 
@@ -901,6 +1034,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Saddex
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/n3.mp3`
+
+> Sase
+
 ### `n4`: Number 4 (used in the confirmation)
 
 **English** → `public/audio/en/n4.mp3`
@@ -922,6 +1059,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/n4.mp3`
 
 > Afar
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/n4.mp3`
+
+> Shoole
 
 ### `n5`: Number 5 (used in the confirmation)
 
@@ -945,6 +1086,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Shan
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/n5.mp3`
+
+> Onte
+
 ### `n6`: Number 6 (used in the confirmation)
 
 **English** → `public/audio/en/n6.mp3`
@@ -966,6 +1111,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/n6.mp3`
 
 > Lix
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/n6.mp3`
+
+> Lee
 
 ### `n7`: Number 7 (used in the confirmation)
 
@@ -989,6 +1138,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Toddoba
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/n7.mp3`
+
+> Lamala
+
 ### `n8`: Number 8 (used in the confirmation)
 
 **English** → `public/audio/en/n8.mp3`
@@ -1010,6 +1163,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/n8.mp3`
 
 > Siddeed
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/n8.mp3`
+
+> Sette
 
 ### `reviewFix`: Review page, second part (after the person says No to submitting)
 
@@ -1033,6 +1190,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Dheh Dib u bilow si aad ugu noqoto su'aasha koowaad, ama dheh lambarka su'aasha aad rabto inaad beddesho.
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/reviewFix.mp3`
+
+> Umi xa'mora higate Wole hanafi yi, woy soorrate hasatto xa'mo kiiro yi.
+
 ### `done`: Thank-you page
 
 **English** → `public/audio/en/done.mp3`
@@ -1054,6 +1215,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/done.mp3`
 
 > Mahadsanid. Waan helnay jawaabahaaga.
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/done.mp3`
+
+> Galateemmo. Dawaro keeshshi adhinoonni.
 
 ### `speakNow`: Said just before the microphone opens (then a beep)
 
@@ -1077,6 +1242,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Hadda hadal.
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/speakNow.mp3`
+
+> Xa hasaawi.
+
 ### `sel`: Focus: a choice that is ticked
 
 **English** → `public/audio/en/sel.mp3`
@@ -1098,6 +1267,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/sel.mp3`
 
 > waa la doortay
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/sel.mp3`
+
+> doodamino
 
 ### `unsel`: Focus: a choice that is not ticked
 
@@ -1121,6 +1294,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > lama dooran
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/unsel.mp3`
+
+> doodaminokki
+
 ### `langName`: Focus: a language button, in that language
 
 **English** → `public/audio/en/langName.mp3`
@@ -1142,6 +1319,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/langName.mp3`
 
 > Soomaali
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/langName.mp3`
+
+> Sidaamu Afoo
 
 ### `b_next`: Focus: the "Next" button
 
@@ -1165,6 +1346,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Xiga
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/b_next.mp3`
+
+> Albisi
+
 ### `b_back`: Focus: the "Back" button
 
 **English** → `public/audio/en/b_back.mp3`
@@ -1186,6 +1371,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/b_back.mp3`
 
 > Dib u noqo
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/b_back.mp3`
+
+> Higi
 
 ### `b_skip`: Focus: the "Skip" button
 
@@ -1209,6 +1398,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Ka bood
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/b_skip.mp3`
+
+> Darbi
+
 ### `b_read`: Focus: the "Read aloud" button
 
 **English** → `public/audio/en/b_read.mp3`
@@ -1230,6 +1423,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/b_read.mp3`
 
 > Akhri
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/b_read.mp3`
+
+> Qaalinke nabbawi
 
 ### `b_speak`: Focus: the "Speak" button
 
@@ -1253,6 +1450,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Hadal
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/b_speak.mp3`
+
+> Hasaawi
+
 ### `b_readToMe`: Focus: the "Read to me" button
 
 **English** → `public/audio/en/b_readToMe.mp3`
@@ -1274,6 +1475,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/b_readToMe.mp3`
 
 > Ii akhri
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/b_readToMe.mp3`
+
+> Ane nabbawi
 
 ### `b_stopRead`: Focus: the "Stop reading" button
 
@@ -1297,6 +1502,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Jooji akhrinta
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/b_stopRead.mp3`
+
+> Nabbawa uurrisi
+
 ### `b_send`: Focus: the "Yes, submit" button
 
 **English** → `public/audio/en/b_send.mp3`
@@ -1318,6 +1527,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/b_send.mp3`
 
 > Haa, gudbi
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/b_send.mp3`
+
+> Ee, soy
 
 ### `b_noChange`: Focus: the "No, change something" button
 
@@ -1341,6 +1554,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Maya, wax baan beddelayaa
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/b_noChange.mp3`
+
+> Dee'ni, mittu coye soorrara
+
 ### `b_restart`: Focus: the "Start again" button
 
 **English** → `public/audio/en/b_restart.mp3`
@@ -1362,6 +1579,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/b_restart.mp3`
 
 > Dib u bilow
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/b_restart.mp3`
+
+> Wole hanafi
 
 ### `b_change`: Focus: the "Change" button
 
@@ -1385,6 +1606,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Beddel
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/b_change.mp3`
+
+> Soorri
+
 ### `b_start`: Focus: the "Start" button
 
 **English** → `public/audio/en/b_start.mp3`
@@ -1406,6 +1631,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/b_start.mp3`
 
 > Bilow
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/b_start.mp3`
+
+> Hanafi
 
 ### `b_startVoice`: Focus: the "Start with voice" button
 
@@ -1429,6 +1658,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Ku bilow cod
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/b_startVoice.mp3`
+
+> Qaalinke hanafi
+
 ### `b_raYes`: Focus: the "Yes, read aloud" button
 
 **English** → `public/audio/en/b_raYes.mp3`
@@ -1450,6 +1683,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/b_raYes.mp3`
 
 > Haa, ii akhri
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/b_raYes.mp3`
+
+> Ee, nabbawi
 
 ### `b_raNo`: Focus: the "No, thank you" button
 
@@ -1473,6 +1710,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Maya, mahadsanid
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/b_raNo.mp3`
+
+> Dee'ni, galateemmo
+
 ### `b_draftGo`: Focus: the "Continue where I stopped" button
 
 **English** → `public/audio/en/b_draftGo.mp3`
@@ -1494,6 +1735,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/b_draftGo.mp3`
 
 > Ka sii wad halkii aan ku joogsaday
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/b_draftGo.mp3`
+
+> Uurrinoommohunni albisi
 
 ### `o_prefs_large`: Focus: choice "Larger text" (question prefs)
 
@@ -1517,6 +1762,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Qoraal ka weyn
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/o_prefs_large.mp3`
+
+> Lowo borro
+
 ### `o_prefs_simple`: Focus: choice "Pictures next to choices" (question prefs)
 
 **English** → `public/audio/en/o_prefs_simple.mp3`
@@ -1538,6 +1787,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/o_prefs_simple.mp3`
 
 > Sawirro ku xiga doorashooyinka
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/o_prefs_simple.mp3`
+
+> Doorshu gaxa misilla
 
 ### `q_fullName`: Focus: the answer box of "What is your full name?"
 
@@ -1561,6 +1814,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Waa maxay magacaaga oo buuxa?
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/q_fullName.mp3`
+
+> Wo'mu su'mikki ayeti?
+
 ### `q_contact`: Focus: the answer box of "What phone number or email can we use?"
 
 **English** → `public/audio/en/q_contact.mp3`
@@ -1582,6 +1839,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/q_contact.mp3`
 
 > Lambarkee taleefan ama iimayl ayaan isticmaali karnaa?
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/q_contact.mp3`
+
+> Hiittoo silki kiiro woy imeelenni dandoonketa?
 
 ### `o_idRoute_kebele`: Focus: choice "Kebele ID or passport" (question idRoute)
 
@@ -1605,6 +1866,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Aqoonsiga kebele ama baasaboor
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/o_idRoute_kebele.mp3`
+
+> Qebeele eeshsha woy paaspoorte
+
 ### `o_idRoute_refugee`: Focus: choice "Refugee or returnee ID" (question idRoute)
 
 **English** → `public/audio/en/o_idRoute_refugee.mp3`
@@ -1626,6 +1891,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/o_idRoute_refugee.mp3`
 
 > Aqoonsiga qaxootiga ama soo-noqotaha
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/o_idRoute_refugee.mp3`
+
+> Baqatu woy higgaanchu eeshsha
 
 ### `o_idRoute_other`: Focus: choice "Another document" (question idRoute)
 
@@ -1649,6 +1918,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Dukumenti kale
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/o_idRoute_other.mp3`
+
+> Wole bortaje
+
 ### `o_idRoute_refer`: Focus: choice "I don't have an ID. Refer me through a partner organisation" (question idRoute)
 
 **English** → `public/audio/en/o_idRoute_refer.mp3`
@@ -1670,6 +1943,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/o_idRoute_refer.mp3`
 
 > Ma haysto aqoonsi. Iigu gudbiya hay'ad iskaashi
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/o_idRoute_refer.mp3`
+
+> Eeshsha diafi'rino. Jaala dirijjiteenni hoolisi'e
 
 ### `o_support_screenreader`: Focus: choice "I use a screen reader" (question support)
 
@@ -1693,6 +1970,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Waxaan isticmaalaa akhriyaha shaashadda
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/o_support_screenreader.mp3`
+
+> Leellisaancho nabbawaancho horoonsi'reemmo
+
 ### `o_support_large`: Focus: choice "Large text" (question support)
 
 **English** → `public/audio/en/o_support_large.mp3`
@@ -1714,6 +1995,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/o_support_large.mp3`
 
 > Qoraal weyn
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/o_support_large.mp3`
+
+> Lowo borro
 
 ### `o_support_voice`: Focus: choice "I prefer to speak my answers" (question support)
 
@@ -1737,6 +2022,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Waxaan doorbidaa inaan ku hadlo jawaabahayga
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/o_support_voice.mp3`
+
+> Dawaro qaalinke hasaawa doorreemmo
+
 ### `o_support_sign`: Focus: choice "Ethiopian Sign Language interpreter" (question support)
 
 **English** → `public/audio/en/o_support_sign.mp3`
@@ -1758,6 +2047,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/o_support_sign.mp3`
 
 > Turjubaan Luqadda Calaamadaha Itoobiya
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/o_support_sign.mp3`
+
+> Itiyoophiyu Malaatu Afoo turjimaancho
 
 ### `o_support_simple`: Focus: choice "Simple words and pictures" (question support)
 
@@ -1781,6 +2074,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Erayo fudud iyo sawirro
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/o_support_simple.mp3`
+
+> Shota qaalla nna misilla
+
 ### `o_support_human`: Focus: choice "Please call me to help" (question support)
 
 **English** → `public/audio/en/o_support_human.mp3`
@@ -1802,6 +2099,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/o_support_human.mp3`
 
 > Fadlan ii soo wac si aad ii caawiso
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/o_support_human.mp3`
+
+> Ikkitinni kaa'lo daafira silki xa'mi
 
 ### `o_needs_stepfree`: Focus: choice "Step-free workplace" (question needs)
 
@@ -1825,6 +2126,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Goob shaqo oo aan jaranjaro lahayn
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/o_needs_stepfree.mp3`
+
+> Gadu dinokki loosu bayicho
+
 ### `o_needs_reader`: Focus: choice "Screen-reader friendly tools" (question needs)
 
 **English** → `public/audio/en/o_needs_reader.mp3`
@@ -1846,6 +2151,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/o_needs_reader.mp3`
 
 > Qalab ku habboon akhriyaha shaashadda
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/o_needs_reader.mp3`
+
+> Leellisaancho nabbawaanchora coyi'nanno uduunnicho
 
 ### `o_needs_interp`: Focus: choice "Sign language interpreter" (question needs)
 
@@ -1869,6 +2178,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Turjubaan luqadda calaamadaha
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/o_needs_interp.mp3`
+
+> Malaatu afoo turjimaancho
+
 ### `o_needs_hours`: Focus: choice "Flexible hours" (question needs)
 
 **English** → `public/audio/en/o_needs_hours.mp3`
@@ -1890,6 +2203,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/o_needs_hours.mp3`
 
 > Saacado dabacsan
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/o_needs_hours.mp3`
+
+> Soorramanno loosu saate
 
 ### `o_needs_remote`: Focus: choice "Work from home" (question needs)
 
@@ -1913,6 +2230,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Ka shaqeyn guriga
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/o_needs_remote.mp3`
+
+> Mineenni loosa
+
 ### `q_role`: Job page: the question "Which job are you applying for?" (the job titles are read by the device voice)
 
 **English** → `public/audio/en/q_role.mp3`
@@ -1934,6 +2255,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/q_role.mp3`
 
 > Shaqadee ayaad codsanaysaa?
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/q_role.mp3`
+
+> Ayi loosora xa'mitto?
 
 ### `q_why`: Focus: the answer box of "Why do you want this job?"
 
@@ -1957,6 +2282,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Maxaad u rabtaa shaqadan?
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/q_why.mp3`
+
+> Konne loosu mayira hasatto?
+
 ### `q_job`: Focus: the answer box of "What is the job title?"
 
 **English** → `public/audio/en/q_job.mp3`
@@ -1978,6 +2307,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/q_job.mp3`
 
 > Waa maxay magaca shaqada?
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/q_job.mp3`
+
+> Loosu su'mi ayeti?
 
 ### `o_offers_stepfree`: Focus: choice "Step-free workplace" (question offers)
 
@@ -2001,6 +2334,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Goob shaqo oo aan jaranjaro lahayn
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/o_offers_stepfree.mp3`
+
+> Gadu dinokki loosu bayicho
+
 ### `o_offers_reader`: Focus: choice "Screen-reader friendly tools" (question offers)
 
 **English** → `public/audio/en/o_offers_reader.mp3`
@@ -2022,6 +2359,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/o_offers_reader.mp3`
 
 > Qalab ku habboon akhriyaha shaashadda
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/o_offers_reader.mp3`
+
+> Leellisaancho nabbawaanchora coyi'nanno uduunnicho
 
 ### `o_offers_interp`: Focus: choice "Sign language interpreter" (question offers)
 
@@ -2045,6 +2386,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Turjubaan luqadda calaamadaha
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/o_offers_interp.mp3`
+
+> Malaatu afoo turjimaancho
+
 ### `o_offers_hours`: Focus: choice "Flexible hours" (question offers)
 
 **English** → `public/audio/en/o_offers_hours.mp3`
@@ -2067,6 +2412,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 
 > Saacado dabacsan
 
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/o_offers_hours.mp3`
+
+> Soorramanno loosu saate
+
 ### `o_offers_remote`: Focus: choice "Work from home" (question offers)
 
 **English** → `public/audio/en/o_offers_remote.mp3`
@@ -2088,6 +2437,10 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/o_offers_remote.mp3`
 
 > Ka shaqeyn guriga
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/o_offers_remote.mp3`
+
+> Mineenni loosa
 
 ---
 

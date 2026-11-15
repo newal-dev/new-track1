@@ -4,9 +4,9 @@
    <db-career-gateway api='https://YOUR-HOST/v1'></db-career-gateway> job search and application
    <db-form flow='employer' api='https://YOUR-HOST/v1'></db-form>     any flow (the original tag)
    partner: name shown in the consent question.  sw: path of the partner's one-line service worker (offline).  asr: browser | off | a name registered with DbForm.registerASR().  fonts='no': do not load the local fonts.  jsonld='no': do not add schema.org/JobPosting to the page.
-   flow: signup | job | employer.  lang: en | am | om | ti | so (anything else falls back to en).  lang-ask='no': skip the first page that asks for the language (shown in English by default).  theme: auto | standard | dark | contrast | rg | by (the person's own choice in the Colours menu wins).  CSS hooks on <db-form>: --db-accent, --db-font.  hide: optional comma list of question ids to leave out, e.g. hide='idRoute,support' (fullName, role and job cannot be hidden).  audio: optional base URL of recorded .mp3 files (BASE/en|am|om|ti|so/QUESTIONID.mp3).  Events: db-complete, db-error.
+   flow: signup | job | employer.  lang: en | am | om | ti | so | sid (anything else falls back to en).  lang-ask='no': skip the first page that asks for the language (shown in English by default).  theme: auto | standard | dark | contrast | rg | by (the person's own choice in the Colours menu wins).  CSS hooks on <db-form>: --db-accent, --db-font.  hide: optional comma list of question ids to leave out, e.g. hide='idRoute,support' (fullName, role and job cannot be hidden).  audio: optional base URL of recorded .mp3 files (BASE/en|am|om|ti|so/QUESTIONID.mp3).  Events: db-complete, db-error.
    Amharic text is a DRAFT: have a native speaker check every string before submitting.
-   Afaan Oromoo (om), Tigrinya (ti) and Somali (so) text is a machine-assisted DRAFT: every line marked // VERIFY_NATIVE must be reviewed by a native speaker. */
+   Afaan Oromoo (om), Tigrinya (ti), Somali (so) and Sidaamu Afoo (sid, see the SID block) text is a machine-assisted DRAFT: every line marked // VERIFY_NATIVE must be reviewed by a native speaker. */
 // Everything below is block-scoped so its names (LANGS, UI, T, ...) never clash with the host page's own scripts.
 {
 // The script's own address: fonts and the service worker are loaded from the same server.
@@ -30,6 +30,7 @@ const EC_MONTHS = {
   om: ['Fulbaana', 'Onkoloolessa', 'Sadaasa', 'Muddee', 'Amajjii', 'Guraandhala', 'Bitootessa', 'Eebila', 'Caamsaa', 'Waxabajjii', 'Adoolessa', 'Hagayya', 'Qaammee'],
   ti: ['መስከረም', 'ጥቅምቲ', 'ሕዳር', 'ታሕሳስ', 'ጥሪ', 'ለካቲት', 'መጋቢት', 'ሚያዝያ', 'ግንቦት', 'ሰነ', 'ሓምለ', 'ነሓሰ', 'ጳጉሜ'],
   so: ['Meskerem', 'Tikimt', 'Hidar', 'Tahsas', 'Tir', 'Yekatit', 'Megabit', 'Miyazya', 'Ginbot', 'Sene', 'Hamle', 'Nehase', 'Pagume'],
+  sid: ['Meskerem', 'Tikimt', 'Hidar', 'Tahsas', 'Tir', 'Yekatit', 'Megabit', 'Miyazya', 'Ginbot', 'Sene', 'Hamle', 'Nehase', 'Pagume'], // VERIFY_NATIVE
 };
 const ecText = (e, l) => `${e.d ? e.d + ' ' : ''}${(EC_MONTHS[l] || EC_MONTHS.en)[e.m - 1]} ${e.y}`;
 const isoOf = d => d.toISOString().slice(0, 10);
@@ -49,8 +50,9 @@ const LANGS = [
   { id: 'om', name: 'Afaan Oromoo', en: 'Oromo', sr: 'om-ET', tts: ['om', 'orm'], say: ['oromo', 'oromoo', 'oromiffa', 'oromifa', 'oromigna'] }, // VERIFY_NATIVE
   { id: 'ti', name: 'ትግርኛ', en: 'Tigrinya', sr: 'ti-ET', tts: ['ti', 'tir'], say: ['tigrinya', 'tigrigna', 'tigrinia', 'tigrina', 'ትግርኛ'] }, // VERIFY_NATIVE
   { id: 'so', name: 'Soomaali', en: 'Somali', sr: 'so-SO', tts: ['so', 'som'], say: ['somali', 'soomaali', 'somaali', 'somalia'] }, // VERIFY_NATIVE
+  { id: 'sid', name: 'Sidaamu Afoo', en: 'Sidama', sr: 'sid-ET', tts: ['sid'], say: ['sidama', 'sidamo', 'sidaama', 'sidaamu', 'sidaamigna'] }, // VERIFY_NATIVE
 ];
-const LANG_RE = /^(en|am|om|ti|so)$/;
+const LANG_RE = /^(en|am|om|ti|so|sid)$/;
 const LANG = id => LANGS.find(x => x.id === id) || LANGS[0];
 // Keyboards differ: full-width digits and ＠ (phone keyboards, IMEs) and Arabic-Indic digits become plain 0-9 and @ before checking.
 const ascii = v => String(v == null ? '' : v).normalize('NFKC').replace(/[٠-٩۰-۹]/g, d => String(d.charCodeAt(0) & 0xF));
@@ -70,7 +72,7 @@ const BTN = { next: 'next', back: 'back', skip: 'skip', read: 'read', mic: 'spea
 const UI = {
   // Language page. It is always in English first (langH, langAsk, langNone); each language then invites its own speakers (langSelf).
   langH: { en: 'Which language would you like to use?' },
-  langAsk: { en: 'Which language would you like to use? Say English, Amharic, Oromo, Tigrinya or Somali, or press a button.' },
+  langAsk: { en: 'Which language would you like to use? Say English, Amharic, Oromo, Tigrinya, Somali or Sidama, or press a button.' },
   langNone: { en: 'We did not hear a language. Please press a language button.' },
   colours: { en: 'Colours', am: 'ቀለሞች', om: "Halluuwwan", ti: "ሕብርታት", so: "Midabada" }, // VERIFY_NATIVE (om ti so)
   th_auto: { en: 'Same as my device', am: 'እንደ መሣሪያዬ', om: "Akkuma meeshaa koo", ti: "ከም መሳርሒየ", so: "Sida qalabkayga" }, // VERIFY_NATIVE (om ti so)
@@ -236,6 +238,143 @@ const FLOWS = {
       hint: { en: 'Optional. Ethiopian calendar. If you only know the month, choose Not sure for the day.', am: 'አማራጭ ነው። በኢትዮጵያ አቆጣጠር። ወሩን ብቻ ካወቁ ለቀኑ «እርግጠኛ አይደለሁም» ይምረጡ።', om: "Dirqama miti. Lakkoofsa Itoophiyaa. Ji'a qofa yoo beekte, guyyaaf 'Hin beeku' filadhu.", ti: "ግዴታ ኣይኮነን። ብኣቆጻጽራ ኢትዮጵያ። ወርሒ ጥራይ እንተ ፈሊጥኩም፣ ንመዓልቲ «ርግጸኛ ኣይኮንኩን» ምረጹ።", so: "Ikhtiyaari. Kalandarka Itoobiya. Haddii aad bisha oo keliya taqaanno, maalinta u dooro 'Ma hubo'." } }, // VERIFY_NATIVE
   ] },
 };
+
+// ---- Sidaamu Afoo (sid) --------------------------------------------------------------------------------------
+// ROUGH DRAFT, NOT CHECKED: every line must be corrected by a native Sidama speaker BEFORE the audio clips are made
+// (the voice reads exactly this text). It is kept in one block so the reviewer can work through it in one place.
+// Keys: ui.* = interface text, q.* / hint.* = questions and hints, opt.<question>.<choice>, work.<choice> = workplace adjustments.
+// Keep {n}, {t}, {x}, {p}, {r}, {e}, {g} exactly as they are: the form puts numbers and names there.
+// A line that is deleted or left '' falls back to English.
+const SID = {
+  ui: {
+    colours: 'Kuulla',
+    th_auto: 'Uduunnichoyi\'ya gede',
+    th_standard: 'Rosu',
+    th_dark: 'Tuqa',
+    th_contrast: 'Lowo babbaxxe (kolishsho nna waajjo)',
+    th_rg: 'Hoogora nna burtukaane (duumo nna haqqaa kuulla babbaxxe dandiitinokketa)',
+    th_by: 'Haqqaa-hoogora nna duumo (hoogora nna dalla kuulla babbaxxe dandiitinokketa)',
+    sending: 'Soyamanni no…',
+    speakNow: 'Xa hasaawi.',
+    sel: 'doodamino',
+    unsel: 'doodaminokki',
+    langSelf: 'Sidaamu Afoo doorate, Sidama yi, woy Sidaamu Afoo yitanno ilkaawa xiiwi.',
+    next: 'Albisi',
+    back: 'Higi',
+    read: 'Qaalinke nabbawi',
+    speak: 'Hasaawi',
+    send: 'Ee, soy',
+    change: 'Soorri',
+    review: 'Dawaro keeshshi buuxi',
+    thanks: 'Galateemmo. Dawaro keeshshi adhinoonni.',
+    need: 'Ikkitinni tenne xa\'mo dawaari, woy Higi xiiwi.',
+    bad: 'Ikkitinni zeerotenni hanafanno, tonne kiiro afi\'rino silki kiiro borreessi, woy @ malaatto afi\'rino imeele borreessi.',
+    skip: 'Darbi',
+    stopped: 'Nabbawa uurrino. Wole hanafate Ane nabbawi xiiwi.',
+    skipped: '(darbamino)',
+    of: 'Xa\'mo {n}, {t} giddo',
+    heard: 'Macciishshoonnihu: {x}. Soorrate dandaatto.',
+    novoice: 'Qaalinke eeshsha konni dandaamannokki. Ikkitinni borreessi.',
+    novoicehere: 'Konne uduunnichi tenne afootenni qaali dihasiissanno. Ikkitinni borrote nabbawi, woy wole uduunnicho paaxi.',
+    listening: 'Macciishshitinoonni. Ikkitinni hasaawi.',
+    micblocked: 'Maykiroofoonu gufamino. Barbaarsaaso giddo fajji, woy borreessi.',
+    nolang: 'Kuni barbaarsaasi tenne afoo qaalinke dumaggisiisa didandiitanno. Ikkitinni borreessi.',
+    nospeech: 'Mittunkuranni dimacciishshinoommo. Wole paaxi, woy borreessi.',
+    welcomeH: 'Dancha dayitine!',
+    welcomeP: 'Borreessamate nna loosu dandoowa afate shota doogo.',
+    startVoice: 'Qaalinke hanafi',
+    typeInstead: 'Ikkiinni borreessi',
+    start: 'Hanafi',
+    intro: 'Dancha dayitine. Kuni foormu mitte yannara mitte xa\'mo xa\'manno. Ilkaawubba mereero sa\'ate Tab, doorate Enter horoonsi\'ri. Qoola macciishshate Qaalinke nabbawi xiiwi.',
+    readToMe: 'Ane nabbawi',
+    stopRead: 'Nabbawa uurrisi',
+    reading: 'Nabbaweemmo...',
+    raAsk: 'Kuni qoolu qaalinke nabbawamanno gede hasatto?',
+    raHint: 'Ikkitinni Ee woy Dee\'ni yi, woy mitte ilkaawa xiiwi.',
+    raPrivacy: 'Ee yitto ikkiro, woy gedensaanni Hasaawi xiiwitto ikkiro, barbaarsaasikki qaalekki borrote soorrate abbaasi aana soyannosi. Dee\'ni yitte borreessa dandaatto.',
+    raAgain: 'Dawaro dimacciishshinoommo, kawule Dee\'ni yinoonni gede adhineemmo. Qoolu nabbawamanno gede hasatto ikkiro, xa Ee yi, woy Ee ilkaawa xiiwi.',
+    raYes: 'Ee, nabbawi',
+    raNo: 'Dee\'ni, galateemmo',
+    raNone: 'Nabbawinnikkinni albisa. Ane nabbawi ayee yannanni xiiwa dandaatto.',
+    sayChoose: 'Doorshikki kiiro woy su\'ma yi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi.',
+    sayChoose1: 'Doorshikki kiiro woy su\'ma yi. Albisate Albisi, wole macciishshate Qaalinke nabbawi yi.',
+    saySkip: 'Tenne xa\'mo darbate Darbi yi.',
+    sayText: 'Xa dawarokki hasaawi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi.',
+    sayText1: 'Xa dawarokki hasaawi. Albisate Albisi, wole macciishshate Qaalinke nabbawi yi.',
+    sayWelcome: 'Hanafate Hanafi yi.',
+    sayReview: 'Dawaro keeshshi soyate Soy, soorrate Higi yi.',
+    chose: 'Doorttohu: {x}. Albisate Albisi yi, woy wole doori.',
+    noneSel: 'Mittunkuri dooraminokki. Kiiro woy su\'ma yi, woy Darbi yi.',
+    unclear: 'Hakkaya, dihuvattoommo. Ikkitinni doorshikki kiiro yi.',
+    heardNext: 'Macciishshoonnihu: {x}. Albisate Albisi yi, woy dawarokki wole yi.',
+    idle: 'Dimacciishshinoommo. Lowo Hasaawi ilkaawa xiiwi, woy keyboorde horoonsi\'rate Nabbawa uurrisi xiiwi.',
+    sayType: 'Ikkitinni dawarokki saaxine giddo borreessi. Aanchite Enter, woy Albisi ilkaawa xiiwi.',
+    reviewAsk: 'Dawaro keeshshi soyate hasatto? Soyate Ee, mittu coye soorrate Dee\'ni yi.',
+    reviewFix: 'Umi xa\'mora higate Wole hanafi yi, woy soorrate hasatto xa\'mo kiiro yi.',
+    noChange: 'Dee\'ni, mittu coye soorrara',
+    restart: 'Wole hanafi',
+    choseA: 'Doorttohu',
+    choseB: 'Albisate Albisi yi, woy wole doori.',
+    heardGeneric: 'Dawarokki macciishshinoonni. Leellisaanchu aana leellitanno. Albisate Albisi yi, woy dawarokki wole yi.',
+    fail: 'Dawaro keeshshi soya didandiinoommo. Mittunkuri dibaino. Ikkitinni wole paaxi.',
+    consentH: 'Ammanaakki',
+    consentSend: 'Kuri dawaro {p}ra soyamanno gede ammanaammo.',
+    consentSupport: 'Kaa\'lo doorshoyya qixxeessitootira qoodi, kaa\'lo qixxeessanno gede. Tenne mullicho agurtto ikkiro, kaa\'lo doorshoyyikki disoyamanno.',
+    consentNote: 'Ammanaatto geeshsha mittunkuri disoyamanno. Soyitto gedensaanni, dawaro keeshshi huqqisamanno gede xa\'mate dandiitto qiinoo koode afitto.',
+    consentNeed: 'Ikkitinni soyitto albaanni ammanaate saaxine malaatisi, woy Higi xiiwi.',
+    org: 'konne weebsaytete qixxeessitoota',
+    receipt: 'Qiinoo koodekki {r}. Gedensaanni dawaro keeshshi huqqisamanno gede hasatto ikkiro agari.',
+    draftH: 'Dancha higgite',
+    draftP: 'Darbinoha yannaha dawaro keeshshi konne uduunnicho aana agarantino.',
+    draftGo: 'Uurrinoommohunni albisi',
+    queued: 'Interneete aana dikiitto. Dawaro keeshshi konne uduunnicho aana agarantino, interneete aana higgitto wote soyamanno.',
+    sentLater: 'Agarantino dawaro keeshshi xa soyamino.',
+    tapToHear: 'Xa\'muwa macciishshate ayee ilkaawa xiiwi woy leellisaancho kaali.',
+    today: 'Techi Itiyoophiyu barru qoodo aana {e} ({g}).',
+    day: 'Barra',
+    month: 'Agana',
+    year: 'Diri (Itiyoophiya)',
+    notSure: 'Dianfaa\'moommo',
+    about: 'shiima',
+    dateBad: 'Ikkitinni agana doori, woy barranna diri Dianfaa\'moommo assi.',
+    noMatch: 'Doorttoha baala aamannohu loosu dino, kawule loosubba leellitino.',
+  },
+  q: {
+    prefs: 'Konne foormu hiittoo horoonsi\'rate hasatto?',
+    fullName: 'Wo\'mu su\'mikki ayeti?',
+    contact: 'Hiittoo silki kiiro woy imeelenni dandoonketa?',
+    idRoute: 'Ati ayeti ikkitoota hiittoo leellisate hasatto?',
+    support: 'Hiittoo kaa\'lo kaa\'lannohe? Ayeeno doori.',
+    needs: 'Loosu aana hiittoo kaa\'lo hasiissannohe? Ayeeno doori.',
+    role: 'Ayi loosora xa\'mitto?',
+    why: 'Konne loosu mayira hasatto?',
+    job: 'Loosu su\'mi ayeti?',
+    offers: 'Kuni loosu hiittoo qixxeessuwa aamanno?',
+    closes: 'Xa\'muwu ayi yanna gufamanno?',
+  },
+  hint: {
+    prefs: 'Dooro. Darba dandaatto.',
+    fullName: 'Barru barrunni horoonsi\'ratto su\'mu ikkanno.',
+    contact: 'Tenne pirogiraame daafira dandoonketa calla. Silki kiiro tonne kiiro afi\'rinohanna zeerotenni hanafanno.',
+    support: 'Tenne darba dandaatto. Ragi dihasiissanno. Qixxeessitooti calla la\'anno, kaa\'lo qixxeessate calla.',
+    needs: 'Ma\'nunni. Konne uduunnichokki aana keeshshanno, coyi\'nanno loosuwa leellisate calla.',
+    why: 'Shiima qaalla ikkanno. Hasaawa dandaatto.',
+    closes: 'Dooro. Itiyoophiyu barru qoodo. Agana calla huvatto ikkiro, barrara Dianfaa\'moommo doori.',
+  },
+  opt: {
+    prefs: { large: 'Lowo borro', simple: 'Doorshu gaxa misilla' },
+    idRoute: { kebele: 'Qebeele eeshsha woy paaspoorte', refugee: 'Baqatu woy higgaanchu eeshsha', other: 'Wole bortaje', refer: 'Eeshsha diafi\'rino. Jaala dirijjiteenni hoolisi\'e' },
+    support: { screenreader: 'Leellisaancho nabbawaancho horoonsi\'reemmo', large: 'Lowo borro', voice: 'Dawaro qaalinke hasaawa doorreemmo', sign: 'Itiyoophiyu Malaatu Afoo turjimaancho', simple: 'Shota qaalla nna misilla', human: 'Ikkitinni kaa\'lo daafira silki xa\'mi' },
+  },
+  work: { stepfree: 'Gadu dinokki loosu bayicho', reader: 'Leellisaancho nabbawaanchora coyi\'nanno uduunnicho', interp: 'Malaatu afoo turjimaancho', hours: 'Soorramanno loosu saate', remote: 'Mineenni loosa' },
+};
+// Merge the Sidama text into the shared tables. A missing or empty line falls back to English.
+for (const k in SID.ui) if (UI[k] && SID.ui[k]) UI[k].sid = SID.ui[k];
+for (const f of Object.values(FLOWS)) for (const s of f.steps) {
+  if (SID.q[s.id]) s.q.sid = SID.q[s.id];
+  if (s.hint && SID.hint[s.id]) s.hint.sid = SID.hint[s.id];
+  (s.options || []).forEach(([k, t]) => { const v = s.options === WORK ? SID.work[k] : (SID.opt[s.id] || {})[k]; if (v) t.sid = v; });
+}
 
 // ---- Design tokens ---------------------------------------------------------------------------------------------
 // One accent per theme, warm neutral surfaces. Meaning never depends on colour alone: selected = check mark + heavier
@@ -425,6 +564,7 @@ const NUM = {
   tokko: 1, lama: 2, sadii: 3, afur: 4, shan: 5, jaha: 6, torba: 7, saddeet: 8, // om, VERIFY_NATIVE
   'ሓደ': 1, 'ክልተ': 2, 'ሰለስተ': 3, 'ኣርባዕተ': 4, 'ሓሙሽተ': 5, 'ሽዱሽተ': 6, 'ሸውዓተ': 7, 'ሸሞንተ': 8, // ti, VERIFY_NATIVE
   kow: 1, hal: 1, laba: 2, saddex: 3, afar: 4, lix: 6, toddoba: 7, siddeed: 8, // so (shan = 5 is shared with om), VERIFY_NATIVE
+  mitto: 1, lame: 2, sase: 3, shoole: 4, onte: 5, lee: 6, lamala: 7, sette: 8, // sid, VERIFY_NATIVE
 };
 const NUM1 = { won: 1, to: 2, too: 2, for: 4 };
 const STOP = ['use', 'the', 'and', 'for', 'you', 'can', 'not', 'don', 'have', 'please', 'through', 'any',
@@ -453,9 +593,9 @@ const CMD = {
 };
 // Yes / No for the first question and the review page.
 const YES = ['አዎ', 'አዎን', 'ይሁን', 'yes', 'yeah', 'yep', 'ok', 'okay', 'sure',
-  'eeyyee', 'eeyye', 'eeyee', 'እወ', 'እዉ', 'haa', 'haye', 'haah']; // om ti so, VERIFY_NATIVE
+  'eeyyee', 'eeyye', 'eeyee', 'እወ', 'እዉ', 'haa', 'haye', 'haah', 'ee']; // om ti so sid, VERIFY_NATIVE
 const NO = ['አይ', 'አይደለም', 'አልፈልግም', 'አያስፈልግም', 'no', 'nope',
-  'lakki', 'lakkii', 'miti', 'ኣይፋል', 'ኣይፋልን', 'maya', 'mayo']; // om ti so, VERIFY_NATIVE
+  'lakki', 'lakkii', 'miti', 'ኣይፋል', 'ኣይፋልን', 'maya', 'mayo', 'dee', 'deeni']; // om ti so sid, VERIFY_NATIVE
 const HASV = () => window.SpeechRecognition || window.webkitSpeechRecognition;
 const DRAFT_DAYS = 7;
 const store = {

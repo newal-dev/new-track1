@@ -37,7 +37,7 @@ test('the calendar converts both ways for every day of four years', () => {
   }
 });
 test('13 month names in every language', () => {
-  for (const l of ['en', 'am', 'om', 'ti', 'so']) assert.equal(C.months[l].length, 13, l);
+  for (const l of ['en', 'am', 'om', 'ti', 'so', 'sid']) assert.equal(C.months[l].length, 13, l);
   assert.equal(C.ecText({ y: 2019, m: 3, d: 6 }, 'am'), '6 ኅዳር 2019');
 });
 test('employer closing date: day "Not sure" becomes the last day of that month, shown as approximate', () => {
@@ -140,6 +140,15 @@ test('consent box is on the review page, with the partner name; support box only
 });
 test('every new text exists in all five languages', () => {
   for (const k of ['consentH', 'consentSend', 'consentSupport', 'consentNote', 'consentNeed', 'draftH', 'draftP', 'draftGo', 'queued', 'sentLater', 'today', 'dateBad', 'noMatch', 'receipt', 'tapToHear'])
-    for (const l of ['en', 'am', 'om', 'ti', 'so']) assert.ok(UI[k][l], k + ' ' + l);
+    for (const l of ['en', 'am', 'om', 'ti', 'so', 'sid']) assert.ok(UI[k][l], k + ' ' + l);
 });
 test('widget stays under 250 kB for 3G phones', () => { assert.ok(fs.statSync(file).size < 250 * 1024, fs.statSync(file).size + ' bytes'); });
+test('Sidaamu Afoo: every text, question, hint and choice has a Sidama version', () => {
+  const missing = Object.keys(UI).filter(k => !['langH', 'langAsk', 'langNone'].includes(k) && !UI[k].sid);
+  for (const f of Object.values(F)) for (const s of f.steps) {
+    if (!s.q.sid) missing.push('q.' + s.id);
+    if (s.hint && !s.hint.sid) missing.push('hint.' + s.id);
+    (s.options || []).forEach(([k, t]) => { if (!t.sid) missing.push(s.id + '.' + k); });
+  }
+  assert.deepEqual(missing, []);
+});

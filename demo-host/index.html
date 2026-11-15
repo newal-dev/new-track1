@@ -23,6 +23,7 @@
         <li><a data-lang='om' lang='om' hreflang='om' href='?lang=om'>Afaan Oromoo</a></li>
         <li><a data-lang='ti' lang='ti' hreflang='ti' href='?lang=ti'>ትግርኛ</a></li>
         <li><a data-lang='so' lang='so' hreflang='so' href='?lang=so'>Soomaali</a></li>
+        <li><a data-lang='sid' lang='sid' hreflang='sid' href='?lang=sid'>Sidaamu Afoo</a></li>
       </ul>
     </nav>
   </div>
@@ -47,7 +48,7 @@
       <dl class='facts'>
         <div><dt>Time</dt><dd>About 3 minutes, one question at a time.</dd></div>
         <div><dt>You need</dt><dd>Nothing. No ID is needed to start.</dd></div>
-        <div><dt>Languages</dt><dd>English, አማርኛ, Afaan Oromoo, ትግርኛ, Soomaali.</dd></div>
+        <div><dt>Languages</dt><dd>English, አማርኛ, Afaan Oromoo, ትግርኛ, Soomaali, Sidaamu Afoo.</dd></div>
         <div><dt>Help</dt><dd>Call 0911 000 000, or visit us. Ethiopian Sign Language support on Thursdays.</dd></div>
       </dl>
       <p class='note'>Your support needs are optional and only seen by the organisers.</p>
@@ -133,7 +134,7 @@
 <script>
   (function () {
     // ?flow= and ?lang=: keep both when the visitor switches form or language.
-    const p = new URLSearchParams(location.search), LANG_IDS = ['en', 'am', 'om', 'ti', 'so'];
+    const p = new URLSearchParams(location.search), LANG_IDS = ['en', 'am', 'om', 'ti', 'so', 'sid'];
     const flow = ['signup', 'job', 'employer'].includes(p.get('flow')) ? p.get('flow') : 'signup';
     const lang = LANG_IDS.includes(p.get('lang')) ? p.get('lang') : 'en';
     const form = document.querySelector('db-form');

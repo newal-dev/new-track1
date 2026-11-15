@@ -28,8 +28,8 @@ import torch
 from transformers import VitsModel, AutoTokenizer, set_seed
 
 # ---------------------------------------------------------------- settings --
-# All five languages, so every clip is the same family of voice and the same loudness.
-LANGS_TO_MAKE = ["en", "am", "om", "ti", "so"]
+# Every language, so every clip is the same family of voice and the same loudness.
+LANGS_TO_MAKE = ["en","am","om","ti","so","sid"]
 ONLY_IDS = []            # e.g. ["fullName", "errBad"] to remake just a few clips; empty = all
 MODELS = {
     "en": "facebook/mms-tts-eng",
@@ -37,8 +37,9 @@ MODELS = {
     "om": "facebook/mms-tts-orm",
     "ti": "facebook/mms-tts-tir",
     "so": "facebook/mms-tts-som",
+    "sid": "facebook/mms-tts-sid",
 }
-UROMAN_CODE = {"en": "eng", "am": "amh", "om": "orm", "ti": "tir", "so": "som"}  # used only if a model expects Latin letters
+UROMAN_CODE = {"en": "eng", "am": "amh", "om": "orm", "ti": "tir", "so": "som", "sid": "sid"}  # used only if a model expects Latin letters
 SPEAKING_RATE = 0.9      # below 1.0 = slower and clearer
 PAUSE_SENTENCE = 0.45    # seconds of silence between sentences and between numbered choices
 PAUSE_COMMA = 0.18       # shorter breath at commas (the models have no comma of their own)
@@ -49,19 +50,20 @@ SEED = 555               # same text -> same voice every run
 SAVE_TO_DRIVE = False    # True = also copy audio.zip to Google Drive (asks for permission)
 OUT = "/content/audio" if os.path.isdir("/content") else os.path.abspath("audio")
 
-# The MMS models have no digits or symbols, so these are spelled out first.  VERIFY_NATIVE (om, ti, so)
+# The MMS models have no digits or symbols, so these are spelled out first.  VERIFY_NATIVE (om, ti, so, sid)
 NUMBERS = {
     "en": ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"],
     "am": ["ዜሮ", "አንድ", "ሁለት", "ሦስት", "አራት", "አምስት", "ስድስት", "ሰባት", "ስምንት", "ዘጠኝ", "አሥር"],
     "om": ["zeeroo", "tokko", "lama", "sadii", "afur", "shan", "jaha", "torba", "saddeet", "sagal", "kudhan"],
     "ti": ["ዜሮ", "ሓደ", "ክልተ", "ሰለስተ", "ኣርባዕተ", "ሓሙሽተ", "ሽዱሽተ", "ሸውዓተ", "ሸሞንተ", "ትሽዓተ", "ዓሰርተ"],
     "so": ["eber", "kow", "laba", "saddex", "afar", "shan", "lix", "toddoba", "siddeed", "sagaal", "toban"],
+    "sid": ["zeero", "mitto", "lame", "sase", "shoole", "onte", "lee", "lamala", "sette", "honse", "tonne"],
 }
-AT_SIGN = {"en": "at", "am": "at", "om": "at", "ti": "at", "so": "at"}
+AT_SIGN = {"en": "at", "am": "at", "om": "at", "ti": "at", "so": "at", "sid": "at"}
 
 CLIPS = json.loads(r'''{
  "en": {
-  "langAsk": "Which language would you like to use? Say English, Amharic, Oromo, Tigrinya or Somali, or press a button.",
+  "langAsk": "Which language would you like to use? Say English, Amharic, Oromo, Tigrinya, Somali or Sidama, or press a button.",
   "raAsk": "Would you like this page to be read aloud to you? Please say Yes or No, or press a button. If you choose Yes, or press a Speak button later, your browser may send your voice to its provider to turn it into text. You can choose No and type instead.",
   "raAgain": "We did not hear an answer, so we will take that as No. If you would like the page read aloud, please say Yes now, or press the Yes button.",
   "welcome": "Welcome! A simpler way to register and find opportunities. Start. Start with voice. Read to me. Say Start to begin.",
@@ -509,6 +511,96 @@ CLIPS = json.loads(r'''{
   "o_offers_interp": "Turjubaan luqadda calaamadaha",
   "o_offers_hours": "Saacado dabacsan",
   "o_offers_remote": "Ka shaqeyn guriga"
+ },
+ "sid": {
+  "langSelf": "Sidaamu Afoo doorate, Sidama yi, woy Sidaamu Afoo yitanno ilkaawa xiiwi.",
+  "raAsk": "Kuni qoolu qaalinke nabbawamanno gede hasatto? Ikkitinni Ee woy Dee'ni yi, woy mitte ilkaawa xiiwi. Ee yitto ikkiro, woy gedensaanni Hasaawi xiiwitto ikkiro, barbaarsaasikki qaalekki borrote soorrate abbaasi aana soyannosi. Dee'ni yitte borreessa dandaatto.",
+  "raAgain": "Dawaro dimacciishshinoommo, kawule Dee'ni yinoonni gede adhineemmo. Qoolu nabbawamanno gede hasatto ikkiro, xa Ee yi, woy Ee ilkaawa xiiwi.",
+  "welcome": "Dancha dayitine! Borreessamate nna loosu dandoowa afate shota doogo. Hanafi. Qaalinke hanafi. Ane nabbawi. Hanafate Hanafi yi.",
+  "prefs": "Konne foormu hiittoo horoonsi'rate hasatto? Dooro. Darba dandaatto. 1: Lowo borro. 2: Doorshu gaxa misilla. Doorshikki kiiro woy su'ma yi. Albisate Albisi, wole macciishshate Qaalinke nabbawi yi. Tenne xa'mo darbate Darbi yi.",
+  "fullName": "Wo'mu su'mikki ayeti? Barru barrunni horoonsi'ratto su'mu ikkanno. Xa dawarokki hasaawi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi.",
+  "contact": "Hiittoo silki kiiro woy imeelenni dandoonketa? Tenne pirogiraame daafira dandoonketa calla. Silki kiiro tonne kiiro afi'rinohanna zeerotenni hanafanno. Ikkitinni dawarokki saaxine giddo borreessi. Aanchite Enter, woy Albisi ilkaawa xiiwi.",
+  "idRoute": "Ati ayeti ikkitoota hiittoo leellisate hasatto? 1: Qebeele eeshsha woy paaspoorte. 2: Baqatu woy higgaanchu eeshsha. 3: Wole bortaje. 4: Eeshsha diafi'rino. Jaala dirijjiteenni hoolisi'e. Doorshikki kiiro woy su'ma yi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi.",
+  "support": "Hiittoo kaa'lo kaa'lannohe? Ayeeno doori. Tenne darba dandaatto. Ragi dihasiissanno. Qixxeessitooti calla la'anno, kaa'lo qixxeessate calla. 1: Leellisaancho nabbawaancho horoonsi'reemmo. 2: Lowo borro. 3: Dawaro qaalinke hasaawa doorreemmo. 4: Itiyoophiyu Malaatu Afoo turjimaancho. 5: Shota qaalla nna misilla. 6: Ikkitinni kaa'lo daafira silki xa'mi. Doorshikki kiiro woy su'ma yi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi. Tenne xa'mo darbate Darbi yi.",
+  "needs": "Loosu aana hiittoo kaa'lo hasiissannohe? Ayeeno doori. Ma'nunni. Konne uduunnichokki aana keeshshanno, coyi'nanno loosuwa leellisate calla. 1: Gadu dinokki loosu bayicho. 2: Leellisaancho nabbawaanchora coyi'nanno uduunnicho. 3: Malaatu afoo turjimaancho. 4: Soorramanno loosu saate. 5: Mineenni loosa. Doorshikki kiiro woy su'ma yi. Albisate Albisi, wole macciishshate Qaalinke nabbawi yi. Tenne xa'mo darbate Darbi yi.",
+  "why": "Konne loosu mayira hasatto? Shiima qaalla ikkanno. Hasaawa dandaatto. Xa dawarokki hasaawi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi.",
+  "job": "Loosu su'mi ayeti? Xa dawarokki hasaawi. Albisate Albisi, wole macciishshate Qaalinke nabbawi yi.",
+  "offers": "Kuni loosu hiittoo qixxeessuwa aamanno? 1: Gadu dinokki loosu bayicho. 2: Leellisaancho nabbawaanchora coyi'nanno uduunnicho. 3: Malaatu afoo turjimaancho. 4: Soorramanno loosu saate. 5: Mineenni loosa. Doorshikki kiiro woy su'ma yi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi. Tenne xa'mo darbate Darbi yi.",
+  "closes": "Xa'muwu ayi yanna gufamanno? Dooro. Itiyoophiyu barru qoodo. Agana calla huvatto ikkiro, barrara Dianfaa'moommo doori. Ikkitinni dawarokki saaxine giddo borreessi. Aanchite Enter, woy Albisi ilkaawa xiiwi.",
+  "errNeed": "Ikkitinni tenne xa'mo dawaari, woy Higi xiiwi.",
+  "errBad": "Ikkitinni zeerotenni hanafanno, tonne kiiro afi'rino silki kiiro borreessi, woy @ malaatto afi'rino imeele borreessi.",
+  "errFail": "Dawaro keeshshi soya didandiinoommo. Mittunkuri dibaino. Ikkitinni wole paaxi.",
+  "unclear": "Hakkaya, dihuvattoommo. Ikkitinni doorshikki kiiro yi.",
+  "noneSel": "Mittunkuri dooraminokki. Kiiro woy su'ma yi, woy Darbi yi.",
+  "idle": "Dimacciishshinoommo. Lowo Hasaawi ilkaawa xiiwi, woy keyboorde horoonsi'rate Nabbawa uurrisi xiiwi.",
+  "sayWelcome": "Hanafate Hanafi yi.",
+  "reviewAsk": "Dawaro keeshshi soyate hasatto? Soyate Ee, mittu coye soorrate Dee'ni yi.",
+  "heardGeneric": "Dawarokki macciishshinoonni. Leellisaanchu aana leellitanno. Albisate Albisi yi, woy dawarokki wole yi.",
+  "choseA": "Doorttohu",
+  "choseB": "Albisate Albisi yi, woy wole doori.",
+  "errConsentNeed": "Ikkitinni soyitto albaanni ammanaate saaxine malaatisi, woy Higi xiiwi.",
+  "errDateBad": "Ikkitinni agana doori, woy barranna diri Dianfaa'moommo assi.",
+  "draftH": "Dancha higgite Darbinoha yannaha dawaro keeshshi konne uduunnicho aana agarantino. Uurrinoommohunni albisi Wole hanafi",
+  "queued": "Interneete aana dikiitto. Dawaro keeshshi konne uduunnicho aana agarantino, interneete aana higgitto wote soyamanno.",
+  "sentLater": "Agarantino dawaro keeshshi xa soyamino.",
+  "tapToHear": "Xa'muwa macciishshate ayee ilkaawa xiiwi woy leellisaancho kaali.",
+  "n1": "Mitto",
+  "n2": "Lame",
+  "n3": "Sase",
+  "n4": "Shoole",
+  "n5": "Onte",
+  "n6": "Lee",
+  "n7": "Lamala",
+  "n8": "Sette",
+  "reviewFix": "Umi xa'mora higate Wole hanafi yi, woy soorrate hasatto xa'mo kiiro yi.",
+  "done": "Galateemmo. Dawaro keeshshi adhinoonni.",
+  "speakNow": "Xa hasaawi.",
+  "sel": "doodamino",
+  "unsel": "doodaminokki",
+  "langName": "Sidaamu Afoo",
+  "b_next": "Albisi",
+  "b_back": "Higi",
+  "b_skip": "Darbi",
+  "b_read": "Qaalinke nabbawi",
+  "b_speak": "Hasaawi",
+  "b_readToMe": "Ane nabbawi",
+  "b_stopRead": "Nabbawa uurrisi",
+  "b_send": "Ee, soy",
+  "b_noChange": "Dee'ni, mittu coye soorrara",
+  "b_restart": "Wole hanafi",
+  "b_change": "Soorri",
+  "b_start": "Hanafi",
+  "b_startVoice": "Qaalinke hanafi",
+  "b_raYes": "Ee, nabbawi",
+  "b_raNo": "Dee'ni, galateemmo",
+  "b_draftGo": "Uurrinoommohunni albisi",
+  "o_prefs_large": "Lowo borro",
+  "o_prefs_simple": "Doorshu gaxa misilla",
+  "q_fullName": "Wo'mu su'mikki ayeti?",
+  "q_contact": "Hiittoo silki kiiro woy imeelenni dandoonketa?",
+  "o_idRoute_kebele": "Qebeele eeshsha woy paaspoorte",
+  "o_idRoute_refugee": "Baqatu woy higgaanchu eeshsha",
+  "o_idRoute_other": "Wole bortaje",
+  "o_idRoute_refer": "Eeshsha diafi'rino. Jaala dirijjiteenni hoolisi'e",
+  "o_support_screenreader": "Leellisaancho nabbawaancho horoonsi'reemmo",
+  "o_support_large": "Lowo borro",
+  "o_support_voice": "Dawaro qaalinke hasaawa doorreemmo",
+  "o_support_sign": "Itiyoophiyu Malaatu Afoo turjimaancho",
+  "o_support_simple": "Shota qaalla nna misilla",
+  "o_support_human": "Ikkitinni kaa'lo daafira silki xa'mi",
+  "o_needs_stepfree": "Gadu dinokki loosu bayicho",
+  "o_needs_reader": "Leellisaancho nabbawaanchora coyi'nanno uduunnicho",
+  "o_needs_interp": "Malaatu afoo turjimaancho",
+  "o_needs_hours": "Soorramanno loosu saate",
+  "o_needs_remote": "Mineenni loosa",
+  "q_role": "Ayi loosora xa'mitto?",
+  "q_why": "Konne loosu mayira hasatto?",
+  "q_job": "Loosu su'mi ayeti?",
+  "o_offers_stepfree": "Gadu dinokki loosu bayicho",
+  "o_offers_reader": "Leellisaancho nabbawaanchora coyi'nanno uduunnicho",
+  "o_offers_interp": "Malaatu afoo turjimaancho",
+  "o_offers_hours": "Soorramanno loosu saate",
+  "o_offers_remote": "Mineenni loosa"
  }
 }''')
 
