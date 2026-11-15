@@ -8,7 +8,7 @@ Most phones and laptops have **no Amharic voice**. The browser can only read wit
 When an Amharic recording is missing and the device has no Amharic voice, the plugin now says in English "This device has no voice for this language…" so a blind person knows why, and it still listens for their answer.
 
 ## What to produce
-- **33 files per language** (66 in total) (English and Amharic).
+- **43 files per language** (86 in total) (English and Amharic).
 - Format: **mp3**, mono, 64 kbps or lower (small for 3G). 
 - Folders: `public/audio/en/` and `public/audio/am/`.
 - File name = the **ID** in the first column, plus `.mp3`. Example: `public/audio/am/fullName.mp3`. Use exactly this spelling and capital letters.
@@ -20,19 +20,24 @@ When an Amharic recording is missing and the device has no Amharic voice, the pl
 3. Read **every word exactly as written**, no more and no less. Do not add "please" or change the order, including the numbers ("1:" is spoken "one", "2:" "two"…). The numbers matter: the person will say them back.
 4. Read the Amharic with a native speaker, and let that speaker also fix any wrong Amharic in the code first. Then update the text here too.
 5. Trim silence at the start and end. Keep each file under about 40 seconds.
-6. Convert to mp3 (for example with Audacity: File, Export, MP3), name the file, put it in the right folder, then test: open the form, choose Read to me, and listen to each page in both languages.
+6. Convert to mp3 (for example with Audacity: File, Export, MP3), name the file, put it in the right folder, then test: open the form, choose Read every page aloud, and listen to each page in both languages. Then test again after pressing Start with voice input.
 7. Commit and push the audio folders.
+
+## Two versions of each question: read aloud only, and voice input on
+Reading aloud and voice input are separate choices. The form only tells someone to *say* something when the microphone is really listening.
+- `QUESTIONID.mp3` (for example `fullName.mp3`) is played when **voice input is on**. It ends with spoken instructions such as "Say Next to continue", and the microphone starts as soon as it finishes.
+- `QUESTIONIDRead.mp3` (for example `fullNameRead.mp3`) is played when the person only chose **Read every page aloud**. It has no voice instructions, because the microphone is off.
 
 ## Important: what the voice says must match what is on screen
 - The **first question of each flow** (`prefs`, `needs`, `job`) has **no Back button**, so its script does **not** say "Back". Every other question does.
 - **Skip** is spoken only for optional questions, and those pages have a visible Skip button.
 - The words you say in the instructions are the same as the buttons: **Next, Back, Skip, Read aloud, Start, Submit**.
 - The privacy notice is spoken **once**, in `raAsk`, and shown once on that same page. It is not repeated anywhere else.
-- The **contact** question (phone or email) is **typed, not spoken**: it has no Speak button and the voice does not listen, because email addresses and numbers are not recognised reliably. Its script ends with "Please type your answer in the box. Then press Enter, or press the Next button."
+- The **contact** question (phone or email) is **typed, not spoken**: it has no Start voice input button and the voice does not listen, because email addresses and numbers are not recognised reliably. Its script ends with "Please type your answer in the box. Then press Enter, or press the Next button."
 
 - **Errors and answers are now recorded too.** `errNeed`, `errBad`, `errFail`, `unclear`, `noneSel`, `idle`, `sayWelcome` and `reviewAsk` are single messages. The confirmation after a choice is three parts played in a row: `choseA` ("You chose"), then the number clips `n1` to `n8` (for example "two"), then `choseB`. Record the numbers as single words with a short pause at the end.
 - If a website hides a question with the `hide` attribute, the recordings still describe the full list. Hide only questions you do not need in your own demo, or record again for that site.
-- The **Stop reading** button and the Escape key stop any recording or voice at any time. They are not spoken, so they are not in the scripts.
+- The **Stop reading aloud** button stops reading; **Stop listening** and **Switch to typing** stop the microphone; the Escape key stops both at any time. They are not spoken, so they are not in the scripts.
 
 ## Do NOT record these (they change each time)
 - **review** (the first part of the last page): reads out the person's own answers, then asks "Do you want to submit your answers?". Only the second part, `reviewFix`, is recordable.
@@ -43,19 +48,28 @@ These pages use the device voice. That is expected.
 ## Checklist
 | ID | Page | Optional question? |
 |---|---|---|
-| `raAsk` | First question (asks if the page should be read aloud) | - |
-| `raAgain` | Second ask, if no answer was heard | - |
+| `raAsk` | First question (asks if the page should be read aloud; played only when the person presses Read this page aloud) | - |
 | `welcome` | Welcome page (after they said Yes to read aloud) | - |
-| `prefs` | signup flow, question 1 | yes (includes "Say Skip") |
-| `fullName` | signup flow, question 2 | no |
-| `contact` | signup flow, question 3 | no |
-| `idRoute` | signup flow, question 4 | no |
-| `support` | signup flow, question 5 | yes (includes "Say Skip") |
-| `needs` | job flow, question 1 | yes (includes "Say Skip") |
-| `why` | job flow, question 3 | no |
-| `job` | employer flow, question 1 | no |
-| `offers` | employer flow, question 2 | yes (includes "Say Skip") |
+| `prefs` | signup flow, question 1, voice input on | yes (includes "Say Skip") |
+| `prefsRead` | signup flow, question 1, read aloud only (no voice instructions) | - |
+| `fullName` | signup flow, question 2, voice input on | no |
+| `fullNameRead` | signup flow, question 2, read aloud only (no voice instructions) | - |
+| `contact` | signup flow, question 3, voice input on | no |
+| `contactRead` | signup flow, question 3, read aloud only (no voice instructions) | - |
+| `idRoute` | signup flow, question 4, voice input on | no |
+| `idRouteRead` | signup flow, question 4, read aloud only (no voice instructions) | - |
+| `support` | signup flow, question 5, voice input on | yes (includes "Say Skip") |
+| `supportRead` | signup flow, question 5, read aloud only (no voice instructions) | - |
+| `needs` | job flow, question 1, voice input on | yes (includes "Say Skip") |
+| `needsRead` | job flow, question 1, read aloud only (no voice instructions) | - |
+| `why` | job flow, question 3, voice input on | no |
+| `whyRead` | job flow, question 3, read aloud only (no voice instructions) | - |
+| `job` | employer flow, question 1, voice input on | no |
+| `jobRead` | employer flow, question 1, read aloud only (no voice instructions) | - |
+| `offers` | employer flow, question 2, voice input on | yes (includes "Say Skip") |
+| `offersRead` | employer flow, question 2, read aloud only (no voice instructions) | - |
 | `errNeed` | Error: question not answered | - |
+| `errNeed1` | Error: first question not answered (no Back button) | - |
 | `errBad` | Error: phone number or email not valid | - |
 | `errFail` | Error: could not send | - |
 | `unclear` | Voice answer not understood | - |
@@ -74,7 +88,8 @@ These pages use the device voice. That is expected.
 | `n6` | Number 6 (used in the confirmation) | - |
 | `n7` | Number 7 (used in the confirmation) | - |
 | `n8` | Number 8 (used in the confirmation) | - |
-| `reviewFix` | Review page, second part (after the person says No to submitting) | - |
+| `reviewFix` | Review page, second part (after the person says No to submitting), voice input on | - |
+| `reviewFixRead` | Review page, second part, read aloud only | - |
 | `done` | Thank-you page | - |
 
 ---
@@ -83,37 +98,27 @@ These pages use the device voice. That is expected.
 
 Record the text inside each box, from the first word to the last. Read "1:" as "one", "2:" as "two", and so on.
 
-### `raAsk`: First question (asks if the page should be read aloud)
+### `raAsk`: First question (asks if the page should be read aloud; played only when the person presses Read this page aloud)
 
 **English** → `public/audio/en/raAsk.mp3`
 
-> Would you like this page to be read aloud to you? Please say Yes or No, or press a button. If you choose Yes, or press a Speak button later, your browser may send your voice to its provider to turn it into text. You can choose No and type instead.
+> Would you like this page to be read aloud to you? Read aloud means this form speaks each page to you. It does not use your microphone. Choose Yes or No. Voice input is separate and optional. It only starts when you press a voice input button. Your browser may then send your voice to its provider (for example Google, in Chrome) to turn it into text. You can always type instead.
 
 **አማርኛ (draft, must be checked)** → `public/audio/am/raAsk.mp3`
 
-> ይህ ገጽ እንዲነበብልዎ ይፈልጋሉ? «አዎ» ወይም «አይ» ይበሉ፤ ወይም አንድ ቁልፍ ይጫኑ። «አዎ» ከመረጡ ወይም በኋላ «ተናገር» ከተጫኑ አሳሽዎ ድምፅዎን ወደ ጽሑፍ ለመቀየር ወደ አቅራቢው ሊልክ ይችላል። «አይ» መርጠው በምትኩ መጻፍ ይችላሉ።
-
-### `raAgain`: Second ask, if no answer was heard
-
-**English** → `public/audio/en/raAgain.mp3`
-
-> We did not hear an answer, so we will take that as No. If you would like the page read aloud, please say Yes now, or press the Yes button.
-
-**አማርኛ (draft, must be checked)** → `public/audio/am/raAgain.mp3`
-
-> መልስ አልሰማንም። እንደ «አይ» እንወስደዋለን። እንዲነበብልዎ ከፈለጉ አሁን «አዎ» ይበሉ ወይም «አዎ» የሚለውን ይጫኑ።
+> ይህ ገጽ እንዲነበብልዎ ይፈልጋሉ? ማንበብ ማለት ይህ ቅጽ እያንዳንዱን ገጽ ያነብልዎታል ማለት ነው። ማይክሮፎንዎን አይጠቀምም። «አዎ» ወይም «አይ» ይምረጡ። የድምፅ ግብዓት የተለየና አማራጭ ነው። የሚጀምረው የድምፅ ግብዓት ቁልፍ ሲጫኑ ብቻ ነው። ከዚያ አሳሽዎ ድምፅዎን ወደ ጽሑፍ ለመቀየር ወደ አቅራቢው (ለምሳሌ በChrome ውስጥ Google) ሊልክ ይችላል። ሁልጊዜ በምትኩ መጻፍ ይችላሉ።
 
 ### `welcome`: Welcome page (after they said Yes to read aloud)
 
 **English** → `public/audio/en/welcome.mp3`
 
-> Welcome! A simpler way to register and find opportunities. Start. Start with voice. Read to me. Say Start to begin.
+> Welcome! A simpler way to register and find opportunities. Start and type my answers. Start with voice input. Read every page aloud.
 
 **አማርኛ (draft, must be checked)** → `public/audio/am/welcome.mp3`
 
-> እንኳን ደህና መጡ! ለመመዝገብና ዕድሎችን ለማግኘት ቀለል ያለ መንገድ። ጀምር. በድምፅ ጀምር. አንብቡልኝ. ለመጀመር «ጀምር» ይበሉ።
+> እንኳን ደህና መጡ! ለመመዝገብና ዕድሎችን ለማግኘት ቀለል ያለ መንገድ። ጀምር፣ መልሶቼን እጽፋለሁ. በድምፅ ግብዓት ጀምር. እያንዳንዱን ገጽ አንብብልኝ.
 
-### `prefs`: signup flow, question 1
+### `prefs`: signup flow, question 1, voice input on
 
 **English** → `public/audio/en/prefs.mp3`
 
@@ -123,7 +128,17 @@ Record the text inside each box, from the first word to the last. Read "1:" as "
 
 > ይህን ቅጽ እንዴት መጠቀም ይፈልጋሉ? አማራጭ ነው። መዝለል ይችላሉ። 1: ትልቅ ጽሑፍ. 2: ከምርጫዎች ጋር ሥዕሎች. የምርጫዎን ቁጥር ወይም ስም ይናገሩ። ለመቀጠል «ቀጥል»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ። ይህን ጥያቄ ለመዝለል «ዝለል» ይበሉ።
 
-### `fullName`: signup flow, question 2
+### `prefsRead`: signup flow, question 1, read aloud only (no voice instructions)
+
+**English** → `public/audio/en/prefsRead.mp3`
+
+> How would you like to use this form? Optional. You can skip this. Larger text. Pictures next to choices.
+
+**አማርኛ (draft, must be checked)** → `public/audio/am/prefsRead.mp3`
+
+> ይህን ቅጽ እንዴት መጠቀም ይፈልጋሉ? አማራጭ ነው። መዝለል ይችላሉ። ትልቅ ጽሑፍ. ከምርጫዎች ጋር ሥዕሎች.
+
+### `fullName`: signup flow, question 2, voice input on
 
 **English** → `public/audio/en/fullName.mp3`
 
@@ -133,7 +148,17 @@ Record the text inside each box, from the first word to the last. Read "1:" as "
 
 > ሙሉ ስምዎ ማነው? በየቀኑ የሚጠቀሙበት ስም በቂ ነው። መልስዎን አሁን ይናገሩ። ለመቀጠል «ቀጥል»፣ ለመመለስ «ተመለስ»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ።
 
-### `contact`: signup flow, question 3
+### `fullNameRead`: signup flow, question 2, read aloud only (no voice instructions)
+
+**English** → `public/audio/en/fullNameRead.mp3`
+
+> What is your full name? The name you use every day is fine.
+
+**አማርኛ (draft, must be checked)** → `public/audio/am/fullNameRead.mp3`
+
+> ሙሉ ስምዎ ማነው? በየቀኑ የሚጠቀሙበት ስም በቂ ነው።
+
+### `contact`: signup flow, question 3, voice input on
 
 **English** → `public/audio/en/contact.mp3`
 
@@ -143,7 +168,17 @@ Record the text inside each box, from the first word to the last. Read "1:" as "
 
 > ልናገኝዎ የምንችልበት ስልክ ቁጥር ወይም ኢሜይል ምንድን ነው? ስለዚህ ፕሮግራም ለማግኘት ብቻ ነው የሚያገለግለው። ስልክ ቁጥር በዜሮ የሚጀምር ባለ አሥር አሃዝ ነው። እባክዎ መልስዎን በሳጥኑ ውስጥ ይጻፉ። ከዚያ Enter ወይም «ቀጥል» የሚለውን ቁልፍ ይጫኑ።
 
-### `idRoute`: signup flow, question 4
+### `contactRead`: signup flow, question 3, read aloud only (no voice instructions)
+
+**English** → `public/audio/en/contactRead.mp3`
+
+> What phone number or email can we use? Only used to contact you about this programme. A phone number has 10 digits and starts with 0.
+
+**አማርኛ (draft, must be checked)** → `public/audio/am/contactRead.mp3`
+
+> ልናገኝዎ የምንችልበት ስልክ ቁጥር ወይም ኢሜይል ምንድን ነው? ስለዚህ ፕሮግራም ለማግኘት ብቻ ነው የሚያገለግለው። ስልክ ቁጥር በዜሮ የሚጀምር ባለ አሥር አሃዝ ነው።
+
+### `idRoute`: signup flow, question 4, voice input on
 
 **English** → `public/audio/en/idRoute.mp3`
 
@@ -153,7 +188,17 @@ Record the text inside each box, from the first word to the last. Read "1:" as "
 
 > ማንነትዎን እንዴት ማሳየት ይፈልጋሉ? 1: ቀበሌ መታወቂያ ወይም ፓስፖርት. 2: የስደተኛ ወይም ተመላሽ መታወቂያ. 3: ሌላ ሰነድ. 4: ሰነድ የለኝም። አጋር ድርጅት እንዲያመላክተኝ ይጠይቁ. የምርጫዎን ቁጥር ወይም ስም ይናገሩ። ለመቀጠል «ቀጥል»፣ ለመመለስ «ተመለስ»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ።
 
-### `support`: signup flow, question 5
+### `idRouteRead`: signup flow, question 4, read aloud only (no voice instructions)
+
+**English** → `public/audio/en/idRouteRead.mp3`
+
+> How would you like to show who you are? Kebele ID or passport. Refugee or returnee ID. Another document. I don't have an ID. Refer me through a partner organisation.
+
+**አማርኛ (draft, must be checked)** → `public/audio/am/idRouteRead.mp3`
+
+> ማንነትዎን እንዴት ማሳየት ይፈልጋሉ? ቀበሌ መታወቂያ ወይም ፓስፖርት. የስደተኛ ወይም ተመላሽ መታወቂያ. ሌላ ሰነድ. ሰነድ የለኝም። አጋር ድርጅት እንዲያመላክተኝ ይጠይቁ.
+
+### `support`: signup flow, question 5, voice input on
 
 **English** → `public/audio/en/support.mp3`
 
@@ -163,7 +208,17 @@ Record the text inside each box, from the first word to the last. Read "1:" as "
 
 > ምን ዓይነት እገዛ ይጠቅምዎታል? የፈለጉትን ይምረጡ። ይህን መዝለል ይችላሉ። ማስረጃ አያስፈልግም። አዘጋጆቹ ብቻ ያዩታል፤ ለእርስዎ እገዛ ለማዘጋጀት ብቻ። 1: ስክሪን ሪደር እጠቀማለሁ. 2: ትልቅ ጽሑፍ. 3: መልሶቼን በድምፅ መናገር እመርጣለሁ. 4: የኢትዮጵያ ምልክት ቋንቋ አስተርጓሚ. 5: ቀላል ቃላትና ሥዕሎች. 6: እባክዎ ደውለው ያግዙኝ. የምርጫዎን ቁጥር ወይም ስም ይናገሩ። ለመቀጠል «ቀጥል»፣ ለመመለስ «ተመለስ»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ። ይህን ጥያቄ ለመዝለል «ዝለል» ይበሉ።
 
-### `needs`: job flow, question 1
+### `supportRead`: signup flow, question 5, read aloud only (no voice instructions)
+
+**English** → `public/audio/en/supportRead.mp3`
+
+> What support would help you? Choose any. You can skip this. No proof needed. Only the organisers see it, and only to prepare help for you. I use a screen reader. Large text. I prefer to speak my answers. Ethiopian Sign Language interpreter. Simple words and pictures. Please call me to help.
+
+**አማርኛ (draft, must be checked)** → `public/audio/am/supportRead.mp3`
+
+> ምን ዓይነት እገዛ ይጠቅምዎታል? የፈለጉትን ይምረጡ። ይህን መዝለል ይችላሉ። ማስረጃ አያስፈልግም። አዘጋጆቹ ብቻ ያዩታል፤ ለእርስዎ እገዛ ለማዘጋጀት ብቻ። ስክሪን ሪደር እጠቀማለሁ. ትልቅ ጽሑፍ. መልሶቼን በድምፅ መናገር እመርጣለሁ. የኢትዮጵያ ምልክት ቋንቋ አስተርጓሚ. ቀላል ቃላትና ሥዕሎች. እባክዎ ደውለው ያግዙኝ.
+
+### `needs`: job flow, question 1, voice input on
 
 **English** → `public/audio/en/needs.mp3`
 
@@ -173,7 +228,17 @@ Record the text inside each box, from the first word to the last. Read "1:" as "
 
 > በሥራ ላይ ምን እገዛ ያስፈልግዎታል? የፈለጉትን ይምረጡ። ሚስጥራዊ ነው። በመሣሪያዎ ላይ ብቻ ይቆያል፤ ተስማሚ ሥራዎችን ለማሳየት ብቻ ነው። 1: ከደረጃ ነፃ የሥራ ቦታ. 2: ለስክሪን ሪደር ተስማሚ መሣሪያዎች. 3: የምልክት ቋንቋ አስተርጓሚ. 4: ተለዋዋጭ የሥራ ሰዓት. 5: ከቤት መሥራት. የምርጫዎን ቁጥር ወይም ስም ይናገሩ። ለመቀጠል «ቀጥል»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ። ይህን ጥያቄ ለመዝለል «ዝለል» ይበሉ።
 
-### `why`: job flow, question 3
+### `needsRead`: job flow, question 1, read aloud only (no voice instructions)
+
+**English** → `public/audio/en/needsRead.mp3`
+
+> What support do you need at work? Choose any. Private. This stays on your device and is only used to show suitable jobs. Step-free workplace. Screen-reader friendly tools. Sign language interpreter. Flexible hours. Work from home.
+
+**አማርኛ (draft, must be checked)** → `public/audio/am/needsRead.mp3`
+
+> በሥራ ላይ ምን እገዛ ያስፈልግዎታል? የፈለጉትን ይምረጡ። ሚስጥራዊ ነው። በመሣሪያዎ ላይ ብቻ ይቆያል፤ ተስማሚ ሥራዎችን ለማሳየት ብቻ ነው። ከደረጃ ነፃ የሥራ ቦታ. ለስክሪን ሪደር ተስማሚ መሣሪያዎች. የምልክት ቋንቋ አስተርጓሚ. ተለዋዋጭ የሥራ ሰዓት. ከቤት መሥራት.
+
+### `why`: job flow, question 3, voice input on
 
 **English** → `public/audio/en/why.mp3`
 
@@ -183,7 +248,17 @@ Record the text inside each box, from the first word to the last. Read "1:" as "
 
 > ይህን ሥራ ለምን ይፈልጋሉ? ጥቂት ቃላት በቂ ናቸው። በድምፅ መናገርም ይችላሉ። መልስዎን አሁን ይናገሩ። ለመቀጠል «ቀጥል»፣ ለመመለስ «ተመለስ»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ።
 
-### `job`: employer flow, question 1
+### `whyRead`: job flow, question 3, read aloud only (no voice instructions)
+
+**English** → `public/audio/en/whyRead.mp3`
+
+> Why do you want this job? A few words are enough. You can speak instead.
+
+**አማርኛ (draft, must be checked)** → `public/audio/am/whyRead.mp3`
+
+> ይህን ሥራ ለምን ይፈልጋሉ? ጥቂት ቃላት በቂ ናቸው። በድምፅ መናገርም ይችላሉ።
+
+### `job`: employer flow, question 1, voice input on
 
 **English** → `public/audio/en/job.mp3`
 
@@ -193,7 +268,17 @@ Record the text inside each box, from the first word to the last. Read "1:" as "
 
 > የሥራው መጠሪያ ምንድን ነው? መልስዎን አሁን ይናገሩ። ለመቀጠል «ቀጥል»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ።
 
-### `offers`: employer flow, question 2
+### `jobRead`: employer flow, question 1, read aloud only (no voice instructions)
+
+**English** → `public/audio/en/jobRead.mp3`
+
+> What is the job title?
+
+**አማርኛ (draft, must be checked)** → `public/audio/am/jobRead.mp3`
+
+> የሥራው መጠሪያ ምንድን ነው?
+
+### `offers`: employer flow, question 2, voice input on
 
 **English** → `public/audio/en/offers.mp3`
 
@@ -202,6 +287,16 @@ Record the text inside each box, from the first word to the last. Read "1:" as "
 **አማርኛ (draft, must be checked)** → `public/audio/am/offers.mp3`
 
 > ይህ ሥራ ምን ዓይነት ማስተካከያዎችን ማቅረብ ይችላል? 1: ከደረጃ ነፃ የሥራ ቦታ. 2: ለስክሪን ሪደር ተስማሚ መሣሪያዎች. 3: የምልክት ቋንቋ አስተርጓሚ. 4: ተለዋዋጭ የሥራ ሰዓት. 5: ከቤት መሥራት. የምርጫዎን ቁጥር ወይም ስም ይናገሩ። ለመቀጠል «ቀጥል»፣ ለመመለስ «ተመለስ»፣ እንደገና ለመስማት «አንብብልኝ» ይበሉ። ይህን ጥያቄ ለመዝለል «ዝለል» ይበሉ።
+
+### `offersRead`: employer flow, question 2, read aloud only (no voice instructions)
+
+**English** → `public/audio/en/offersRead.mp3`
+
+> Which adjustments can this job offer? Step-free workplace. Screen-reader friendly tools. Sign language interpreter. Flexible hours. Work from home.
+
+**አማርኛ (draft, must be checked)** → `public/audio/am/offersRead.mp3`
+
+> ይህ ሥራ ምን ዓይነት ማስተካከያዎችን ማቅረብ ይችላል? ከደረጃ ነፃ የሥራ ቦታ. ለስክሪን ሪደር ተስማሚ መሣሪያዎች. የምልክት ቋንቋ አስተርጓሚ. ተለዋዋጭ የሥራ ሰዓት. ከቤት መሥራት.
 
 ### `errNeed`: Error: question not answered
 
@@ -212,6 +307,16 @@ Record the text inside each box, from the first word to the last. Read "1:" as "
 **አማርኛ (draft, must be checked)** → `public/audio/am/errNeed.mp3`
 
 > እባክዎ ይህን ጥያቄ ይመልሱ ወይም ተመለስ ይጫኑ።
+
+### `errNeed1`: Error: first question not answered (no Back button)
+
+**English** → `public/audio/en/errNeed1.mp3`
+
+> Please answer this question.
+
+**አማርኛ (draft, must be checked)** → `public/audio/am/errNeed1.mp3`
+
+> እባክዎ ይህን ጥያቄ ይመልሱ።
 
 ### `errBad`: Error: phone number or email not valid
 
@@ -257,11 +362,11 @@ Record the text inside each box, from the first word to the last. Read "1:" as "
 
 **English** → `public/audio/en/idle.mp3`
 
-> We did not hear you. Press the big Speak button, or press Stop reading to use the keyboard.
+> We did not hear you, so listening has stopped. Press Start voice input to try again, or type your answer.
 
 **አማርኛ (draft, must be checked)** → `public/audio/am/idle.mp3`
 
-> አልሰማንዎትም። ትልቁን «ተናገር» ቁልፍ ይጫኑ፤ ወይም ኪቦርድ ለመጠቀም «ማንበብ አቁም» ይጫኑ።
+> አልሰማንዎትም፤ ስለዚህ ማዳመጥ ቆሟል። እንደገና ለመሞከር «የድምፅ ግብዓት ጀምር» ይጫኑ ወይም መልስዎን ይጻፉ።
 
 ### `sayWelcome`: Welcome page: say Start
 
@@ -393,7 +498,7 @@ Record the text inside each box, from the first word to the last. Read "1:" as "
 
 > ስምንት
 
-### `reviewFix`: Review page, second part (after the person says No to submitting)
+### `reviewFix`: Review page, second part (after the person says No to submitting), voice input on
 
 **English** → `public/audio/en/reviewFix.mp3`
 
@@ -402,6 +507,16 @@ Record the text inside each box, from the first word to the last. Read "1:" as "
 **አማርኛ (draft, must be checked)** → `public/audio/am/reviewFix.mp3`
 
 > ወደ መጀመሪያው ጥያቄ ለመመለስ «እንደገና ጀምር» ይበሉ፤ ወይም መቀየር የሚፈልጉትን ጥያቄ ቁጥር ይናገሩ።
+
+### `reviewFixRead`: Review page, second part, read aloud only
+
+**English** → `public/audio/en/reviewFixRead.mp3`
+
+> Press Change next to the answer you want to change, or press Start again to go back to the first question.
+
+**አማርኛ (draft, must be checked)** → `public/audio/am/reviewFixRead.mp3`
+
+> መቀየር ከሚፈልጉት መልስ አጠገብ «ቀይር» ይጫኑ፤ ወይም ወደ መጀመሪያው ጥያቄ ለመመለስ «እንደገና ጀምር» ይጫኑ።
 
 ### `done`: Thank-you page
 

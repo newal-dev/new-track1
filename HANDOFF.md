@@ -152,11 +152,11 @@ Do not commit `node_modules/` (add it to `.gitignore`).
 ## 6. Behaviour already built (current version)
 
 ### First screen: "Would you like this page to be read aloud?"
-- Spoken once, then the browser listens for **Yes** or **No** (voice) or you press the big Yes/No buttons.
-- The privacy notice is spoken **once, here**, and shown once on screen: "If you choose Yes, or press a Speak button later, your browser may send your voice to its provider to turn it into text. You can choose No and type instead."
-- If nothing is heard, it asks once more, then continues without reading aloud.
-- Pressing any key stops this listening (the person is using the keyboard).
-- This first screen now appears for **all three flows** (signup, job, employer).
+- **Nothing is spoken and the microphone is never started on page load** (changed 15 Nov: it used to speak and listen after 0.8 s).
+- Big **Yes, read aloud** / **No, thank you** buttons. The text explains that read aloud does not use the microphone.
+- The privacy notice about voice input is shown here and on the welcome page, and linked to every voice button.
+- **Read this page aloud** reads the question, hint and notice (recording `raAsk`). **Answer Yes or No by voice** listens once, only after it is pressed, and says "Listening. Speak now. Say Yes or No."
+- This first screen appears for **all three flows** (signup, job, employer).
 
 ### Welcome page
 Start, Start with voice (only if the browser supports speech), Read to me / Stop reading.
@@ -170,12 +170,18 @@ Start, Start with voice (only if the browser supports speech), Read to me / Stop
 - The phone-or-email question is **typed only** (email addresses and spelled letters are not recognised reliably by speech). It reads the question aloud and says "Please type your answer in the box. Then press Next."
 - Back and language switch now keep checkbox and radio choices, not only typed text.
 
-### Hands-free voice mode (after the person says Yes to read aloud)
-For each page: the page is read aloud with **numbered choices** and instructions, then the form listens automatically.
+### Read aloud and voice input are separate (changed 15 Nov)
+- **Read every page aloud** (or Yes on the first screen) only speaks. It never turns the microphone on and never says "Say…".
+- **Start with voice input** (welcome) or **Start voice input** (any question) turns voice input on. From then on each page listens for an answer (after reading it, if reading is on) until the person presses **Stop listening** or **Switch to typing**, presses Escape, starts typing, or says "stop".
+- While listening: the status area says "Listening. Speak now.", a bar shows "Microphone on: listening" with Stop listening and Switch to typing, the mic button reads "Stop listening", and the voice instructions ("Say Next…") are shown. They are hidden whenever the microphone is off.
+- Permission denied, no microphone, unsupported language, no speech and other errors are announced, and the microphone stays off until the person presses Start voice input again.
+- Recordings: `QUESTIONID.mp3` (with voice instructions) is played only when voice input is on; `QUESTIONIDRead.mp3` (without) otherwise.
+
+### Voice answers (when voice input is on)
 - **Radio and checkbox:** say the number ("two", "ሁለት") or the name; it reads back "You chose: …" and waits for **Next**. For checkboxes, saying a choice again unticks it.
 - **Text questions:** whatever is said fills the box; it reads back "We heard: … Say Next to continue, or say your answer again."
 - **Commands:** Next, Back (not on first question), Skip (optional only), Read aloud/Repeat, Stop. Commands are matched only when the whole utterance is short (one word on text questions, so a name or an answer is never mistaken for a command).
-- If it hears nothing twice, it stops listening and says to press the big Speak button.
+- If it hears nothing twice, it stops listening and says to press Start voice input or type.
 - If the device has no voice for the language (for example Amharic), it shows the message on screen, says an English notice **once**, and still listens.
 
 ### Submit and review (last page)
@@ -313,6 +319,7 @@ Full text is in `RECORDING_SCRIPT.md` (regenerate with `npm run recording`). **1
 - One question per screen; Back keeps answers; no time-outs; no CAPTCHA or login on sign-up.
 - Every control has a label; errors name the problem and say how to fix it; everything works by keyboard with visible focus.
 - Voice is optional; the notice comes before the first listening; typing always works; the transcript is editable before it is accepted.
+- Never start the microphone, or speak, without a button press. Only show or say "Say…" while the microphone is really listening. Keep Stop listening and Switch to typing visible while listening (tests in `tests/a11y-flows.spec.js` enforce this).
 - Read-aloud never starts on its own after the person says No, and can always be stopped.
 - Contrast at least 4.5 to 1; text scales to 200%; icons always accompanied by text.
 - Support requests are optional, private, need no proof, and are never sent to employers.

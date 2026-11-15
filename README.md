@@ -30,7 +30,8 @@ English and Amharic with a switch in the form. Amharic text is a draft until che
 - Support needs are optional, never required, and stored in a separate store that no route returns.
 - Job needs stay on the device: jobs are filtered in the browser and the needs are never sent.
 - No document numbers are collected.
-- Voice input uses the browser's speech service (Chrome sends audio to its provider). The very first screen explains this before any listening starts, and typing always works. The phone-or-email question is typed only, because spelling addresses by voice is unreliable.
+- The plugin never speaks or turns the microphone on by itself. **Read aloud** (the form speaks to you) and **voice input** (you speak to the form) are separate choices, and each starts only after a button press.
+- Voice input uses the browser's speech service (Chrome sends audio to its provider). This is explained next to every voice input button before it is used, and typing always works. While listening, the form shows and announces "Listening. Speak now.", with **Stop listening** and **Switch to typing** buttons; Escape or typing also stops it. The phone-or-email question is typed only, because spelling addresses by voice is unreliable.
 - Storage is in memory only. The demo has no authentication: add real authentication before production.
 
 ## Build vs reuse
@@ -43,7 +44,9 @@ English and Amharic with a switch in the form. Amharic text is a draft until che
 | Demo host | nginx image | BSD-2 (verify) | Shows a real cross-site install |
 
 ## Tests
-Start with `docker compose up --build`, then `npm test` (API) and `npx playwright test tests/a11y.spec.js` (accessibility). First run `npm i -D @playwright/test @axe-core/playwright` and `npx playwright install chromium`.
+Start with `docker compose up --build`, then `npm test` (API and voice logic) and `npm run test:a11y` (accessibility). First run `npm i -D @playwright/test @axe-core/playwright` and `npx playwright install chromium`.
+
+`tests/a11y-flows.spec.js` drives every flow in English and Amharic with the keyboard only, runs axe at every state (welcome, each question, errors, review, send failure, success, listening), checks reflow at 320 px and 640 px, and checks the microphone rules with a simulated speech API. It does not replace testing with a screen reader and a real phone: see `CONFORMANCE.md` for what is still untested.
 
 ## Known limitations
 Amharic voice and speech recognition depend on the device. No real SMS, partner registration or save-and-resume yet. Storage is in memory.

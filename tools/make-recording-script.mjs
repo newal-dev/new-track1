@@ -6,26 +6,27 @@ globalThis.HTMLElement = class { attachShadow(){ return {}; } };
 globalThis.window = globalThis; globalThis.SpeechRecognition = function(){};
 (0,eval)(src.replace(/^const /gm,'var ').replace(/^class DbForm/m,'var DbForm = class DbForm'));
 const D = globalThis.__D, F = globalThis.__F, UI = globalThis.__UI;
-const mk = (flow,l,i=0)=>{ const d = Object.create(D.prototype); d.f=F[flow]; d.l=l; d.a={}; d.rm=true; d.err=''; d.done=false; d.cp=false; d.welcome=false; d.jobs=null; d.i=i; return d; };
+const mk = (flow,l,i=0,vm=true)=>{ const d = Object.create(D.prototype); d.f=F[flow]; d.l=l; d.a={}; d.rm=true; d.vm=vm; d.vno=false; d.err=''; d.done=false; d.cp=false; d.welcome=false; d.ra=2; d.jobs=null; d.i=i; return d; };
 const u=(k,l)=>UI[k][l];
 const out=[];
 const items=[];
 // fixed pages
-items.push({id:'raAsk',what:'First question (asks if the page should be read aloud)',flow:'all',t:l=>[u('raAsk',l),u('raHint',l),u('raPrivacy',l)].join(' ')});
-items.push({id:'raAgain',what:'Second ask, if no answer was heard',flow:'all',t:l=>u('raAgain',l)});
+items.push({id:'raAsk',what:'First question (asks if the page should be read aloud; played only when the person presses Read this page aloud)',flow:'all',t:l=>[u('raAsk',l),u('raHint',l),u('raPrivacy',l)].join(' ')});
 items.push({id:'welcome',what:'Welcome page (after they said Yes to read aloud)',flow:'all',t:l=>{const d=mk('signup',l);d.welcome=true;return d.pageText(undefined);}});
 for (const flow of ['signup','job','employer']) {
   F[flow].steps.forEach((st,i)=>{
     if (st.dyn) return;
-    items.push({id:st.id,what:`${flow} flow, question ${i+1}`,flow,opt:!!st.optional,t:l=>{const d=mk(flow,l,i);return d.pageText(st);}});
+    items.push({id:st.id,what:`${flow} flow, question ${i+1}, voice input on`,flow,opt:!!st.optional,t:l=>{const d=mk(flow,l,i);return d.pageText(st);}});
+    items.push({id:st.id+'Read',what:`${flow} flow, question ${i+1}, read aloud only (no voice instructions)`,flow,t:l=>{const d=mk(flow,l,i,false);return d.pageText(st);}});
   });
 }
 const NWL={en:['One','Two','Three','Four','Five','Six','Seven','Eight'],am:['አንድ','ሁለት','ሦስት','አራት','አምስት','ስድስት','ሰባት','ስምንት']};
-for (const [id,what] of [['errNeed','Error: question not answered'],['errBad','Error: phone number or email not valid'],['errFail','Error: could not send'],['unclear','Voice answer not understood'],['noneSel','Nothing chosen yet'],['idle','Nothing heard'],['sayWelcome','Welcome page: say Start'],['reviewAsk','Review page: do you want to submit?'],['heardGeneric','Spoken answer received (used when the device has no voice)'],['choseA','Confirmation, first part ("You chose")'],['choseB','Confirmation, last part']]) {
-  const k={errNeed:'need',errBad:'bad',errFail:'fail'}[id]||id; items.push({id,what,flow:'all',t:l=>u(k,l)});
+for (const [id,what] of [['errNeed','Error: question not answered'],['errNeed1','Error: first question not answered (no Back button)'],['errBad','Error: phone number or email not valid'],['errFail','Error: could not send'],['unclear','Voice answer not understood'],['noneSel','Nothing chosen yet'],['idle','Nothing heard'],['sayWelcome','Welcome page: say Start'],['reviewAsk','Review page: do you want to submit?'],['heardGeneric','Spoken answer received (used when the device has no voice)'],['choseA','Confirmation, first part ("You chose")'],['choseB','Confirmation, last part']]) {
+  const k={errNeed:'need',errNeed1:'need1',errBad:'bad',errFail:'fail'}[id]||id; items.push({id,what,flow:'all',t:l=>u(k,l)});
 }
 for (let n=1;n<=8;n++) items.push({id:'n'+n,what:'Number '+n+' (used in the confirmation)',flow:'all',t:l=>NWL[l][n-1]});
-items.push({id:'reviewFix',what:'Review page, second part (after the person says No to submitting)',flow:'all',t:l=>u('reviewFix',l)});
+items.push({id:'reviewFix',what:'Review page, second part (after the person says No to submitting), voice input on',flow:'all',t:l=>u('reviewFix',l)});
+items.push({id:'reviewFixRead',what:'Review page, second part, read aloud only',flow:'all',t:l=>u('reviewFixT',l)});
 items.push({id:'done',what:'Thank-you page',flow:'all',t:l=>u('thanks',l)});
 const seen=new Set();
 let md=`# Recording script for read-aloud audio
@@ -50,19 +51,24 @@ When an Amharic recording is missing and the device has no Amharic voice, the pl
 3. Read **every word exactly as written**, no more and no less. Do not add \"please\" or change the order, including the numbers ("1:" is spoken "one", "2:" "two"…). The numbers matter: the person will say them back.
 4. Read the Amharic with a native speaker, and let that speaker also fix any wrong Amharic in the code first. Then update the text here too.
 5. Trim silence at the start and end. Keep each file under about 40 seconds.
-6. Convert to mp3 (for example with Audacity: File, Export, MP3), name the file, put it in the right folder, then test: open the form, choose Read to me, and listen to each page in both languages.
+6. Convert to mp3 (for example with Audacity: File, Export, MP3), name the file, put it in the right folder, then test: open the form, choose Read every page aloud, and listen to each page in both languages. Then test again after pressing Start with voice input.
 7. Commit and push the audio folders.
+
+## Two versions of each question: read aloud only, and voice input on
+Reading aloud and voice input are separate choices. The form only tells someone to *say* something when the microphone is really listening.
+- \`QUESTIONID.mp3\` (for example \`fullName.mp3\`) is played when **voice input is on**. It ends with spoken instructions such as "Say Next to continue", and the microphone starts as soon as it finishes.
+- \`QUESTIONIDRead.mp3\` (for example \`fullNameRead.mp3\`) is played when the person only chose **Read every page aloud**. It has no voice instructions, because the microphone is off.
 
 ## Important: what the voice says must match what is on screen
 - The **first question of each flow** (\`prefs\`, \`needs\`, \`job\`) has **no Back button**, so its script does **not** say "Back". Every other question does.
 - **Skip** is spoken only for optional questions, and those pages have a visible Skip button.
 - The words you say in the instructions are the same as the buttons: **Next, Back, Skip, Read aloud, Start, Submit**.
 - The privacy notice is spoken **once**, in \`raAsk\`, and shown once on that same page. It is not repeated anywhere else.
-- The **contact** question (phone or email) is **typed, not spoken**: it has no Speak button and the voice does not listen, because email addresses and numbers are not recognised reliably. Its script ends with \"Please type your answer in the box. Then press Enter, or press the Next button.\"
+- The **contact** question (phone or email) is **typed, not spoken**: it has no Start voice input button and the voice does not listen, because email addresses and numbers are not recognised reliably. Its script ends with \"Please type your answer in the box. Then press Enter, or press the Next button.\"
 
 - **Errors and answers are now recorded too.** \`errNeed\`, \`errBad\`, \`errFail\`, \`unclear\`, \`noneSel\`, \`idle\`, \`sayWelcome\` and \`reviewAsk\` are single messages. The confirmation after a choice is three parts played in a row: \`choseA\` ("You chose"), then the number clips \`n1\` to \`n8\` (for example "two"), then \`choseB\`. Record the numbers as single words with a short pause at the end.
 - If a website hides a question with the \`hide\` attribute, the recordings still describe the full list. Hide only questions you do not need in your own demo, or record again for that site.
-- The **Stop reading** button and the Escape key stop any recording or voice at any time. They are not spoken, so they are not in the scripts.
+- The **Stop reading aloud** button stops reading; **Stop listening** and **Switch to typing** stop the microphone; the Escape key stops both at any time. They are not spoken, so they are not in the scripts.
 
 ## Do NOT record these (they change each time)
 - **review** (the first part of the last page): reads out the person's own answers, then asks \"Do you want to submit your answers?\". Only the second part, \`reviewFix\`, is recordable.

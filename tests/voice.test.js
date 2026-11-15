@@ -14,9 +14,9 @@ const step = id => Object.values(F).flatMap(f => f.steps).find(s => s.id === id)
 
 const make = (over = {}) => {
   const d = Object.create(D.prototype);
-  Object.assign(d, { f: F.signup, l: 'en', a: {}, rm: true, err: '', done: false, welcome: false, jobs: null, i: 0, rs: 0, hide: [], fromReview: false, pref: {}, tok: 0, vtries: 0, log: [] }, over);
+  Object.assign(d, { f: F.signup, l: 'en', a: {}, rm: true, vm: true, vno: false, err: '', done: false, welcome: false, ra: 2, jobs: null, i: 0, rs: 0, hide: [], fromReview: false, pref: {}, tok: 0, vtries: 0, log: [] }, over);
   d.draw = () => d.log.push('draw'); d.send = () => d.log.push('SEND'); d.say = () => {}; d.speak = () => {};
-  d.say2 = () => d.log.push('say2'); d.seq = () => d.log.push('say2'); d.hasVoice = () => false; d.getAttribute = () => null; d.r = { querySelector: () => null };
+  d.say2 = () => d.log.push('say2'); d.seq = () => d.log.push('say2'); d.hasVoice = () => false; d.getAttribute = () => null; d.r = { querySelector: () => null, querySelectorAll: () => [] };
   return d;
 };
 const pick = (x, id, l = 'en') => { const d = make({ l }); return d.pick(d.norm(x), step(id)).join(','); };
@@ -65,4 +65,24 @@ test('Ethiopian phone numbers need 10 digits (or 251 and 9 digits), or an email'
   const ok = step('contact').check;
   assert.ok(ok('0911000000') && ok('0911 000 000') && ok('+251 911 000 000') && ok('name@example.com'));
   assert.ok(!ok('091100000') && !ok('09110000000') && !ok('911000000') && !ok('hello'));
+});test('read aloud only: no spoken-word instructions and no listening (microphone is off)', () => {
+  const d = make({ vm: false, i: 3 }); let listened = 0; d.listen = () => listened++;
+  for (const id of ['prefs', 'fullName', 'contact', 'idRoute', 'support']) assert.ok(!/\bSay\b|Speak your answer/.test(d.pageText(step(id))), id);
+  d.listenAnswer(); assert.equal(listened, 0);
+  const r = make({ vm: false, i: 5, a: { fullName: 'A' } }); assert.ok(/Press Yes, submit/.test(r.pageText(undefined)) && !/Say Yes/.test(r.pageText(undefined)));
+});
+test('voice input on: listens for the answer; after permission denial it does not', () => {
+  let n = 0; const d = make({ i: 1 }); d.listen = () => n++;
+  d.listenAnswer(); assert.equal(n, 1);
+  d.vno = true; d.listenAnswer(); assert.equal(n, 1);
+});
+test('recordings with voice instructions are only played when voice input is on', () => {
+  const ids = []; const d = make({ vm: false, i: 1 }); d.speak = (t, id) => ids.push(id);
+  d.readPage(step('fullName')); d.vm = true; d.readPage(step('fullName'));
+  assert.deepEqual(ids, ['fullNameRead', 'fullName']);
+});
+test('the first question error does not mention Back', () => {
+  const d = make({ i: 0, f: F.employer }); d.r = { querySelector: () => ({ value: '' }), querySelectorAll: () => [] };
+  d.next(step('job')); assert.equal(d.err, 'Please answer this question.');
+  const e = make({ i: 1 }); e.r = d.r; e.next(step('fullName')); assert.ok(/Back/.test(e.err));
 });

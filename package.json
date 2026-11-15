@@ -2,6 +2,6 @@
   "name": "inclusive-access",
   "version": "1.0.0",
   "type": "module",
-  "scripts": { "start": "node server.js", "test": "node --test tests/api.test.js tests/voice.test.js", "test:voice": "node --test tests/voice.test.js", "recording": "node tools/make-recording-script.mjs" },
+  "scripts": { "start": "node server.js", "test": "node --test tests/api.test.js tests/voice.test.js", "test:voice": "node --test tests/voice.test.js", "test:a11y": "playwright test tests/a11y.spec.js tests/a11y-flows.spec.js --trace off", "recording": "node tools/make-recording-script.mjs" },
   "dependencies": { "cors": "^2.8.5", "express": "^4.19.2" }
 }
