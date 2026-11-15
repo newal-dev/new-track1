@@ -17,10 +17,10 @@ Results: **Supports**, **Partially supports**, **Does not support**, **Not appli
 ### 1.1 Automated (repeatable: `npm run test:all`)
 | Tool | Version | What | Result (15 Nov 2026) |
 |---|---|---|---|
-| axe-core via @axe-core/playwright | axe-core 4.14.0 | Tags `wcag2a wcag2aa wcag21a wcag21aa wcag22aa`; 34 scans in 27 browser tests (`tests/a11y.spec.js`) | **0 violations of any impact** (0 critical, 0 serious, 0 moderate, 0 minor) |
-| Playwright | 1.65.1, Chromium 159.0.8154.6 | Keyboard-only completion of the job flow; focus after each step and after errors; 640 px (200%) and 320 px (400%) widths; captions with sound off; drafts; offline | 27 of 27 pass |
+| axe-core via @axe-core/playwright | axe-core 4.14.0 | Tags `wcag2a wcag2aa wcag21a wcag21aa wcag22aa`; 36 scans in 30 browser tests (`tests/a11y.spec.js`) | **0 violations of any impact** (0 critical, 0 serious, 0 moderate, 0 minor) |
+| Playwright | 1.65.1, Chromium 153.0.8010.12 | Keyboard-only completion of the job flow; Tab through every radio choice and Enter to choose (Amharic); keyboard help in the chosen language; Larger text kept after reload; every clip the spoken review page plays exists in all six languages; focus after each step and after errors; 640 px (200%) and 320 px (400%) widths; captions with sound off; drafts; offline | 30 of 30 pass |
 | `tools/contrast-check.mjs` (`npm run contrast`) | in repo | 15 colour pairs (text 4.5:1, non-text 3:1) in each of the 5 token sets | **75 of 75 pass**; see section 4 |
-| Node test runner | Node 20+ | `tests/core.test.js`, `tests/voice.test.js`, `tests/api.test.js` | 94 of 94 pass |
+| Node test runner | Node 20+ | `tests/core.test.js`, `tests/voice.test.js`, `tests/api.test.js` | 101 of 101 pass |
 
 The 34 axe scans: language page (3 flows); read-aloud question and welcome (Amharic); every sign-up question, review with consent and thank-you; error states for required answer, phone format, missing consent and date without month; employer Ethiopian date; six themes, each with an error showing; 200% and 400% zoom; caption box while reading aloud; draft offer; offline-queued page; Amharic question page; Savanna-style host; demo LMS; LTI launch page; SMS inbox; design system page. Raw results are attached to each run in `test-results/a11y-results.json` (attachment `axe-scans`).
 
@@ -63,7 +63,7 @@ The pass/fail gate needs these results. Fill each row after the session using `d
 ### Operable
 | Criterion | Level | Result | Evidence |
 |---|---|---|---|
-| 2.1.1 Keyboard | A | Supports | Test "keyboard only": job flow from language page to thank-you using only Tab, Space and Enter. Scrollable code block and table are focusable |
+| 2.1.1 Keyboard | A | Supports | Test "keyboard only": job flow from language page to thank-you using only Tab, Space and Enter. Tab and Shift+Tab visit every radio choice; Enter chooses a choice instead of sending the page (test "keyboard: Tab visits every radio choice"). Scrollable code block and table are focusable |
 | 2.1.2 No keyboard trap | A | Supports | Same test tabs through the whole page and back out; the shadow root uses native focus order |
 | 2.1.4 Character key shortcuts | A | Supports | No single-letter shortcuts. Escape only stops speech |
 | 2.2.1 Timing adjustable | A | Supports | No time limits anywhere. Drafts are kept for 7 days on the device, and there is no session timeout |
@@ -95,7 +95,7 @@ The pass/fail gate needs these results. Fill each row after the session using `d
 | 3.2.4 Consistent identification | AA | Supports | Same names and icons for Next, Back, Skip, Read aloud everywhere |
 | 3.2.6 Consistent help | A | Partially supports | Host pages show the same help contact in the footer; the plug-in itself relies on the host for a help link |
 | 3.3.1 Error identification | A | Supports | `role='alert'` message with icon, `aria-invalid` on the field, focus moves to the field (four error states tested) |
-| 3.3.2 Labels or instructions | A | Supports | Question as legend, hint under it (for example the phone format) |
+| 3.3.2 Labels or instructions | A | Supports | Question as legend, hint under it (for example the phone format). A keyboard help strip on every page, in the chosen language, says what Tab, Shift+Tab, Space/Enter and Esc do |
 | 3.3.3 Error suggestion | AA | Supports | Messages say how to fix: "10 digits, starting with zero, or an email with @"; "choose a month"; "tick the box to agree" |
 | 3.3.4 Error prevention (legal, financial, data) | AA | Supports | Review page lists every answer with Change buttons; explicit consent before sending; receipt allows deletion |
 | 3.3.7 Redundant entry | A | Supports | Answers are kept on Back, after language change, on reload (draft) and from the review |
@@ -114,7 +114,7 @@ The pass/fail gate needs these results. Fill each row after the session using `d
 |---|---|---|
 | Time-outs locked people out | No time limits; drafts kept on the device | 2.2.1; test "drafts…" |
 | Long pages were overwhelming | One question per screen, progress "Question n of t" | All flow tests |
-| Voice and review were needed | Speak button, hands-free mode, review page with Change and "Start again" | `tests/voice.test.js` (18 tests) |
+| Voice and review were needed | Speak button, hands-free mode, review page with Change and "Start again" | `tests/voice.test.js` (22 tests) |
 | Read-aloud in Ethiopian languages | Recorded clips in am, om, ti, so; captions for every clip | `public/audio/` (79 clips per language) |
 | Blocked without a kebele ID | Four routes, including "I don't have an ID. Refer me through a partner"; no document number collected | API test "only known ID routes are stored" |
 | Support needs felt like a medical form | Functional, non-medical labels; optional; "No proof needed"; separate consent; never shown to employers | API tests "privacy isolation", "support needs are dropped without their own consent" |

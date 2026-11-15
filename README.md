@@ -33,9 +33,9 @@ Wait until you see `Plugin server on http://localhost:3000`, then open:
 **Run the tests:**
 ```sh
 npm ci
-npm test                       # 94 unit, voice and API tests; no server needed
+npm test                       # unit, voice and API tests; no server needed
 npx playwright install chromium
-npm run test:a11y              # 27 browser tests with axe-core; starts the servers itself
+npm run test:a11y              # browser tests with axe-core; starts the servers itself
 npm run contrast               # contrast of every colour pair in every theme
 ```
 Or everything inside Docker: `docker compose --profile test run --rm tests`.
@@ -53,7 +53,7 @@ Or everything inside Docker: `docker compose --profile test run --rm tests`.
 - Everything runs in an open Shadow DOM: the host's CSS cannot break it, and it cannot change the host.
 - Attributes: `api`, `audio`, `partner` (name in the consent question), `lang` (en, am, om, ti, so, sid), `lang-ask='no'`, `theme` (auto, standard, dark, contrast, rg, by), `hide`, `sw` (offline), `asr` (browser, off, or a registered recogniser), `fonts='no'`, `jsonld='no'`.
 - Events: `db-complete`, `db-error`, `db-queued`, `db-sent`, `db-theme`. CSS hooks: `--db-accent`, `--db-font`.
-- Size: `widget.js` is about 125 kB uncompressed (well under 250 kB). Fonts are fetched only when needed, and the Ethiopic font only when Ge'ez text is shown.
+- Size: `widget.js` is about 155 kB uncompressed (under 250 kB). Fonts are fetched only when needed, and the Ethiopic font only when Ge'ez text is shown.
 
 **Level 2: REST API and OpenAPI.** [`openapi.yaml`](openapi.yaml) (OpenAPI 3.0.3, validated). Routes:
 - `GET /v1/health`, `GET /v1/jobs`, `GET /v1/jobs/{id}`
@@ -70,11 +70,13 @@ Or everything inside Docker: `docker compose --profile test run --rm tests`.
 
 | Key | What it does |
 |---|---|
-| Tab, Shift+Tab | Move between choices and buttons. With read-aloud on, the focused control is spoken in the chosen language: number, name, and "selected" or "not selected" |
-| Arrow keys | Move between options in a radio group; change a date select |
-| Space | Tick or untick a checkbox; press a button |
-| Enter | Go to the next question. Ignored while an input method (Ge'ez, Keyman, phone keyboard) is composing |
+| Tab, Shift+Tab | Move down and up through every choice and button, one by one (radio choices too, like checkboxes). With read-aloud on, the focused control is spoken in the chosen language: number, name, and "selected" or "not selected" |
+| Arrow keys | Move between options in a radio group, as usual; change a date select |
+| Space | Tick or untick a checkbox; choose a radio choice; press a button |
+| Enter | On a choice: choose it. On a choice that is already chosen, or in an answer box: go to the next question. Ignored while an input method (Ge'ez, Keyman, phone keyboard) is composing |
 | Escape | Stop all speech and listening at once |
+
+A **keyboard help strip** at the top of every page says this in the chosen language (Tab: go down, Shift+Tab: go up, Space/Enter: choose, Esc: stop the voice), for keyboard-only, deaf and hard-of-hearing users who cannot hear the spoken instructions.
 
 | Pattern | Markup |
 |---|---|
@@ -85,24 +87,26 @@ Or everything inside Docker: `docker compose --profile test run --rm tests`.
 | Errors | `role='alert'` box with icon and text. Focus moves to the field (or to the consent box) |
 | Status | `role='status'` for Sending, Listening, Saved on this device, Reading stopped |
 | Language buttons | `role='group'`, `aria-pressed`, `lang` on each button |
-| Colours menu | `<details>` with a `<fieldset>` of radios. The choice is saved on the device and the host can follow it (`db-theme`) |
+| Colours and text size menu | `<details>` with a `<fieldset>` of theme radios and a **Larger text** checkbox. Both are saved on the device; the host can follow the colours (`db-theme`) |
+| Keyboard help | `<ul aria-label='Keyboard'>` with `<kbd>` keys, in the chosen language |
 | Captions | Visible caption box of everything spoken, and a large Listening banner. `aria-hidden`, because screen-reader users already hear it |
 | Host pages | Skip link, `nav` with `aria-label`, `aria-current` on the current page and language |
 
 There are no time limits anywhere. The same information is in [`openapi.yaml`](openapi.yaml) (`info.description` and `x-accessibility`).
 
 ## Languages, voice and audio
-- The first page asks for the language in English; then each language invites its own speakers. All non-English text is a **draft** until a native speaker checks it: the Amharic, and every line marked `VERIFY_NATIVE`.
+- The first page asks in English for English only; then each language invites its own speakers in its own voice and by its own name ("ለአማርኛ «አማርኛ» ይበሉ"). People can answer with the English name or their own ("አማርኛ", "Afaan Oromoo", "ትግርኛ", "Soomaali", "Sidaamu Afoo"): the recogniser's five best guesses are checked, common mis-hearings and near misses count, and if nothing is understood it asks again in English and Amharic and listens with an Amharic recogniser, which writes the Ge'ez names. All non-English text is a **draft** until a native speaker checks it: the Amharic, and every line marked `VERIFY_NATIVE`.
 - **Read aloud** plays clips from `public/audio/{en,am,om,ti,so,sid}/` (Meta MMS-TTS, made offline in Google Colab). It falls back to the device voice, and says so when there is none. English uses the device voice.
-- To regenerate clips: `npm run recording`, then follow "How to make the clips" in [RECORDING_SCRIPT.md](RECORDING_SCRIPT.md). Nine newer clips per language are not yet generated (consent, date and draft messages, `q_role`). Until then the captions and device voice cover them.
-- **Voice input:** after a page is read, the form says "Speak now", beeps, then listens. Answers can be numbers or names, with commands (Next, Back, Skip, Read aloud, Stop) in all six languages. The phone or email question is typed only.
+- **The review page is spoken in every language**, from short clips: heading, number, question, the chosen option (or "skipped"), a phone number digit by digit, the consent sentence and the question. Only words the person typed (a name) need a voice: the device voice for the language, or else an English voice, with Ge'ez spelled in Latin letters, so it is never silent. The same applies to the consent boxes, colour themes and job titles when they get keyboard focus.
+- To regenerate clips: `npm run recording`, then follow "How to make the clips" in [RECORDING_SCRIPT.md](RECORDING_SCRIPT.md). Every clip the form uses exists for every language (a browser test checks the review page's clips).
+- **Voice input:** after a page is read, the form says "Speak now", beeps, then listens. Answers can be numbers or names, with commands (Next, Back, Skip, Read aloud, Stop) in all six languages. The phone or email question can be spoken too: "zero nine one one…" (in any of the six languages, "double four" works) becomes `0911…`, "abebe at gmail dot com" becomes `abebe@gmail.com`, and it is read back digit by digit before Next. On the review page, saying Yes sends; if support needs were chosen, it then asks separately whether to share them (a second Yes).
 - **Different keyboards:** Ge'ez input methods do not submit early; full-width and Arabic-Indic digits are accepted; switching keyboard layout does not stop the voice.
 
 ## Built for Ethiopia
 - Amharic and Tigrinya in Ge'ez script, with local Noto Sans Ethiopic (SIL OFL) and `lang` set on every part.
 - **Ethiopian calendar:** 13 months including Pagumē (5 or 6 days). Employers enter the closing date in the Ethiopian calendar, with "Not sure" for an approximate date; it is converted for JobPosting. The thank-you page shows today's date in both calendars.
 - Ethiopian phone numbers (`09…`, `07…` or `251…`). Four identity routes, including "I don't have an ID. Refer me through a partner". No document numbers are collected.
-- **Cheap phones and 3G:** one 125 kB script, no framework, mp3 clips at 48 kbps that load only when played, and fonts loaded only for the scripts on screen.
+- **Cheap phones and 3G:** one 155 kB script, no framework, mp3 clips at 48 kbps that load only when played, and fonts loaded only for the scripts on screen.
 - **Offline:** answers are saved on the device as the person goes, kept for 7 days, and offered again after a reload. A submission made offline is queued and sent when the connection returns. With the partner's one-line service worker (`sw` attribute), the page, widget, fonts, job list and played clips open offline too.
 
 ## Privacy

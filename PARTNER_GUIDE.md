@@ -223,18 +223,20 @@ Do this once on a computer and once on a phone. It takes about 15 minutes.
 - [ ] `https://YOUR-HOST/v1/health` shows `{"ok":true}`.
 
 **Keyboard only (unplug the mouse)**
-- [ ] Tab and Shift+Tab reach every button and choice, with a clearly visible focus ring.
+- [ ] Tab and Shift+Tab reach every button and **every single choice** (radio choices too), with a clearly visible focus ring.
+- [ ] The keyboard help strip at the top of the form (Tab, Shift+Tab, Space/Enter, Esc) is in the chosen language.
 - [ ] With "read aloud" on, each choice is read as number, name and "selected" or "not selected", in the chosen language.
-- [ ] Space ticks a box; Enter goes to the next question; Escape stops the voice.
+- [ ] Space or Enter chooses; Enter on a choice that is already chosen goes to the next question; Escape stops the voice.
 
 **Sound and voice** (Chrome or Edge, on HTTPS)
 - [ ] After a page is read, you hear "Speak now", then a beep, and the **Listening** banner appears.
-- [ ] Saying a number ("two") or a word ("Next", "Back") works.
-- [ ] In Amharic, Afaan Oromoo, Tigrinya and Somali you hear the recorded clips (not silence).
+- [ ] On the language page, saying a language name works, also in its own words ("አማርኛ", "Afaan Oromoo", "ትግርኛ", "Soomaali", "Sidaamu Afoo"). If the first try is not understood, it asks again in English and Amharic.
+- [ ] Saying a number ("two") or a word ("Next", "Back") works. A phone number can be spoken ("zero nine one one…") and is read back digit by digit.
+- [ ] In Amharic, Afaan Oromoo, Tigrinya, Somali and Sidaamu Afoo you hear the recorded clips (not silence), **including the review page**.
 
 **Seeing and colours**
 - [ ] With the sound off, the caption box shows everything that is spoken.
-- [ ] Each option in the **Colours** menu changes the form, and the choice is remembered after reloading.
+- [ ] Each option in the **Colours and text size** menu changes the form (including **Larger text**), and the choice is remembered after reloading.
 - [ ] At 200% browser zoom nothing is cut off; on a phone the form fits the screen.
 
 **Consent, drafts and offline**
@@ -335,3 +337,24 @@ Each posting includes the title, employer, location (Addis Ababa, ET), date post
   customElements.get('db-form').registerASR('local', (lang, element) => new MyRecogniser({ lang }));
   ```
   Then use `asr='local'` on the tag.
+
+## 16. Make the rest of your page accessible too (ALX and other hosts)
+
+The plug-in is accessible on its own, but a person meets your whole page first. These checks take an hour and fix most of
+what stopped people on the 21 October test day. They apply to any ALX page (Savanna course pages, programme sign-up
+pages, job boards).
+
+- **Language:** set `<html lang='am'>` (or `en`, `om` …) to the page's language, and `lang` on any part in another language.
+  Screen readers choose their voice from it.
+- **A skip link** as the first thing on the page: `<a href='#main'>Skip to the form</a>`, and `id='main'` on the element that holds the plug-in.
+- **Headings in order** (one `h1`, then `h2` …) and landmarks (`header`, `nav` with `aria-label`, `main`, `footer`), so
+  screen-reader users can jump around.
+- **Keyboard:** every link and button reachable with Tab, in reading order, with a visible focus ring. Never remove the outline without a replacement.
+- **No time limits and no automatic log-out** on pages with forms. If a session must end, warn first and let the person extend it.
+- **Video and audio:** captions for every video (also in Amharic), a transcript for audio. Never autoplay sound.
+- **Images:** a short `alt` text for each image that carries meaning; `alt=''` for decoration.
+- **Contrast** at least 4.5:1 for text (3:1 for large text and icons). The plug-in's themes pass; check your header and footer too.
+- **Zoom to 200% and 400%:** no sideways scrolling, nothing cut off. Use relative units (`rem`, `%`), not fixed heights.
+- **Help in more than English:** link to help and contact details in the languages your learners use, by phone as well as email.
+- **Follow the person's colour choice:** listen to the `db-theme` event (section 7) so your header and footer match the colours they picked.
+- **Test** with the checklist in section 9, with axe DevTools (free browser extension), and with one real user of a screen reader.

@@ -15,7 +15,7 @@ Success = the thank-you page with a receipt code, reached without help.
 | 1 | NVDA + Chrome | NVDA 2024 or newer, Chrome, mouse unplugged | Each question, hint, choice and error is read once; focus lands on the question; the error is announced |
 | 2 | TalkBack + Chrome (Android) | Settings, Accessibility, TalkBack on | Swipe order follows the screen; double-tap selects; the consent box is announced |
 | 3 | TalkBack in a WebView | Open the page from an app that uses a WebView (for example a link inside a messaging app) | Same as 2 |
-| 4 | Keyboard only | Mouse unplugged | Tab, Shift+Tab, Space, Enter, Escape; focus is always visible; Read to me reads each choice |
+| 4 | Keyboard only | Mouse unplugged | Tab, Shift+Tab, Space, Enter, Escape; focus is always visible; Tab reaches every choice; Enter chooses; keyboard help shown in the chosen language; Read to me reads each choice |
 | 5 | 200% and 400% zoom | Ctrl and + until 200%, then 400% | Nothing cut off, no sideways scrolling, buttons reachable |
 | 6 | Sound off | Mute the device, choose Yes to read aloud | The caption box shows every spoken line; Listening is visible |
 | 7 | Amharic | Choose አማርኛ on the first page | Every word is Amharic; clips play; Ge'ez letters show correctly |

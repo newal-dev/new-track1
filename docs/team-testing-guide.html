@@ -95,9 +95,9 @@ STEPS
    it is and ask me before stopping anything.
 5. Install and run the automated tests:
    - `npm ci`
-   - `npm test`  (expect 95 passing)
+   - `npm test`  (expect 101 passing)
    - `npx playwright install chromium`
-   - `npm run test:a11y`  (expect 27 passed; it starts its own servers)
+   - `npm run test:a11y`  (expect 30 passed; it starts its own servers)
    - `npm run contrast`  (expect 75 of 75 pairs pass)
    Give me the pass/fail numbers, and for every failure the test name and error.
 6. Start the app: `docker compose up --build -d` (or, without Docker: `npm start` and,
@@ -130,17 +130,20 @@ STEPS
       <li>pronunciation is understandable (write down words that sound wrong);</li>
       <li>after reading you hear "Speak now", a beep, and a <strong>Listening</strong> banner appears.</li>
     </ul></li>
-  <li><strong>Tab test:</strong> press Tab and Shift+Tab. Each choice is read as number, name and "selected" or "not selected".</li>
+  <li><strong>Language page:</strong> the English voice names only English; then each language invites you in its own voice and by its own name. Say your language's name in your own words (for example "አማርኛ"): it should be chosen. If it is not understood, you hear "Please say the name of your language again" in English and Amharic, then a second beep.</li>
+  <li><strong>Tab test:</strong> press Tab and Shift+Tab. Each choice (radio choices too) is read as number, name and "selected" or "not selected". The consent boxes on the review page are read in your language.</li>
+  <li><strong>Review page:</strong> it is read in your language: each answer with its number and question, then the consent sentence and "Do you want to submit your answers?". A typed name is read by an English voice if your device has none for your language.</li>
   <li>Press <strong>Escape</strong>: all sound stops at once.</li>
   <li>Native speakers: also check the <strong>written</strong> text. All non-English text is a draft.</li>
 </ol>
-<div class='note'><strong>Known, do not report:</strong> job titles in the job list are read by the device voice, so they can be silent in Ethiopian languages. The support and adjustment pages are long (40–60 seconds) because they read every choice. <strong>Sidaamu Afoo</strong> is a rough first draft waiting for native review; two Sidama clips (closing date hint, "did not understand") drop the letter v. Please do report wrong Sidama words: that review is exactly what is needed.</div>
+<div class='note'><strong>Known, do not report:</strong> job titles and typed names are read by the device voice, or by an English voice when the device has none for your language (Ge'ez is then spelled in Latin letters), so they can sound foreign. The support and adjustment pages are long (40–60 seconds) because they read every choice. <strong>Sidaamu Afoo</strong> is a rough first draft waiting for native review; two Sidama clips (closing date hint, "did not understand") drop the letter v. Please do report wrong Sidama words: that review is exactly what is needed.</div>
 
 <h2>4. Voice answers (10 min, Chrome or Edge)</h2>
 <ol>
   <li>Choose a language, press Yes to read aloud, and allow the microphone.</li>
   <li>After the beep, answer with a number ("two"), a choice name, or a command: Next, Back, Skip, Read aloud, Stop.</li>
-  <li>On the last page say "Yes" to submit.</li>
+  <li>On the phone or email question, say the number: "zero nine one one…" (also in your language). It is filled in and read back digit by digit. Say "Next".</li>
+  <li>On the last page say "Yes" to submit. If you chose support needs, it asks whether to share them too: say Yes or No.</li>
   <li>Write down what was misunderstood. Afaan Oromoo, Tigrinya and Sidama usually have no browser speech recognition: typing is expected there.</li>
 </ol>
 
@@ -148,6 +151,9 @@ STEPS
 <p>Do not touch the mouse. Use Tab, Shift+Tab, arrow keys, Space, Enter, Escape.</p>
 <ul class='checks'>
   <li><span class='box'></span>Complete all three forms.</li>
+  <li><span class='box'></span>The keyboard help strip at the top (Tab, Shift+Tab, Space/Enter, Esc) is in the language you chose.</li>
+  <li><span class='box'></span>On "How would you like to show who you are?", Tab visits every choice; Enter chooses it (no error); Enter again goes on.</li>
+  <li><span class='box'></span>On a checkbox page, Enter ticks a box; Enter on a ticked box goes on; Space unticks.</li>
   <li><span class='box'></span>The focus is always clearly visible.</li>
   <li><span class='box'></span>Next with an empty answer shows an error and moves the focus to the field.</li>
   <li><span class='box'></span>On the review page, "Yes, submit" without ticking the consent box shows an error and sends nothing.</li>
@@ -167,7 +173,7 @@ STEPS
   <tbody>
     <tr><td>Zoom 200% and 400%</td><td>Ctrl and +</td><td>No sideways scrolling, nothing cut off</td></tr>
     <tr><td>Sound off</td><td>Mute, choose Yes to read aloud</td><td>Captions show every spoken line</td></tr>
-    <tr><td>Colours</td><td>Colours menu, try all six</td><td>Readable; header and footer follow; remembered after reload</td></tr>
+    <tr><td>Colours and text size</td><td>"Colours and text size" menu, try all six themes and Larger text</td><td>Readable; header and footer follow; both remembered after reload</td></tr>
     <tr><td>Draft</td><td>Answer two questions, reload</td><td>"Welcome back"; Continue keeps the answers</td></tr>
     <tr><td>Offline</td><td>F12, Network, Offline, then submit</td><td>"You are offline… saved"; back online, it is sent</td></tr>
     <tr><td>Language switch</td><td>Top language links while filling in</td><td>Language changes, answers kept</td></tr>

@@ -16,7 +16,7 @@ const make = (over = {}) => {
   const d = Object.create(D.prototype);
   Object.assign(d, { f: F.signup, l: 'en', a: {}, rm: true, err: '', done: false, welcome: false, jobs: null, i: 0, rs: 0, hide: [], fromReview: false, pref: {}, tok: 0, vtries: 0, log: [] }, over);
   d.draw = () => d.log.push('draw'); d.send = () => d.log.push('SEND'); d.say = () => {}; d.speak = () => {};
-  d.say2 = () => d.log.push('say2'); d.seq = () => d.log.push('say2'); d.hasVoice = () => false; d.getAttribute = () => null; d.r = { querySelector: () => null };
+  d.say2 = (m, id) => d.log.push('say2' + (id ? ':' + id : '')); d.seq = () => d.log.push('say2'); d.played = []; d.playList = items => { d.played.push(items); d.log.push('play'); }; d.hasVoice = () => false; d.getAttribute = () => null; d.r = { querySelector: () => null };
   return d;
 };
 const pick = (x, id, l = 'en') => { const d = make({ l }); return d.pick(d.norm(x), step(id)).join(','); };
@@ -40,12 +40,21 @@ test('first question does not mention Back; later ones do', () => {
   assert.ok(!/Back/.test(make({ i: 0 }).pageText(step('prefs'))));
   assert.ok(/Back/.test(make({ i: 1 }).pageText(step('fullName'))));
 });
-test('contact question is typed, not spoken', () => {
-  assert.ok(/type your answer/i.test(make({ i: 2 }).pageText(step('contact'))));
+test('contact question can be spoken: digits and emails are turned into text and read back digit by digit', () => {
+  assert.ok(/Speak your answer/i.test(make({ i: 2 }).pageText(step('contact'))));
+  const box = { value: '' }, d = make({ i: 2 }); d.r = { querySelector: q => (q === '#f' ? box : null) };
+  d.heard('zero nine one one 22 33 44'); assert.equal(box.value, '0911223344');
+  assert.deepEqual(d.played[0].map(x => x.id), ['heardA', 'n0', 'n9', 'n1', 'n1', 'n2', 'n2', 'n3', 'n3', 'n4', 'n4', 'heardB']);
+  d.heard('abebe at gmail dot com'); assert.equal(box.value, 'abebe@gmail.com');
+  const a = make({ l: 'am', i: 2 }); a.r = d.r; a.heard('ዜሮ ዘጠኝ 11 22 33 44'); assert.equal(box.value, '0911223344');
+  assert.ok(step('contact').check(box.value));
 });
 test('review: yes submits, no asks what to change, number edits, start again restarts', () => {
   const a = () => ({ fullName: 'Abebe', contact: '0911223344', idRoute: 'refugee', support: ['large'] });
-  let d = make({ a: a(), i: 5 }); d.heard('yes'); assert.ok(d.log.includes('SEND'));
+  let d = make({ a: a(), i: 5 }); d.heard('yes'); assert.ok(!d.log.includes('SEND')); assert.equal(d.sup, 1); assert.ok(d.log.includes('say2:askSupport'));
+  d.heard('no'); assert.ok(d.log.includes('SEND')); assert.equal(d.consent.s, false); assert.equal(d.consent.a, true);
+  d = make({ a: a(), i: 5 }); d.heard('yes'); d.heard('yes'); assert.ok(d.log.includes('SEND')); assert.equal(d.consent.s, true);
+  d = make({ a: { ...a(), support: [] }, i: 5 }); d.heard('yes'); assert.ok(d.log.includes('SEND'));
   d = make({ a: a(), i: 5 }); d.heard('no'); assert.equal(d.rs, 1);
   d = make({ a: a(), i: 5, rs: 1 }); d.heard('two'); assert.equal(d.i, 2); assert.equal(d.fromReview, true);
   d = make({ a: a(), i: 5, rs: 1 }); d.heard('start again'); assert.equal(d.i, 0); assert.equal(d.a.fullName, undefined);
@@ -74,6 +83,44 @@ test('Ethiopian phone numbers need 10 digits (or 251 and 9 digits), or an email'
   assert.equal(d.pickLang('English'), 'en');
   assert.equal(d.pickLang('banana'), '');
   assert.equal(d.pickLang('English or Somali'), '');
+});
+test('language page: own-language names in Ge\'ez, mis-hearings and near misses are understood', () => {
+  const d = make();
+  for (const [said, id] of [['አማርኛ', 'am'], ['ኦሮምኛ', 'om'], ['ትግርኛ', 'ti'], ['ሶማሊኛ', 'so'], ['ሲዳምኛ', 'sid'], ['እንግሊዝኛ', 'en'],
+    ['a marina', 'am'], ['amarinya', 'am'], ['amharik', 'am'], ['aroma', 'om'], ['Soomaali', 'so'], ['Sidaamu Afoo', 'sid'], ['tigrigna', 'ti']]) assert.equal(d.pickLang(said), id, said);
+  // The recogniser's guesses: the first one that names a language wins.
+  assert.equal(d.pickLang(['I married', 'a marina', 'banana']), 'am');
+  assert.equal(d.pickLang(['hello', 'banana']), '');
+});
+test('the English language question names only English; each language invites its own speakers by its own name', () => {
+  const src = fs.readFileSync(new URL('../public/db-form.js', import.meta.url), 'utf8');
+  const ask = src.match(/langAsk: \{ en: '([^']+)'/)[1];
+  assert.ok(/English/.test(ask) && !/Amharic|Oromo|Tigrinya|Somali|Sidama/.test(ask));
+  assert.ok(/«አማርኛ» ይበሉ/.test(src) && /«ትግርኛ» በሉ/.test(src));
+});
+test('review by voice is put together from recorded clips, never one device-voice sentence', () => {
+  const d = make({ l: 'am', a: { fullName: 'ሳሙኤል', contact: '0911223344', idRoute: 'refugee', support: ['large'] }, i: 5 });
+  const ids = d.reviewItems().map(x => x.id);
+  assert.deepEqual(ids, ['reviewH', 'n1', 'q_fullName', null, 'n2', 'q_contact', 'n0', 'n9', 'n1', 'n1', 'n2', 'n2', 'n3', 'n3', 'n4', 'n4',
+    'n3', 'q_idRoute', 'o_idRoute_refugee', 'n4', 'q_support', 'o_support_large', 'consentOrg', 'reviewAsk']);
+  assert.equal(d.reviewItems()[3].any, true); // the typed name: read by any voice there is, never silent
+  const p = make({ l: 'am', a: {}, i: 5 }); p.getAttribute = k => (k === 'partner' ? 'AAAPD' : null);
+  assert.deepEqual(p.consentItems('a').map(x => [x.id, x.t]), [['consentSendA', 'እነዚህን መልሶች ለ'], [null, 'AAAPD'], ['consentSendB', ' ለመላክ እስማማለሁ።']]);
+});
+test('Ge\'ez is spelled in Latin letters when only an English voice exists', () => {
+  const r = globalThis.romanize;
+  assert.equal(r('አበበ'), 'abebe');
+  assert.equal(r('ተስፋዬ'), 'tesfaye');
+  assert.equal(r('ሳሙኤል'), 'samuel');
+  assert.equal(r('Abebe 09'), 'Abebe 09');
+});
+test('spoken phone numbers: words in every language, double and triple, and +251', () => {
+  const c = globalThis.spokenContact;
+  assert.equal(c('zero nine double one 223 344'), '0911223344');
+  assert.equal(c('plus 251 911 22 33 44'), '251911223344');
+  assert.equal(c('zeeroo sagal tokko tokko lama lama sadii sadii afur afur'), '0911223344');
+  assert.equal(c('eber sagaal kow kow laba laba saddex saddex afar afar'), '0911223344');
+  assert.equal(c('Abebe at example dot com'), 'abebe@example.com');
 });
 test('choosing a language leaves the language page and switches every text', () => {
   const d = make({ lp: true, welcome: true, l: 'en', ra: 0 }); d.stopRA = () => {}; d.askRA = () => d.log.push('askRA');

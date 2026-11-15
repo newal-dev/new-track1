@@ -58,7 +58,7 @@ test('signup: every question, the review and the thank-you page', async ({ page 
   await next(page);
   await expect(heading(page)).toHaveText('What is your full name?'); await axe(page, 'signup fullName (text)');
   await F(page).locator('#f').fill('Abebe Kebede'); await next(page);
-  await axe(page, 'signup contact (text, typed only)');
+  await axe(page, 'signup contact (text, spoken or typed)');
   await F(page).locator('#f').fill('0911223344'); await next(page);
   await expect(heading(page)).toHaveText('How would you like to show who you are?'); await axe(page, 'signup idRoute (radio)');
   await F(page).getByText("I don't have an ID", { exact: false }).click(); await next(page);
@@ -268,4 +268,56 @@ test('LTI 1.3: the demo LMS launches the plug-in in Amharic', async ({ page }) =
 test('partner pages: SMS inbox and design system', async ({ page }) => {
   await page.goto('http://localhost:3000/demo/sms-inbox'); await axe(page, 'SMS inbox');
   await page.goto('/design-system.html'); await axe(page, 'design system page');
+});
+
+test('keyboard: Tab visits every radio choice, Enter chooses it, Enter again goes on; help is shown in the chosen language', async ({ page }) => {
+  await toForm(page, 'signup', 'am');
+  await expect(F(page).locator('.keys')).toContainText('ወደ ታች ለመሄድ');
+  await expect(F(page).locator('.keys')).toContainText('ድምፁን ለማቆም');
+  await next(page);
+  await F(page).locator('#f').fill('ሳሙኤል'); await next(page);
+  await F(page).locator('#f').fill('0911223344'); await next(page);
+  await expect(heading(page)).toHaveText('ማንነትዎን እንዴት ማሳየት ይፈልጋሉ?');
+  const seen = [];
+  for (let k = 0; k < 4; k++) { await page.keyboard.press('Tab'); seen.push((await deepActive(page)).value); }
+  expect(seen).toEqual(['kebele', 'refugee', 'other', 'refer']);
+  await page.keyboard.press('Shift+Tab'); await page.keyboard.press('Shift+Tab');
+  expect((await deepActive(page)).value).toBe('refugee');
+  await page.keyboard.press('Enter');
+  await expect(F(page).locator('input[value=refugee]')).toBeChecked();
+  await expect(heading(page)).toHaveText('ማንነትዎን እንዴት ማሳየት ይፈልጋሉ?');
+  await expect(F(page).locator('#err')).toBeEmpty();
+  await page.keyboard.press('Enter');
+  await expect(heading(page)).toHaveText('ምን ዓይነት እገዛ ይጠቅምዎታል? የፈለጉትን ይምረጡ።');
+  // Checkboxes: Enter ticks, Enter on a ticked box goes on.
+  await page.keyboard.press('Tab'); await page.keyboard.press('Enter');
+  await expect(F(page).locator('input[value=screenreader]')).toBeChecked();
+  await page.keyboard.press('Enter');
+  await expect(heading(page)).toHaveText('መልሶችዎን ያረጋግጡ');
+  await axe(page, 'Amharic review with keyboard help');
+});
+
+test('Display menu: larger text is kept on this device', async ({ page }) => {
+  await toForm(page);
+  await F(page).locator('details.disp summary').click();
+  await F(page).locator('[data-large]').check();
+  await expect(F(page).locator('section')).toHaveCSS('font-size', '22px');
+  await axe(page, 'Display menu open');
+  await page.reload();
+  await expect(F(page).locator('section')).toHaveCSS('font-size', '22px');
+});
+
+test('review page by voice: every clip it plays exists, in every language', async ({ page, request }) => {
+  await toForm(page);
+  await next(page);
+  await F(page).locator('#f').fill('Abebe'); await next(page);
+  await F(page).locator('#f').fill('0911223344'); await next(page);
+  await F(page).locator('input[value=refugee]').check(); await next(page);
+  await F(page).locator('input[value=sign]').check(); await next(page);
+  await expect(heading(page)).toHaveText('Check your answers');
+  for (const l of ['en', 'am', 'om', 'ti', 'so', 'sid']) {
+    const ids = await F(page).evaluate((el, l) => { el.l = l; return el.reviewItems().filter(x => x.id).map(x => x.id); }, l);
+    expect(ids).toContain('reviewH'); expect(ids).toContain('q_idRoute'); expect(ids).toContain('o_support_sign');
+    for (const id of new Set(ids)) expect((await request.head(`http://localhost:3000/audio/${l}/${id}.mp3`)).status(), `${l}/${id}.mp3`).toBe(200);
+  }
 });
