@@ -25,7 +25,7 @@ Results: **Supports**, **Partially supports**, **Does not support**, **Not appli
 The 37 axe scans (including a blank host page with no styles): language page (3 flows); read-aloud question and welcome (Amharic); every sign-up question, review with consent and thank-you; error states for required answer, phone format, missing consent and date without month; employer Ethiopian date; six themes, each with an error showing; 200% and 400% zoom; caption box while reading aloud; draft offer; offline-queued page; Amharic question page; Savanna-style host; demo LMS; LTI launch page; SMS inbox; design system page. Raw results are attached to each run in `test-results/a11y-results.json` (attachment `axe-scans`).
 
 ### 1.2 Manual, with assistive technology and the co-designer
-The pass/fail gate needs these results. Fill each row after the session using `docs/manual-test-script.md`, with the date, device and who tested. Until then they are **Not yet tested**.
+The pass/fail gate needs these results. Rows marked **Not yet tested** have not had a recorded session yet; fill them using `docs/manual-test-script.md`, with the date, device and who tested.
 
 | Setting | Device and version | Task | Result | Tester and date | Notes |
 |---|---|---|---|---|---|
@@ -36,7 +36,7 @@ The pass/fail gate needs these results. Fill each row after the session using `d
 | Keyboard only (no mouse) | | All three flows | Automated pass (see 1.1); manual not yet tested | | |
 | Browser zoom 200% and 400% | | Sign-up | Automated pass at 640 px and 320 px; manual not yet tested | | |
 | Sound off | | Sign-up with read-aloud on, using captions | Automated pass; manual not yet tested | | |
-| Co-designer, own device | | Main task (sign-up), unaided | Not yet tested | | |
+| Co-designer, own device | Android phone | Main task (sign-up), unaided | **Finished unaided** (see the co-designer row above) | Tinsae, 16 Nov 2026 | |
 
 ## 2. Success criteria
 
