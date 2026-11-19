@@ -4,6 +4,39 @@
 **Live:** https://inclusive-access.onrender.com (no login) · **Licence:** [MIT](LICENSE) (the generated voice clips are CC-BY-NC 4.0, see [Libraries and their licences](#libraries-and-their-licences))
 Partner install guide: **[PARTNER_GUIDE.md](PARTNER_GUIDE.md)** · Put it online: **[DEPLOY.md](DEPLOY.md)** · Accessibility: **[CONFORMANCE.md](CONFORMANCE.md)** and the full **[WCAG 2.2 AA report](docs/WCAG-2.2-AA-Report.md)**
 
+[![tests](https://github.com/newal-dev/new-track1/actions/workflows/test.yml/badge.svg?branch=claude/busy-tesla-9gbzv7)](https://github.com/newal-dev/new-track1/actions/workflows/test.yml) · every push runs 115 unit/voice/API tests, the colour-contrast check and 33 browser tests with axe-core
+
+## Start here
+
+**Live links** (no login; the free server may take about a minute to wake up on the first visit):
+
+| Link | What it is |
+|---|---|
+| https://inclusive-access.onrender.com/site/savanna/pages/signup.html | **The plug-in inside the Savanna page** (the demo we show) |
+| https://inclusive-access.onrender.com/site/ | Demo partner site: sign-up, **Apply for a job**, **For employers** |
+| https://inclusive-access.onrender.com/site/blank.html | An empty page with only the two install lines |
+| https://inclusive-access.onrender.com/site/my-answers.html | **My answers:** type your receipt code to see, download or delete your answers |
+| https://inclusive-access.onrender.com/docs | API documentation (try every call) |
+
+**Install in three steps** (Node.js 20+ and git; or `docker compose up --build` instead of steps 2–3):
+
+```sh
+git clone https://github.com/newal-dev/new-track1.git && cd new-track1
+npm ci
+npm start      # then open http://localhost:3000
+```
+
+On any partner website it is two lines: `<script src='https://inclusive-access.onrender.com/widget.js' defer></script>` and `<db-onboarding api='https://inclusive-access.onrender.com/v1'></db-onboarding>`.
+
+**Run the tests:**
+
+```sh
+npm test                                   # 115 unit, voice and API tests, no server needed
+npx playwright install chromium && npm run test:a11y   # 33 browser + axe-core tests, starts the servers itself
+```
+
+**Privacy in one line:** nothing is sent without a tick; support needs need a second tick and are never shown to employers; every learner gets a receipt code to see, download or **delete** their answers. Full note: **[PRIVACY.md](PRIVACY.md)**.
+
 ## What it does
 
 Inclusive Access is a drop-in module that adds an accessible **sign-up**, a **job search and application**, and an **employer job form** to any website or learning platform, Savanna first, with one script tag. People can type, speak their answers, or have every page read aloud, in **English, አማርኛ, Afaan Oromoo, ትግርኛ, Soomaali and Sidaamu Afoo**, with the keyboard, NVDA or TalkBack. It never times out, never demands an ID, keeps support needs private, and sends nothing without the person's consent.
@@ -47,9 +80,9 @@ Wait for `Plugin server on http://localhost:3000`, then open:
 **Run the tests:**
 ```sh
 npm ci
-npm test                       # 113 unit, voice and API tests; no server needed
+npm test                       # 115 unit, voice and API tests; no server needed
 npx playwright install chromium
-npm run test:a11y              # 32 browser tests with axe-core; starts the servers itself
+npm run test:a11y              # 33 browser tests with axe-core; starts the servers itself
 npm run contrast               # every colour pair in every theme
 node tools/measure-3g.mjs      # load time on Slow 3G and 3G (servers running)
 ```
@@ -143,7 +176,7 @@ Measured with `node tools/measure-3g.mjs` on `blank.html` (empty cache, Chrome n
 
 | What | Where | How to see or delete it |
 |---|---|---|
-| Sign-up answers: name, phone or email, identity route (no document numbers) | The server (in memory in this demo) | `GET` / `DELETE /v1/records/{id}` with the receipt the learner gets |
+| Sign-up answers: name, phone or email, identity route (no document numbers) | The server (in memory in this demo) | **Delete my answers** on the thank-you page, or the **My answers** page with the receipt code (`/v1/receipts/{code}`) |
 | Support needs (optional, no proof) | Only with a **second, separate** consent; a separate store; never shown to employers | Same export and delete |
 | "Prefer not to say" | Nowhere: nothing about support is sent | |
 | Job seeker's work needs | **Never leave the phone**: the job filter runs on the device | |
@@ -160,7 +193,7 @@ Rough estimate for **3,000 learners a month**: **about US$5–10 a month** for o
 
 ## Finished and not finished
 
-**Finished:** the three flows (sign-up, job application, employer form) in six languages; voice input and read-aloud with recorded clips; keyboard, screen-reader, 200% text and colour-theme support; consent, separate support consent, export and deletion; drafts and offline sending; Ethiopian calendar; Level 1, Level 2 (OpenAPI + `/docs`) and Level 3 (LTI 1.3 launch, JobPosting); running inside the official Savanna starter; one-container deployment; 113 unit/API tests, 32 browser tests, 0 axe violations.
+**Finished:** the three flows (sign-up, job application, employer form) in six languages; voice input and read-aloud with recorded clips; keyboard, screen-reader, 200% text and colour-theme support; consent, separate support consent, export and deletion (on the thank-you page and the "My answers" page, with only the receipt code); drafts and offline sending; Ethiopian calendar; Level 1, Level 2 (OpenAPI + `/docs`) and Level 3 (LTI 1.3 launch, JobPosting); running inside the official Savanna starter; one-container deployment; 115 unit/API tests, 33 browser tests, 0 axe violations, run by GitHub Actions on every push.
 
 **Not finished, honestly:**
 - **Native review** of Afaan Oromoo, Tigrinya, Somali and Sidaamu Afoo (Amharic is checked).

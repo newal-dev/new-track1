@@ -205,6 +205,20 @@ const UI = {
   consentNeed: { en: 'Please tick the box to agree before sending, or press Back.', am: 'ከመላክዎ በፊት ለመስማማት ሳጥኑን ምልክት ያድርጉ፤ ወይም ተመለስ ይጫኑ።', om: "Maaloo osoo hin ergin dura walii galuuf saanduqa mallattoo godhi, ykn Duubatti tuqi.", ti: "በጃኹም ቅድሚ ምልኣኽ ንምስምማዕ ነቲ ሳንዱቕ ምልክት ግበሩ፣ ወይ «ተመለስ» ጠውቑ።", so: "Fadlan calaamadee sanduuqa si aad u oggolaato ka hor intaadan dirin, ama riix Dib u noqo." }, // VERIFY_NATIVE
   org: { en: 'the organisers of this website', am: 'የዚህ ድረ-ገጽ አዘጋጆች', om: "qindeessitoota marsariitii kanaa", ti: "ኣወሃሃድቲ እዚ መርበብ", so: "qabanqaabiyayaasha boggan" }, // VERIFY_NATIVE
   receipt: { en: 'Your receipt code is {r}. Keep it if you may want your answers deleted later.', am: 'የደረሰኝ ኮድዎ {r} ነው። መልሶችዎ በኋላ እንዲሰረዙ ሊፈልጉ ከቻሉ ይያዙት።', om: "Koodiin ragaa kee {r} dha. Booda deebiin kee akka haqamu barbaaduu yoo dandeesse qabadhu.", ti: "ኮድ ቅብሊትኩም {r} እዩ። ደሓር መልስታትኩም ክድምሰሱ ክትደልዩ እንተ ኽኢልኩም ሓዝዎ።", so: "Koodhkaaga rasiidka waa {r}. Hayso haddii aad hadhow rabto in jawaabahaaga la tirtiro." }, // VERIFY_NATIVE
+  // The learner's own record (thank-you page and the "My answers" page): download it, or delete it with the receipt code.
+  // Added 19 Nov from the organisers' feedback. All languages, Amharic too, are drafts: VERIFY_NATIVE.
+  myDownload: { en: 'Download my answers', am: 'መልሶቼን አውርድ', om: 'Deebii koo buusi', ti: 'መልስታተይ ኣውርድ', so: 'Soo dejiso jawaabahayga' },
+  myDelete: { en: 'Delete my answers', am: 'መልሶቼን ሰርዝ', om: 'Deebii koo haqi', ti: 'መልስታተይ ደምስስ', so: 'Tirtir jawaabahayga' },
+  mySure: { en: 'Delete all your answers? This cannot be undone. Your support choices are deleted too.', am: 'ሁሉንም መልሶችዎን መሰረዝ ይፈልጋሉ? ይህ ሊመለስ አይችልም። የእገዛ ምርጫዎችዎም ይሰረዛሉ።', om: "Deebii kee hunda haquu barbaaddaa? Kun deebi'uu hin danda'u. Filannoon deeggarsa kees ni haqama.", ti: 'ኩሉ መልስታትኩም ክትድምስሱ ትደልዩ ዶ? እዚ ክምለስ ኣይክእልን። ምርጫታት ደገፍኩም እውን ይድምሰሱ።', so: 'Ma rabtaa inaad tirtirto dhammaan jawaabahaaga? Tan dib looma celin karo. Doorashooyinkaaga taageerada sidoo kale waa la tirtirayaa.' },
+  myYes: { en: 'Yes, delete them', am: 'አዎ፣ ሰርዛቸው', om: 'Eeyyee, haqi', ti: 'እወ፣ ደምስሶም', so: 'Haa, tirtir' },
+  myNo: { en: 'No, keep them', am: 'አይ፣ ይቆዩ', om: 'Lakki, haa turan', ti: 'ኣይፋል፣ ይጽንሑ', so: 'Maya, ha joogaan' },
+  myDeleted: { en: 'Your answers have been deleted.', am: 'መልሶችዎ ተሰርዘዋል።', om: 'Deebiin kee haqameera.', ti: 'መልስታትኩም ተደምሲሶም።', so: 'Jawaabahaaga waa la tirtiray.' },
+  myFail: { en: 'We could not do that. Please try again.', am: 'ይህን ማድረግ አልቻልንም። እባክዎ እንደገና ይሞክሩ።', om: "Kana gochuu hin dandeenye. Maaloo irra deebi'ii yaali.", ti: 'ነዚ ክንገብሮ ኣይከኣልናን። በጃኹም ደጊምኩም ፈትኑ።', so: 'Ma aanaan samayn karin. Fadlan mar kale isku day.' },
+  myH: { en: 'Your answers', am: 'መልሶችዎ', om: 'Deebii kee', ti: 'መልስታትኩም', so: 'Jawaabahaaga' },
+  myCode: { en: 'Your receipt code', am: 'የደረሰኝ ኮድዎ', om: 'Koodii ragaa kee', ti: 'ኮድ ቅብሊትኩም', so: 'Koodhka rasiidkaaga' },
+  myHint: { en: 'It is on the thank-you page you saw after sending: 24 letters and numbers.', am: 'ከላኩ በኋላ ባዩት የምስጋና ገጽ ላይ ያለው፣ 24 ፊደላትና ቁጥሮች ያሉት ኮድ ነው።', om: 'Fuula galataa erga ergitee booda argite irratti argama: qubeewwanii fi lakkoofsota 24.', ti: 'ድሕሪ ምልኣኽ ኣብ ዝረኣኹምዎ ገጽ ምስጋና ዘሎ፣ 24 ፊደላትን ቁጽርታትን ዘለዎ ኮድ እዩ።', so: 'Waa koodhka 24 xaraf iyo lambar ah ee ku qoran bogga mahadnaqa ee aad aragtay kadib markaad dirtay.' },
+  myShow: { en: 'Show my answers', am: 'መልሶቼን አሳይ', om: 'Deebii koo agarsiisi', ti: 'መልስታተይ ኣርእይ', so: 'I tus jawaabahayga' },
+  myNotFound: { en: 'No answers were found with this code. Check the code and try again.', am: 'በዚህ ኮድ ምንም መልስ አልተገኘም። ኮዱን አረጋግጠው እንደገና ይሞክሩ።', om: 'Koodii kanaan deebiin hin argamne. Koodii mirkaneessii irra deebi\'ii yaali.', ti: 'ብዚ ኮድ ዝተረኽበ መልሲ የለን። ኮዱ ኣረጋግጹ ደጊምኩም ፈትኑ።', so: 'Jawaab looma helin koodhkan. Hubi koodhka oo mar kale isku day.' },
   // Drafts and offline: answers are kept on this device and sent when the connection comes back.
   draftH: { en: 'Welcome back', am: 'እንኳን ደህና ተመለሱ', om: "Baga nagaan deebitan", ti: "እንቋዕ ብደሓን ተመለስኩም", so: "Ku soo dhawoow mar kale" }, // VERIFY_NATIVE
   draftP: { en: 'Your answers from last time are kept on this device.', am: 'ካለፈው ጊዜ መልሶችዎ በዚህ መሣሪያ ላይ ተቀምጠዋል።', om: "Deebiin kee yeroo darbe meeshaa kana irratti kuufameera.", ti: "መልስታትኩም ካብ ዝሓለፈ ግዜ ኣብዚ መሳርሒ ተዓቂቦም ኣለዉ።", so: "Jawaabahaagii hore waxay ku kaydsan yihiin qalabkan." }, // VERIFY_NATIVE
@@ -330,6 +344,18 @@ const SID = {
     heardA: 'Macciishshoonnihu',
     heardB: 'Albisate Albisi yi, woy dawarokki wole yi.',
     textSize: 'Borrote lowina',
+    myDownload: 'Dawaro keeshsha ajiisi',
+    myDelete: 'Dawaro keeshsha huqisi',
+    mySure: 'Dawaro keeshsha baala huqisate hasatto? Kuni higge didandiitanno. Kaa\'lo doorshoyyikkino huqqisamanno.',
+    myYes: 'Ee, huqisi',
+    myNo: 'Dee\'ni, agari',
+    myDeleted: 'Dawaro keeshshi huqqisamino.',
+    myFail: 'Konne assa didandiinoommo. Ikkitinni wole paaxi.',
+    myH: 'Dawaro keeshshi',
+    myCode: 'Qiinoo koodekki',
+    myHint: 'Soyitto gedensaanni la\'itto galatu qoolu aana no: 24 fidalla nna kiiro.',
+    myShow: 'Dawaro keeshsha leellishi',
+    myNotFound: 'Konne koodenni dawaro diafamino. Koode buuxe wole paaxi.',
     reviewKeys: 'Dawaro keyboordetenni soorrate, Soorri ilkaawa iillitto geeshsha Tab xiiwi, aanchite Enter xiiwi.',
     askSupport: 'Kaa\'lo doorte. Kaa\'lo qixxeessanno gede kaa\'lo doorshoyyikki qixxeessitootira qoolate hasatto? Ee woy Dee\'ni yi.',
     next: 'Albisi',
@@ -588,6 +614,7 @@ dl.review{margin:var(--s4) 0 0;border-top:1px solid var(--line)}
 .after{margin-top:var(--s4)}
 .done{display:flex;flex-direction:column;gap:var(--s3);padding:var(--s4) 0}
 .done svg{color:var(--accent)}
+.sure{margin-top:var(--s4);padding:var(--s3);border-left:6px solid var(--error);border-radius:var(--r1);background:var(--error-soft)}
 .done .receipt{font-family:ui-monospace,Consolas,monospace;font-weight:700;letter-spacing:.04em}
 .when{color:var(--ink-2);font-size:.9375em}
 .note{padding:var(--s3);border-left:4px solid var(--accent);background:var(--accent-soft);color:var(--ink)}
@@ -1292,7 +1319,7 @@ class DbForm extends HTMLElement {
     if (this.moved) { this.halt(); this.sup = 0; }
     const st = this.steps, s = st[this.i];
     let b;
-    if (this.done) b = `<div class='done'>${CHECK}<h2 id='h' tabindex='-1'>${this.u(this.queued ? 'queued' : 'thanks')}</h2>${this.receipt ? `<p>${this.u('receipt', { r: `<span class='receipt'>${esc(this.receipt)}</span>` })}</p>` : ''}<p class='when'>${esc(this.todayText())}</p></div>`;
+    if (this.done) b = `<div class='done'>${CHECK}<h2 id='h' tabindex='-1'>${this.u(this.queued ? 'queued' : 'thanks')}</h2>${this.receipt ? `<p>${this.u('receipt', { r: `<span class='receipt'>${esc(this.receipt)}</span>` })}</p>` : ''}<p class='when'>${esc(this.todayText())}</p>${this.mineHtml()}</div>`;
     else if (this.welcome) b = this.welcomeHTML();
     else if (!s) {
       const rv = st.map((x, n) => [x, n]).filter(([x]) => !x.local);
@@ -1339,6 +1366,16 @@ class DbForm extends HTMLElement {
 
   // Events named as in the organisers' data contract: db-signup:step / :done / :support (db-job:…, db-employer:… for the
   // other flows). They bubble out of the shadow DOM, like db-complete.
+  // Thank-you page: the learner can keep a copy of their answers, or delete them with the receipt (no account needed).
+  mineHtml() {
+    const api = this.getAttribute('api');
+    if (this.mine === 'gone') return `<p id='mymsg' tabindex='-1' role='status'>${esc(this.u('myDeleted'))}</p>`;
+    if (this.mine === 'sure') return `<div class='sure' role='group' aria-labelledby='sureq'><p id='sureq' tabindex='-1'><strong>${esc(this.u('mySure'))}</strong></p><div class='row'><button type='button' class='p' data-mydel-yes>${esc(this.u('myYes'))}</button><button type='button' data-mydel-no>${esc(this.u('myNo'))}</button></div></div>`;
+    const dl = this.sent ? `<button type='button' data-mydl>${esc(this.u('myDownload'))}</button>` : '';
+    const del = this.receipt && api ? `<button type='button' data-mydel>${esc(this.u('myDelete'))}</button>` : '';
+    return dl || del ? `<div class='row'>${dl}${del}</div>${this.mine === 'fail' ? `<p class='err' role='alert'>${esc(this.u('myFail'))}</p>` : ''}` : '';
+  }
+  focusIn(sel) { const e = this.r.querySelector && this.r.querySelector(sel); if (e && e.focus) e.focus(); }
   emit(name, detail) {
     if (typeof this.dispatchEvent !== 'function') return;
     const flow = this.getAttribute('flow') || this.constructor.flow;
@@ -1400,6 +1437,14 @@ class DbForm extends HTMLElement {
     this.r.querySelectorAll('[data-ra]').forEach(b => b.addEventListener('click', () => { this.stopRA(); this.raDone(b.dataset.ra); }));
     on('[data-send]', () => this.send());
     on('[data-resume]', () => this.resume());
+    on('[data-mydl]', () => saveAnswers(this.sent, this.receipt, this.r));
+    on('[data-mydel]', () => { this.mine = 'sure'; this.draw(); this.focusIn('#sureq'); });
+    on('[data-mydel-no]', () => { this.mine = ''; this.draw(); this.focusIn('[data-mydel]'); });
+    on('[data-mydel-yes]', async () => {
+      const ok = await deleteByReceipt(this.getAttribute('api'), this.receipt);
+      this.mine = ok ? 'gone' : 'fail'; this.draw(); this.focusIn(ok ? '#mymsg' : '[data-mydel]');
+      if (ok) { this.say(this.u('myDeleted')); this.dispatchEvent(new CustomEvent('db-deleted', { detail: { id: this.recId }, bubbles: true, composed: true })); this.sent = null; }
+    });
     this.r.querySelectorAll('[data-consent]').forEach(x => x.addEventListener('change', () => {
       this.consent[x.dataset.consent] = x.checked;
       if (x.dataset.consent === 'a' && x.checked && this.errKey === 'consentNeed') { this.err = ''; this.errKey = ''; const e = this.r.querySelector('#err'); if (e) e.textContent = ''; x.removeAttribute('aria-invalid'); }
@@ -1707,6 +1752,7 @@ class DbForm extends HTMLElement {
         const j = await r.json().catch(() => ({}));
         this.receipt = j.receipt || ''; this.recId = j.id || '';
       }
+      this.sent = out; this.mine = '';
       this.done = true; this.moved = true; this.err = ''; this.dropDraft();
       this.dispatchEvent(new CustomEvent('db-complete', { detail: { answers: out, id: this.recId, receipt: this.receipt }, bubbles: true, composed: true }));
       // The organisers' data contract (Technical Guide, Track 1): profile and support in two separate events.
@@ -1728,6 +1774,54 @@ class DbForm extends HTMLElement {
     this.draw();
   }
 }
+// Learner's own record, shared by the thank-you page and <db-my-answers>.
+function saveAnswers(data, receipt, root) {
+  if (!data || typeof document === 'undefined') return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify({ receipt, ...data }, null, 2)], { type: 'application/json' }));
+  a.download = 'my-answers' + (receipt ? '-' + receipt : '') + '.json';
+  (root || document.body).appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+async function deleteByReceipt(api, code) {
+  if (!api || !code) return false;
+  try { const r = await fetch(api + '/receipts/' + encodeURIComponent(code), { method: 'DELETE' }); return r.status === 204; } catch (e) { return false; }
+}
+// <db-my-answers api='…/v1' lang='am'>: a learner types the receipt code from the thank-you page to see, download or
+// delete their answers later, on any device. Uses the same look and the same words as the form.
+class DbMyAnswers extends DbForm {
+  connectedCallback() { this.l = this.getAttribute('lang') || this.l || 'en'; this.code = ''; this.rec = null; this.state = ''; this.paint(); }
+  disconnectedCallback() {}
+  paint(focus) {
+    const u = k => esc(this.u(k)), r = this.rec;
+    let b = `<h2 id='h' tabindex='-1'>${u('myH')}</h2>`;
+    if (this.state === 'gone') b += `<p id='mymsg' tabindex='-1' role='status'>${u('myDeleted')}</p>`;
+    else if (r) {
+      const rows = Object.entries(r.answers || {}).filter(([k]) => k !== 'consent').map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(Array.isArray(v) ? v.join(', ') : v)}</dd>`).join('');
+      b += `<dl class='mine'>${rows}</dl>` + (this.state === 'sure'
+        ? `<div class='sure' role='group' aria-labelledby='sureq'><p id='sureq' tabindex='-1'><strong>${u('mySure')}</strong></p><div class='row'><button type='button' class='p' data-yes>${u('myYes')}</button><button type='button' data-no>${u('myNo')}</button></div></div>`
+        : `<div class='row'><button type='button' data-dl>${u('myDownload')}</button><button type='button' data-del>${u('myDelete')}</button></div>`);
+    } else b += `<form novalidate><label for='code'>${u('myCode')}</label><p class='hint' id='codehint'>${u('myHint')}</p><input type='text' id='code' autocomplete='off' spellcheck='false' aria-describedby='codehint${this.state ? ' myerr' : ''}'${this.state ? " aria-invalid='true'" : ''} value='${esc(this.code)}'><div class='row'><button class='p'>${u('myShow')}</button></div></form>`;
+    if (this.state === 'missing' || this.state === 'fail') b += `<p class='err' id='myerr' role='alert'>${u(this.state === 'missing' ? 'myNotFound' : 'myFail')}</p>`;
+    this.r.innerHTML = `<style>${CSS}.mine{display:grid;grid-template-columns:auto 1fr;gap:var(--s2) var(--s4)}.mine dt{font-weight:700}.mine dd{margin:0;overflow-wrap:anywhere}label{display:block;font-weight:700}.hint{margin:var(--s1) 0 var(--s3);color:var(--ink-2)}</style><section lang='${esc(this.l)}'>${b}</section>`;
+    const $ = s => this.r.querySelector(s), api = this.getAttribute('api');
+    const f = $('form'); if (f) f.addEventListener('submit', async e => {
+      e.preventDefault(); this.code = $('#code').value.replace(/\s+/g, '');
+      try { const x = await fetch(api + '/receipts/' + encodeURIComponent(this.code)); if (x.ok) { this.rec = await x.json(); this.state = ''; } else this.state = x.status === 404 ? 'missing' : 'fail'; } catch (er) { this.state = 'fail'; }
+      this.paint(this.rec ? '#h' : '#code');
+    });
+    const on = (s, fn) => { const e = $(s); if (e) e.addEventListener('click', fn); };
+    on('[data-dl]', () => saveAnswers(r && { flow: r.flow, at: r.at, answers: r.answers, support: r.support }, this.code, this.r));
+    on('[data-del]', () => { this.state = 'sure'; this.paint('#sureq'); });
+    on('[data-no]', () => { this.state = ''; this.paint('[data-del]'); });
+    on('[data-yes]', async () => {
+      const ok = await deleteByReceipt(api, this.code);
+      if (ok) { this.rec = null; this.state = 'gone'; this.dispatchEvent(new CustomEvent('db-deleted', { detail: { id: r.id }, bubbles: true, composed: true })); } else this.state = 'fail';
+      this.paint(ok ? '#mymsg' : '[data-del]');
+    });
+    if (focus) { const e = $(focus); if (e) e.focus(); }
+  }
+}
 // Level 1 tags. All three are the same engine; the two named tags only change the default flow.
 // <db-onboarding> = sign-up, <db-career-gateway> = job search and application. Loading the script twice is harmless.
 class DbOnboarding extends DbForm { static flow = 'signup'; }
@@ -1735,4 +1829,5 @@ class DbCareerGateway extends DbForm { static flow = 'job'; }
 if (!customElements.get('db-form')) customElements.define('db-form', DbForm);
 if (!customElements.get('db-onboarding')) customElements.define('db-onboarding', DbOnboarding);
 if (!customElements.get('db-career-gateway')) customElements.define('db-career-gateway', DbCareerGateway);
+if (!customElements.get('db-my-answers')) customElements.define('db-my-answers', DbMyAnswers);
 }

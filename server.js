@@ -206,6 +206,23 @@ Demo partner site: ${BASE}/site/ (and http://localhost:8080 with docker compose)
     r.set('Cache-Control', 'no-store').json({ id, flow: rec.flow, at: rec.at, answers: rec.data, support: supportPreferences.get(id) || [], consent: c });
   });
 
+  // The learner's own controls, with only the receipt code they were given (they never see the record id): see their
+  // answers, or delete them. An unknown code answers 404, the same as a wrong one.
+  const byReceipt = code => { if (typeof code !== 'string' || code.length !== 24) return null; for (const id of consents.keys()) if (same(code, receiptOf(id))) return id; return null; };
+  app.get('/v1/receipts/:code', (q, r) => {
+    const id = byReceipt(q.params.code), c = id && consents.get(id), rec = id && records.get(id);
+    if (!rec || !c) return fail(r, 404, 'not_found', 'No answers with this receipt code.');
+    r.set('Cache-Control', 'no-store').json({ id, flow: rec.flow, at: rec.at, answers: rec.data, support: supportPreferences.get(id) || [], consent: c });
+  });
+  app.delete('/v1/receipts/:code', (q, r) => {
+    const id = byReceipt(q.params.code), c = id && consents.get(id);
+    if (!c || !records.has(id)) return fail(r, 404, 'not_found', 'No answers with this receipt code.');
+    records.delete(id); supportPreferences.delete(id);
+    const k = jobs.findIndex(j => j.record === id); if (k >= 0) jobs.splice(k, 1);
+    c.withdrawnAt = new Date().toISOString();
+    r.status(204).end();
+  });
+
   // Consent audit log for partners: no names, contacts or answers, only what was agreed, when, and in which language.
   app.get('/v1/consents', (q, r) => {
     if (ADMIN && !same(q.get('authorization'), 'Bearer ' + ADMIN)) return fail(r, 401, 'unauthorised', 'Send Authorization: Bearer <ADMIN_TOKEN>.');

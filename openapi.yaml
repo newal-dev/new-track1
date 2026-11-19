@@ -154,6 +154,37 @@ paths:
       responses:
         '204': { description: Deleted. The consent log keeps only the withdrawal time. }
         '404': { $ref: '#/components/responses/NotFound' }
+  /v1/receipts/{code}:
+    get:
+      tags: [consent]
+      summary: The learner's own record, found with the receipt code alone (the "My answers" page)
+      description: For a learner who kept only the 24-character receipt code from the thank-you page. Answers 404 for a wrong, malformed or deleted code. Never cached.
+      parameters:
+        - { name: code, in: path, required: true, schema: { type: string, minLength: 24, maxLength: 24 } }
+      responses:
+        '200':
+          description: The record, in the same shape as GET /v1/records/{id}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string, format: uuid }
+                  flow: { type: string, enum: [signup, job, employer] }
+                  at: { type: string, format: date-time }
+                  answers: { type: object }
+                  support: { type: array, items: { type: string } }
+                  consent: { $ref: '#/components/schemas/ConsentRecord' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [consent]
+      summary: Delete my answers with my receipt code (no account needed)
+      description: Deletes the answers and support needs, removes an employer's job post, and records the withdrawal time in the consent log.
+      parameters:
+        - { name: code, in: path, required: true, schema: { type: string, minLength: 24, maxLength: 24 } }
+      responses:
+        '204': { description: Deleted. }
+        '404': { $ref: '#/components/responses/NotFound' }
   /v1/consents:
     get:
       tags: [consent]

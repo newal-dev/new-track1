@@ -76,6 +76,50 @@ test('signup: every question, the review and the thank-you page', async ({ page 
   await axe(page, 'signup done');
 });
 
+test('the learner can delete their answers with their receipt: on the thank-you page, and later on "My answers"', async ({ page, request }) => {
+  const send = async () => {
+    await toForm(page);
+    await next(page);
+    await F(page).locator('#f').fill('Delete Me'); await next(page);
+    await F(page).locator('#f').fill('0911223344'); await next(page);
+    await F(page).getByText("I don't have an ID", { exact: false }).click(); await next(page);
+    await next(page);
+    await F(page).locator('#cons').check(); await F(page).locator('[data-send]').click();
+    await expect(heading(page)).toHaveText('Thank you. We received your answers.');
+    return (await F(page).locator('.receipt').textContent()).trim();
+  };
+  // 1. Thank-you page: Delete asks first; No keeps everything; Yes deletes.
+  const code = await send();
+  await expect(F(page).locator('[data-mydl]')).toBeVisible();
+  await F(page).locator('[data-mydel]').click();
+  expect((await deepActive(page)).id).toBe('sureq');
+  await axe(page, 'thank-you page, delete confirmation');
+  await F(page).locator('[data-mydel-no]').click();
+  expect((await request.get('http://localhost:3000/v1/receipts/' + code)).status()).toBe(200);
+  const gone = page.evaluate(() => new Promise(r => document.addEventListener('db-deleted', () => r(true), { once: true })));
+  await F(page).locator('[data-mydel]').click(); await F(page).locator('[data-mydel-yes]').click();
+  await expect(F(page).locator('#mymsg')).toHaveText('Your answers have been deleted.');
+  expect(await gone).toBe(true);
+  expect((await request.get('http://localhost:3000/v1/receipts/' + code)).status()).toBe(404);
+  // 2. "My answers" page, by keyboard: a wrong code explains itself; the right code shows the answers and deletes them.
+  const code2 = await send();
+  await page.goto('/my-answers.html');
+  const M = page.locator('db-my-answers');
+  await expect(M.locator('#h')).toHaveText('Your answers');
+  await axe(page, 'my answers: enter the code');
+  await M.locator('#code').fill('wrongcode'); await M.locator('#code').press('Enter');
+  await expect(M.locator('#myerr')).toContainText('No answers were found');
+  await expect(M.locator('#code')).toHaveAttribute('aria-invalid', 'true');
+  await M.locator('#code').fill(code2.replace(/(.{4})/g, '$1 ')); await M.locator('#code').press('Enter');
+  await expect(M.locator('.mine')).toContainText('Delete Me');
+  await axe(page, 'my answers: shown');
+  const [dl] = await Promise.all([page.waitForEvent('download'), M.locator('[data-dl]').click()]);
+  expect(dl.suggestedFilename()).toBe('my-answers-' + code2 + '.json');
+  await M.locator('[data-del]').click(); await page.keyboard.press('Tab'); await page.keyboard.press('Enter');
+  await expect(M.locator('#mymsg')).toHaveText('Your answers have been deleted.');
+  expect((await request.get('http://localhost:3000/v1/receipts/' + code2)).status()).toBe(404);
+});
+
 test('error summary: an empty answer shows an alert, marks the field and moves focus to it', async ({ page }) => {
   await toForm(page); await next(page);
   await next(page);
