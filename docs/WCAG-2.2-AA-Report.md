@@ -66,7 +66,7 @@ The pass/fail gate needs these results. Rows marked **Not yet tested** have not 
 | 2.1.1 Keyboard | A | Supports | Test "keyboard only": job flow from language page to thank-you using only Tab, Space and Enter. Tab and Shift+Tab visit every radio choice; Enter chooses a choice instead of sending the page (test "keyboard: Tab visits every radio choice"). Scrollable code block and table are focusable |
 | 2.1.2 No keyboard trap | A | Supports | Same test tabs through the whole page and back out; the shadow root uses native focus order |
 | 2.1.4 Character key shortcuts | A | Supports | No single-letter shortcuts. Escape only stops speech |
-| 2.2.1 Timing adjustable | A | Supports | No time limits anywhere. Drafts are kept for 7 days on the device, and there is no session timeout |
+| 2.2.1 Timing adjustable | A | Supports | No time limits anywhere. Drafts are kept for 7 days on the device, and there is no session timeout. After sign-up nothing moves the learner on by a timer: the host's `continue` address opens only when they choose Next (button or voice), so they can hear and keep their receipt code first |
 | 2.2.2 Pause, stop, hide | A | Supports | The only animation (listening bars) runs only while listening, stops with Stop reading or Escape, and is off with `prefers-reduced-motion` |
 | 2.3.1 Three flashes | A | Supports | One short outline pulse with the beep; no flashing |
 | 2.4.1 Bypass blocks | A | Supports | "Skip to the form" / "Skip to the task" links on host pages |

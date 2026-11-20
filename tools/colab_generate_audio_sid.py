@@ -97,6 +97,7 @@ CLIPS = json.loads(r'''{
   "heardGeneric": "Dawarokki macciishshinoonni. Leellisaanchu aana leellitanno. Albisate Albisi yi, woy dawarokki wole yi.",
   "choseA": "Doorttohu",
   "choseB": "Albisate Albisi yi, woy wole doori.",
+  "doneNext": "Albisate Albisi yi.",
   "errConsentNeed": "Ikkitinni soyitto albaanni ammanaate saaxine malaatisi, woy Higi xiiwi.",
   "errDateBad": "Ikkitinni agana doori, woy barranna diri Dianfaa'moommo assi.",
   "draftH": "Dancha higgite Darbinoha yannaha dawaro keeshshi konne uduunnicho aana agarantino. Uurrinoommohunni albisi Wole hanafi",

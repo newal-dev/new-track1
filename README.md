@@ -4,7 +4,7 @@
 **Live:** https://inclusive-access.onrender.com (no login) · **Licence:** [MIT](LICENSE) (the generated voice clips are CC-BY-NC 4.0, see [Libraries and their licences](#libraries-and-their-licences))
 Partner install guide: **[PARTNER_GUIDE.md](PARTNER_GUIDE.md)** · Put it online: **[DEPLOY.md](DEPLOY.md)** · Accessibility: **[CONFORMANCE.md](CONFORMANCE.md)** and the full **[WCAG 2.2 AA report](docs/WCAG-2.2-AA-Report.md)**
 
-[![tests](https://github.com/newal-dev/new-track1/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/newal-dev/new-track1/actions/workflows/test.yml) · every push runs 115 unit/voice/API tests, the colour-contrast check and 33 browser tests with axe-core
+[![tests](https://github.com/newal-dev/new-track1/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/newal-dev/new-track1/actions/workflows/test.yml) · every push runs 117 unit/voice/API tests, the colour-contrast check and 33 browser tests with axe-core
 
 ## Start here
 
@@ -32,7 +32,7 @@ On any partner website it is two lines: `<script src='https://inclusive-access.o
 **Run the tests:**
 
 ```sh
-npm test                                   # 115 unit, voice and API tests, no server needed
+npm test                                   # 117 unit, voice and API tests, no server needed
 npx playwright install chromium && npm run test:a11y   # 33 browser + axe-core tests, starts the servers itself
 ```
 
@@ -64,7 +64,7 @@ Wait for `Plugin server on http://localhost:3000`, then open:
 |---|---|
 | http://localhost:8080 | Demo partner website with the sign-up form. Its menu switches to **Apply for a job** and **For employers** |
 | http://localhost:8080/blank.html | **The judge's test:** an empty page with no Bootstrap, no Savanna CSS and no styles at all, only the two lines below |
-| http://localhost:8080/savanna/pages/signup.html | **Inside the official Savanna starter** (`savanna/`, ALX's pages unchanged): Savanna's own header and sidebar, our sign-up in `<main>`; when sign-up is done it goes to the learner homepage |
+| http://localhost:8080/savanna/pages/signup.html | **Inside the official Savanna starter** (`savanna/`, ALX's pages unchanged): Savanna's own header and sidebar, our sign-up in `<main>`; after sign-up the thank-you page offers **Next** (button, or say «ቀጥል» when it reads aloud), which opens the learner homepage. No timer moves anyone on |
 | http://localhost:8080/savanna.html | The same plug-in inside a Savanna-style course page |
 | http://localhost:3000/docs | **Interactive API documentation** (Swagger UI): try every call in the browser |
 | http://localhost:3000/demo/lms | A built-in learning platform: each button does a real, signed **LTI 1.3** launch |
@@ -81,7 +81,7 @@ Wait for `Plugin server on http://localhost:3000`, then open:
 **Run the tests:**
 ```sh
 npm ci
-npm test                       # 115 unit, voice and API tests; no server needed
+npm test                       # 117 unit, voice and API tests; no server needed
 npx playwright install chromium
 npm run test:a11y              # 33 browser tests with axe-core; starts the servers itself
 npm run contrast               # every colour pair in every theme
@@ -100,7 +100,7 @@ Or everything inside Docker: `docker compose --profile test run --rm tests`.
 ```
 
 - **Tags:** `<db-onboarding>` is sign-up, `<db-career-gateway>` is job search and application, `<db-form flow='signup|job|employer'>` gives any flow.
-- **Attributes:** `api`, `audio`, `partner` (named in the consent question), `lang` (en, am, om, ti, so, sid), `lang-ask='no'` (skip the language page), `theme` (auto, standard, dark, contrast, rg, by), `hide` (comma list of questions to leave out), `sw` (offline service worker), `asr` (browser, off, or a registered recogniser), `fonts='no'`, `jsonld='no'`.
+- **Attributes:** `api`, `audio`, `partner` (named in the consent question), `lang` (en, am, om, ti, so, sid), `lang-ask='no'` (skip the language page), `continue` (an address: the thank-you page offers Next, by button or by voice, to go there; never a timer), `theme` (auto, standard, dark, contrast, rg, by), `hide` (comma list of questions to leave out), `sw` (offline service worker), `asr` (browser, off, or a registered recogniser), `fonts='no'`, `jsonld='no'`.
 - **Events**, all `bubbles` and `composed`:
 
 | Event | `detail` | When |
@@ -110,6 +110,7 @@ Or everything inside Docker: `docker compose --profile test run --rm tests`.
 | `db-signup:support` | `{ support: [...] }` | sent separately, only when the learner agreed to share support needs |
 | `db-complete` | `{ answers, id, receipt }` | sent (all flows) |
 | `db-error`, `db-queued`, `db-sent` | | send failed; saved offline; offline answers sent later |
+| `db-continue` | `{ id, url }` | the learner chose Next on the thank-you page (`continue` attribute); cancelable: call `preventDefault()` to handle it yourself |
 | `db-theme`, `db-textsize` | `{ theme }`, `{ scale }` | the learner changed colours or text size: the host can follow, so its menu grows too |
 
 - Everything runs in an open **Shadow DOM**: the host's CSS cannot break it. On the host page it adds only its own `@font-face` declarations (turn off with `fonts='no'`) and, on the job page, the JobPosting data (`jsonld='no'`). No global variables, and no changes to the host's elements or styles. CSS hooks: `--db-accent`, `--db-font`.
@@ -155,7 +156,7 @@ curl http://localhost:3000/v1/consents -H "Authorization: Bearer <ADMIN_TOKEN>"
 
 - **English, አማርኛ, Afaan Oromoo, ትግርኛ, Soomaali, Sidaamu Afoo.** The **Amharic** text has been checked by a native speaker. Afaan Oromoo, Tigrinya, Somali and Sidaamu Afoo are **drafts** until native speakers check them (every such line is marked `VERIFY_NATIVE` in `public/db-form.js`).
 - **The language page** asks in English for English only; then each language invites its own speakers in its own voice and by its own name ("ለአማርኛ «አማርኛ» ይበሉ"). After each invitation there is a beep and a 4-second listening window with a recogniser that suits that language, so people can answer as soon as they hear their own. Own-language names, common mis-hearings and near misses count; if nothing is understood, it asks again in English and Amharic.
-- **Read aloud** plays 715 recorded clips (`public/audio/{en,am,om,ti,so,sid}/`, Meta MMS-TTS, made offline), so it works on phones with no Amharic voice. The review page is put together from short clips (heading, number, question, chosen option, a phone number read back in groups), so it is spoken in every language. Words the person typed (a name) are read by the device voice, or else by an English voice with Ge'ez spelled in Latin letters: never silent. Key names (Tab, Enter, Esc) are said in English, as people know them. The Amharic digits 0 to 9 were chosen by a native speaker, by ear.
+- **Read aloud** plays 721 recorded clips (`public/audio/{en,am,om,ti,so,sid}/`, Meta MMS-TTS, made offline), so it works on phones with no Amharic voice. The review page is put together from short clips (heading, number, question, chosen option, a phone number read back in groups), so it is spoken in every language. Words the person typed (a name) are read by the device voice, or else by an English voice with Ge'ez spelled in Latin letters: never silent. Key names (Tab, Enter, Esc) are said in English, as people know them. The Amharic digits 0 to 9 were chosen by a native speaker, by ear.
 - **Voice input:** after a page is read, the form says "Speak now", beeps, then listens. Answers can be numbers ("two", "ሁለት", "12" for 1 and 2) or names, with commands (Next, Back, Skip, Read aloud, Stop) in all six languages. The phone or email question can be spoken ("zero nine one one…", "abebe at gmail dot com"). Browser speech recognition often has no Afaan Oromoo or Tigrinya: typing always works.
 - **Keyboard and screen readers:** Tab and Shift+Tab visit every choice, Space or Enter chooses, Escape stops the voice; a help strip on every page says so in the chosen language. Details and the ARIA patterns: [docs/WCAG-2.2-AA-Report.md](docs/WCAG-2.2-AA-Report.md).
 - **Adding a language:** add its code to `LANGS` and `LANG_RE` in `public/db-form.js`, a column of text (the Sidama block `SID` shows the pattern: one place, falls back to English line by line), then `npm run recording` and make its clips ([RECORDING_SCRIPT.md](RECORDING_SCRIPT.md)).
@@ -194,7 +195,7 @@ Rough estimate for **3,000 learners a month**: **about US$5–10 a month** for o
 
 ## Finished and not finished
 
-**Finished:** the three flows (sign-up, job application, employer form) in six languages; voice input and read-aloud with recorded clips; keyboard, screen-reader, 200% text and colour-theme support; consent, separate support consent, export and deletion (on the thank-you page and the "My answers" page, with only the receipt code); drafts and offline sending; Ethiopian calendar; Level 1, Level 2 (OpenAPI + `/docs`) and Level 3 (LTI 1.3 launch, JobPosting); running inside the official Savanna starter; one-container deployment; 115 unit/API tests, 33 browser tests, 0 axe violations, run by GitHub Actions on every push.
+**Finished:** the three flows (sign-up, job application, employer form) in six languages; voice input and read-aloud with recorded clips; keyboard, screen-reader, 200% text and colour-theme support; consent, separate support consent, export and deletion (on the thank-you page and the "My answers" page, with only the receipt code); drafts and offline sending; Ethiopian calendar; Level 1, Level 2 (OpenAPI + `/docs`) and Level 3 (LTI 1.3 launch, JobPosting); running inside the official Savanna starter; one-container deployment; 117 unit/API tests, 33 browser tests, 0 axe violations, run by GitHub Actions on every push.
 
 **Not finished, honestly:**
 - **Native review** of Afaan Oromoo, Tigrinya, Somali and Sidaamu Afoo (Amharic is checked).

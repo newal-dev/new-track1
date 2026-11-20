@@ -195,6 +195,8 @@ const UI = {
   noChange: { en: 'No, change something', am: 'አይ፣ አንድ ነገር ልቀይር', om: "Lakki, waan tokko jijjiira", ti: "ኣይፋል፣ ገለ ክቕይር", so: "Maya, wax baan beddelayaa" }, // VERIFY_NATIVE
   restart: { en: 'Start again', am: 'እንደገና ጀምር', om: "Irra deebi'ii jalqabi", ti: "ደጊምካ ጀምር", so: "Dib u bilow" }, // VERIFY_NATIVE
   choseA: { en: 'You chose', am: 'የመረጡት', om: "Kan filatte", ti: "ዝመረጽኩምዎ", so: "Waxaad dooratay" }, // VERIFY_NATIVE
+  // Thank-you page with a host "continue" address. The first part of choseB, word for word; its clips are cut from choseB's.
+  doneNext: { en: 'Say Next to continue.', am: 'ለመቀጠል «ቀጥል» ይበሉ።', om: "Itti fufuuf Itti fufi jedhi.", ti: "ንምቕጻል «ቀጽል» በሉ።", so: "Dheh Xiga si aad u sii socoto." }, // VERIFY_NATIVE (all but en, am)
   choseB: { en: 'Say Next to continue, or choose again.', am: 'ለመቀጠል «ቀጥል» ይበሉ ወይም እንደገና ይምረጡ።', om: "Itti fufuuf Itti fufi jedhi, ykn ammas filadhu.", ti: "ንምቕጻል «ቀጽል» በሉ፣ ወይ ደጊምኩም ምረጹ።", so: "Dheh Xiga si aad u sii socoto, ama mar kale dooro." }, // VERIFY_NATIVE
   heardGeneric: { en: 'We heard your answer. It is shown on the screen. Say Next to continue, or say your answer again.', am: 'መልስዎን ሰምተናል። በማያ ገጹ ላይ ይታያል። ለመቀጠል «ቀጥል» ይበሉ ወይም መልስዎን እንደገና ይናገሩ።', om: "Deebii kee dhageenyeerra. Iskiriinii irratti mul'ata. Itti fufuuf Itti fufi jedhi, ykn deebii kee ammas jedhi.", ti: "መልስኹም ሰሚዕና። ኣብ ስክሪን ይርአ ኣሎ። ንምቕጻል «ቀጽል» በሉ፣ ወይ መልስኹም ደጊምኩም በሉ።", so: "Waan maqalnay jawaabtaada. Waxay ka muuqataa shaashadda. Dheh Xiga si aad u sii socoto, ama mar kale dheh jawaabtaada." }, // VERIFY_NATIVE
   fail: { en: 'We could not send your answers. Nothing is lost. Please try again.', am: 'መልሶችዎን መላክ አልቻልንም። ምንም አልጠፋም። እባክዎ እንደገና ይሞክሩ።', om: "Deebii kee erguu hin dandeenye. Homtuu hin badne. Maaloo irra deebi'ii yaali.", ti: "መልስታትኩም ክንሰድድ ኣይከኣልናን። ዋላ ሓንቲ ኣይጠፍአን። በጃኹም ደጊምኩም ፈትኑ።", so: "Ma aanaan diri karin jawaabahaaga. Waxba ma lumin. Fadlan mar kale isku day." }, // VERIFY_NATIVE
@@ -416,6 +418,7 @@ const SID = {
     restart: 'Wole hanafi',
     choseA: 'Doorttohu',
     choseB: 'Albisate Albisi yi, woy wole doori.',
+    doneNext: 'Albisate Albisi yi.',
     heardGeneric: 'Dawarokki macciishshinoonni. Leellisaanchu aana leellitanno. Albisate Albisi yi, woy dawarokki wole yi.',
     fail: 'Dawaro keeshshi soya didandiinoommo. Mittunkuri dibaino. Ikkitinni wole paaxi.',
     consentH: 'Ammanaakki',
@@ -1328,7 +1331,7 @@ class DbForm extends HTMLElement {
     if (this.moved) { this.halt(); this.sup = 0; }
     const st = this.steps, s = st[this.i];
     let b;
-    if (this.done) b = `<div class='done'>${CHECK}<h2 id='h' tabindex='-1'>${this.u(this.queued ? 'queued' : 'thanks')}</h2>${this.receipt ? `<p>${this.u('receipt', { r: `<span class='receipt'>${esc(this.receipt)}</span>` })}</p>` : ''}<p class='when'>${esc(this.todayText())}</p>${this.mineHtml()}</div>`;
+    if (this.done) b = `<div class='done'>${CHECK}<h2 id='h' tabindex='-1'>${this.u(this.queued ? 'queued' : 'thanks')}</h2>${this.receipt ? `<p>${this.u('receipt', { r: `<span class='receipt'>${esc(this.receipt)}</span>` })}</p>` : ''}<p class='when'>${esc(this.todayText())}</p>${this.mineHtml()}${this.cont() ? `<div class='row'><button type='button' class='p big' data-continue>${this.u('next')}${I('next', 20)}</button></div>` : ''}</div>`;
     else if (this.welcome) b = this.welcomeHTML();
     else if (!s) {
       const rv = st.map((x, n) => [x, n]).filter(([x]) => !x.local);
@@ -1369,7 +1372,9 @@ class DbForm extends HTMLElement {
     this.saveDraft();
     this.vtries = 0;
     const quiet = this.quiet; this.quiet = false;
-    if (this.rm && this.moved && !quiet) this.readPage(s, this.done ? null : () => this.listenAnswer());
+    // Thank-you page: with a host "continue" address, ask "Say Next to continue" and listen, so nobody is moved on by a timer.
+    const askNext = this.cont() && this.canHear() && !this.vno ? () => this.say2(this.u('doneNext'), 'doneNext') : null;
+    if (this.rm && this.moved && !quiet) this.readPage(s, this.done ? askNext : () => this.listenAnswer());
     else if (this.err && this.moved && !quiet && (this.vm || this.usedRead)) this.readErr();
   }
 
@@ -1448,6 +1453,7 @@ class DbForm extends HTMLElement {
     on('[data-send]', () => this.send());
     on('[data-resume]', () => this.resume());
     on('[data-mydl]', () => saveAnswers(this.sent, this.receipt, this.r));
+    on('[data-continue]', () => this.goOn());
     on('[data-mydel]', () => { this.mine = 'sure'; this.draw(); this.focusIn('#sureq'); });
     on('[data-mydel-no]', () => { this.mine = ''; this.draw(); this.focusIn('[data-mydel]'); });
     on('[data-mydel-yes]', async () => {
@@ -1590,6 +1596,15 @@ class DbForm extends HTMLElement {
 
   say2(m, id) { this.speak(m, id || null, () => this.cue(() => this.listen(true))); this.say(m); }
 
+  // The host's "continue" attribute: where to go after the thank-you page, when the person chooses Next (button or voice).
+  cont() { return (typeof this.getAttribute === 'function' && this.getAttribute('continue')) || ''; }
+  // Fires db-continue (cancelable: a host can handle it itself), then opens the host's address. Never on a timer.
+  goOn() {
+    const url = this.cont(); this.halt();
+    const go = this.dispatchEvent(new CustomEvent('db-continue', { detail: { id: this.recId, url }, bubbles: true, composed: true, cancelable: true }));
+    if (go && url) window.location.assign(url);
+  }
+
   hasVoice() { const vs = window.speechSynthesis ? speechSynthesis.getVoices() : []; return vs.some(v => this.vmatch(v)); }
 
   // Read the current page. An error is read first, from its own recorded clip, so it is heard even without a device voice.
@@ -1646,7 +1661,14 @@ class DbForm extends HTMLElement {
   // Act on what the person said.
   heard(raw) {
     this.vtries = 0;
-    if (this.done) return;
+    if (this.done) {
+      // Only the thank-you page of a host with a "continue" address listens: "Next" goes on, "Stop" stops reading.
+      if (!this.cont()) return;
+      const dw = (this.norm(raw) || '').split(' ').filter(Boolean), dis = c => dw.length > 0 && dw.length <= 3 && isCmd(c, dw);
+      if (dis('next')) return this.goOn();
+      if (dis('stop')) return this.stopRead();
+      return this.say2(this.u('doneNext'), 'doneNext');
+    }
     const s = this.steps[this.i], t = this.norm(raw), w = t ? t.split(' ') : [];
     const lim = s && s.type === 'text' ? 1 : 3;
     const is = c => w.length > 0 && w.length <= lim && isCmd(c, w);

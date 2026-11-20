@@ -145,7 +145,7 @@
           <p class="mb-4">Sign up for the programme in a few minutes, one question at a time, by typing or by voice, in your own language.</p>
           <!-- Inclusive Access, Level 1: the only two lines this page needs. -->
           <script src="http://localhost:3000/widget.js" defer></script>
-          <db-onboarding api="http://localhost:3000/v1" audio="http://localhost:3000/audio" partner="Digital Bridge (ALX)"></db-onboarding>
+          <db-onboarding api="http://localhost:3000/v1" audio="http://localhost:3000/audio" partner="Digital Bridge (ALX)" continue="homepage-v1-self-paced.html"></db-onboarding>
           <script>
             // ?lang=am (or om, ti, so, sid, en) opens straight in that language and skips the language page:
             // signup.html?lang=am is the voice-first Amharic sign-up. Runs before the deferred widget starts.
@@ -156,10 +156,8 @@
               f.setAttribute('lang', l); f.setAttribute('lang-ask', 'no');
               document.documentElement.lang = l;
             })();
-            // The host decides what happens next: when sign-up is done, go to the learner homepage.
-            document.addEventListener('db-signup:done', function () {
-              setTimeout(function () { window.location.href = 'homepage-v1-self-paced.html'; }, 6000);
-            });
+            // The host decides what happens next with continue="…": the thank-you page offers a Next button (and, when it reads
+            // aloud, "Say Next to continue"), so the learner can hear their receipt code first. No timer moves anyone on.
           </script>
         </div>
       </div>
