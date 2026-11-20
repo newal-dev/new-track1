@@ -32,11 +32,10 @@ The pass/fail gate needs these results. Rows marked **Not yet tested** have not 
 | NVDA + Chrome (desktop) | | Sign-up in English and in Amharic, unaided | Not yet tested | | |
 | TalkBack + Chrome (Android) | | Sign-up and job application, unaided | Not yet tested | | |
 | TalkBack in an Android WebView | | Sign-up, unaided | Not yet tested | | |
-| **Co-designer, own phone, read-aloud on** | Android phone (Tinsae's own) | Sign-up, unaided, on the live site | **Finished unaided**; 9 of 10 parts rated "Amazing", read-aloud voice "Good"; "everything worked really well" | Tinsae, 16 Nov 2026 | No TalkBack or NVDA in this session; see CONFORMANCE.md |
 | Keyboard only (no mouse) | | All three flows | Automated pass (see 1.1); manual not yet tested | | |
 | Browser zoom 200% and 400% | | Sign-up | Automated pass at 640 px and 320 px; manual not yet tested | | |
 | Sound off | | Sign-up with read-aloud on, using captions | Automated pass; manual not yet tested | | |
-| Co-designer, own device | Android phone | Main task (sign-up), unaided | **Finished unaided** (see the co-designer row above) | Tinsae, 16 Nov 2026 | |
+| Co-designer, own device | | Main task (sign-up), unaided | Not yet tested | | |
 
 ## 2. Success criteria
 

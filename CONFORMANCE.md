@@ -5,11 +5,11 @@ The full report, with every criterion, the evidence and the contrast table, is *
 | | Result (15 November 2026) |
 |---|---|
 | axe-core 4.14.0, WCAG 2.0/2.1/2.2 A and AA rules | 37 scans across every flow, state and theme, including a blank host page: **0 violations of any impact** |
-| Browser tests (Playwright, Chromium) | 32 of 32 pass: keyboard-only flow, inside the official Savanna starter, a blank host page with no styles, Tab and Enter on every choice, keyboard help, Larger text, spoken review clips in six languages, focus, 200% and 400% zoom, six themes, captions with sound off, drafts, offline, hosts |
+| Browser tests (Playwright, Chromium) | 33 of 33 pass: keyboard-only flow, deleting answers with the receipt, inside the official Savanna starter, a blank host page with no styles, Tab and Enter on every choice, keyboard help, Larger text, spoken review clips in six languages, focus, 200% and 400% zoom, six themes, captions with sound off, drafts, offline, hosts |
 | Contrast (`npm run contrast`) | 75 of 75 colour pairs pass in five token sets |
-| Unit and API tests | 113 of 113 pass |
+| Unit and API tests | 115 of 115 pass |
 | Criteria (55 at A and AA) | 45 Supports, 2 Partially supports (1.3.5, 3.2.6), 1 Not yet tested (1.4.12), 7 Not applicable, 0 Does not support |
-| NVDA, TalkBack, co-designer sessions | Co-designer Tinsae **finished the sign-up unaided** on her own Android phone with read-aloud (16 Nov); NVDA and TalkBack **not yet tested** |
+| NVDA, TalkBack | **Not yet tested** with a screen reader user |
 
 Re-run everything: `npm run test:all` and `npm run contrast`.
 
@@ -17,9 +17,8 @@ Re-run everything: `npm run test:all` and `npm run contrast`.
 
 | Who | Device and assistive technology | What they did | Result |
 |---|---|---|---|
-| Tinsae (co-designer), during the event | Not recorded | Reviewed the design and the sign-up flow with the team | Asked for six languages, a design that works for Deaf people, colours for people with eye problems, and the menu to grow with the text size. All were built (text size 100%, 150% and 200% for the whole page, navigation included) |
-| Tinsae (co-designer), 16 November | **Her own Android phone**, with the plug-in's read-aloud on (in her words: "my screen itself talked without me doing anything") | The main task: **signed up on her own, without help**, on the live site | **Finished unaided.** Rated 9 of 10 parts "Amazing" (language choice, voice answers, keyboard, text size and colours, phone use, the questions, privacy of the support question, review and sending, overall look) and the read-aloud voice "Good". What to change first: "everything worked really well" |
-| Team, automated | Chromium with axe-core 4.14.0 and Playwright | Every flow, state and theme; keyboard only; 200% and 400% zoom; sound off; a blank host page; inside the official Savanna starter | 32 of 32 pass, 0 axe violations of any impact |
+| Tinsae (co-designer) | Not recorded | Shaped the design with the team | Asked for six languages, a design that works for Deaf people, colours for people with eye problems, and the menu to grow with the text size. All were built (text size 100%, 150% and 200% for the whole page, navigation included) |
+| Team, automated | Chromium with axe-core 4.14.0 and Playwright | Every flow, state and theme; keyboard only; 200% and 400% zoom; sound off; a blank host page; inside the official Savanna starter | 33 of 33 pass, 0 axe violations of any impact |
 | Team, Amharic | A native Amharic speaker on the team | Checked every Amharic text; chose the Amharic number voices by ear | Amharic text verified; Afaan Oromoo, Tigrinya, Somali and Sidaamu Afoo still drafts |
 
-**What was not tested, honestly:** the co-designer's session used the plug-in's own read-aloud on Android; it was not a recorded test with TalkBack or NVDA, keyboard only, 200% zoom and sound off together, so we do not claim those parts of the gate from her session (they are covered by our automated tests above). Her feedback form: ratings and comments, 16 November 2026. We tested inside the official Savanna starter pages and through LTI 1.3, not on the live Savanna platform.
+**What was not tested, honestly:** no recorded session yet with a screen reader user (TalkBack or NVDA), keyboard only, 200% zoom and sound off together; those parts of the gate are covered only by our automated tests above. We tested inside the official Savanna starter pages and through LTI 1.3, not on the live Savanna platform.

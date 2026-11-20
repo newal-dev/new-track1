@@ -45,7 +45,7 @@ Inclusive Access is a drop-in module that adds an accessible **sign-up**, a **jo
 
 **A blind learner with no kebele ID signs up by voice, in Amharic, on a low-cost Android phone, with nobody helping.**
 
-The same engine runs the job application and the employer accommodations form (the career gateway). Results with our co-designer are at the end of [CONFORMANCE.md](CONFORMANCE.md).
+The same engine runs the job application and the employer accommodations form (the career gateway). Our co-designer Tinsae shaped the design; what was and was not tested is at the end of [CONFORMANCE.md](CONFORMANCE.md).
 
 ## Run it
 
