@@ -9,7 +9,7 @@ info:
     interface on these routes. Level 3: schema.org/JobPosting output and an LTI 1.3 launch.
 
     **Privacy.** Nothing is stored without `consent.given = true`. Support needs are stored only when
-    `consent.scope` includes `support`, in a separate store that no route returns. Job-seekers' work needs are
+    `consent.scope` includes `support`, in a separate store that only the person's own export (with their receipt) returns. Job-seekers' work needs are
     never sent: the plug-in filters jobs on the device. Unknown fields are dropped. Each submission returns a
     receipt that lets the person withdraw consent and delete the record. Storage is in memory (demo).
 
@@ -123,6 +123,28 @@ paths:
         '201': { $ref: '#/components/responses/Created' }
         '422': { $ref: '#/components/responses/Invalid' }
   /v1/records/{id}:
+    get:
+      tags: [consent]
+      summary: Export everything held about one record (answers, support needs, consent), for the person who holds the receipt
+      description: Without the record's own receipt this answers 404, the same as for an unknown id.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: X-Receipt, in: header, required: true, schema: { type: string }, description: Receipt returned at submission }
+      responses:
+        '200':
+          description: The record
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string, format: uuid }
+                  flow: { type: string, enum: [signup, job, employer] }
+                  at: { type: string, format: date-time }
+                  answers: { type: object, description: 'The stored answers. A phone number is stored as +251 and nine digits.' }
+                  support: { type: array, items: { type: string } }
+                  consent: { $ref: '#/components/schemas/ConsentRecord' }
+        '404': { $ref: '#/components/responses/NotFound' }
     delete:
       tags: [consent]
       summary: Withdraw consent and delete the record (answers and support needs)
@@ -131,6 +153,37 @@ paths:
         - { name: X-Receipt, in: header, required: true, schema: { type: string }, description: Receipt returned at submission }
       responses:
         '204': { description: Deleted. The consent log keeps only the withdrawal time. }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /v1/receipts/{code}:
+    get:
+      tags: [consent]
+      summary: The learner's own record, found with the receipt code alone (the "My answers" page)
+      description: For a learner who kept only the 24-character receipt code from the thank-you page. Answers 404 for a wrong, malformed or deleted code. Never cached.
+      parameters:
+        - { name: code, in: path, required: true, schema: { type: string, minLength: 24, maxLength: 24 } }
+      responses:
+        '200':
+          description: The record, in the same shape as GET /v1/records/{id}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string, format: uuid }
+                  flow: { type: string, enum: [signup, job, employer] }
+                  at: { type: string, format: date-time }
+                  answers: { type: object }
+                  support: { type: array, items: { type: string } }
+                  consent: { $ref: '#/components/schemas/ConsentRecord' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [consent]
+      summary: Delete my answers with my receipt code (no account needed)
+      description: Deletes the answers and support needs, removes an employer's job post, and records the withdrawal time in the consent log.
+      parameters:
+        - { name: code, in: path, required: true, schema: { type: string, minLength: 24, maxLength: 24 } }
+      responses:
+        '204': { description: Deleted. }
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/consents:
     get:
@@ -197,7 +250,7 @@ components:
         fullName: { type: string, maxLength: 120 }
         contact: { type: string, maxLength: 120, description: 'Phone (10 digits starting with 0, or 251 + 9 digits) or email' }
         idRoute: { type: string, enum: [kebele, refugee, other, refer], description: 'How the person will show who they are. No document number is collected; "refer" = no ID, referred by a partner' }
-        support: { type: array, items: { type: string, enum: [screenreader, large, voice, sign, simple, human] }, description: 'Stored only with consent scope "support", never returned' }
+        support: { type: array, items: { type: string, enum: [screenreader, large, voice, sign, captions, interp, time, simple, human] }, description: 'Stored only with consent scope "support"; returned only by the export with the receipt. The plug-in''s "Prefer not to say" is never sent' }
         consent: { $ref: '#/components/schemas/Consent' }
     ApplicationIn:
       type: object

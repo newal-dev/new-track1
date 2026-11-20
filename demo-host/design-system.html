@@ -13,36 +13,39 @@
   .toc ol{list-style:none;margin:0;padding:0;display:grid;gap:var(--s1);border-left:2px solid var(--line)}
   .toc a{display:block;padding:var(--s1) var(--s3);color:var(--ink-2);text-decoration:none;margin-left:-2px;border-left:2px solid transparent}
   .toc a:hover{color:var(--ink);border-left-color:var(--line-strong)}
-  .part{display:grid;gap:var(--s4);padding-bottom:var(--s7);margin-bottom:var(--s6);border-bottom:1px solid var(--line)}
+  .part{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--s4);padding-bottom:var(--s7);margin-bottom:var(--s6);border-bottom:1px solid var(--line)}
   .part>p{max-width:44rem;color:var(--ink-2)}
   .part h3{margin-top:var(--s3)}
   .principles{margin:0;padding-left:1.2em;display:grid;gap:var(--s2);max-width:46rem}
   .controls{display:flex;flex-wrap:wrap;gap:var(--s3);align-items:center;padding:var(--s3) var(--s4);border:1px solid var(--line);border-radius:var(--r2);background:var(--surface)}
   .controls label{font-weight:700}
+  .controls select{max-width:100%;min-width:0}
   select{font:inherit;min-height:44px;padding:0 var(--s3);border:2px solid var(--line-strong);border-radius:var(--r1);background:var(--surface);color:var(--ink)}
-  .type{display:grid;gap:var(--s3);padding:var(--s5);background:var(--surface);border:1px solid var(--line);border-radius:var(--r2)}
+  .type{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--s3);padding:var(--s5);background:var(--surface);border:1px solid var(--line);border-radius:var(--r2)}
   .type .row{display:grid;grid-template-columns:7rem minmax(0,1fr);gap:var(--s4);align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:var(--s3)}
+  .type .row span{overflow-wrap:anywhere;hyphens:auto}
+  @media (max-width:40rem){.type .row{grid-template-columns:minmax(0,1fr);gap:var(--s1)}}
   .type .row:last-child{border-bottom:0;padding-bottom:0}
   .type .meta{font-size:.8125rem;color:var(--ink-2);font-family:var(--font-mono)}
   .themes{display:grid;gap:var(--s4)}
   .theme{border:1px solid var(--line);border-radius:var(--r2);overflow:hidden;background:var(--surface)}
   .theme header{display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--s2);padding:var(--s3) var(--s4);border-bottom:1px solid var(--line)}
   .theme header code{font-family:var(--font-mono);font-size:.875rem;color:var(--ink-2)}
-  .chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(8.5rem,1fr))}
+  .chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(8.5rem,100%),1fr))}
   .chip{padding:var(--s3);min-height:5.5rem;display:flex;flex-direction:column;justify-content:flex-end;font-size:.8125rem;border-right:1px solid rgb(0 0 0 / .08)}
   .chip b{font-family:var(--font-mono);font-weight:400}
-  .checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));gap:0;border-top:1px solid var(--line)}
-  .checks div{display:flex;justify-content:space-between;gap:var(--s2);padding:var(--s2) var(--s4);font-size:.875rem;border-bottom:1px solid var(--line)}
+  .checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(15rem,100%),1fr));gap:0;border-top:1px solid var(--line)}
+  .checks div{display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--s2);padding:var(--s2) var(--s4);font-size:.875rem;border-bottom:1px solid var(--line)}
   .pass,.fail{font-weight:700;font-family:var(--font-mono)}
   .fail{color:var(--error)}
   .fail::before{content:'✕ '}.pass::before{content:'✓ '}
-  .spec{display:block}
-  .grid2{display:grid;gap:var(--s4)}
+  .spec{display:block;min-width:0;overflow-x:auto}
+  .grid2{display:grid;gap:var(--s4);grid-template-columns:minmax(0,1fr)}
   @media (min-width:48rem){.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
-  .icons{display:grid;grid-template-columns:repeat(auto-fill,minmax(7rem,1fr));gap:var(--s2)}
+  .icons{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(7rem,100%),1fr));gap:var(--s2)}
   .icons figure{margin:0;display:grid;justify-items:start;gap:var(--s2);padding:var(--s3);border:1px solid var(--line);border-radius:var(--r1);background:var(--surface);color:var(--ink)}
   .icons figcaption{font-family:var(--font-mono);font-size:.75rem;color:var(--ink-2)}
-  .elev{display:grid;gap:var(--s4);grid-template-columns:repeat(auto-fill,minmax(12rem,1fr))}
+  .elev{display:grid;gap:var(--s4);grid-template-columns:repeat(auto-fill,minmax(min(12rem,100%),1fr))}
   .elev div{padding:var(--s4);min-height:7rem;border-radius:var(--r2);display:flex;align-items:flex-end;font-size:.875rem}
 </style>
 </head>

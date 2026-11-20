@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang='en'>
+<head>
+<meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>Inclusive Access on a blank page</title>
+</head>
+<body>
+<!-- The judge's test from the Technical Guide: an empty page with no Bootstrap, no Savanna CSS and no styles of its own.
+     Only the two lines a partner adds. It must still work and still look right. -->
+<main>
+<h1>Sign up</h1>
+<script src='http://localhost:3000/widget.js' defer></script>
+<db-onboarding api='http://localhost:3000/v1' audio='http://localhost:3000/audio' partner='Test Partner'></db-onboarding>
+</main>
+<script>
+  // Optional third line from the guide: the host listens and decides what to do with the data.
+  document.addEventListener('db-signup:done', e => console.log('db-signup:done', e.detail));
+</script>
+</body>
+</html>

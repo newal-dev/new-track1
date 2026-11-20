@@ -1,16 +1,30 @@
 // Inclusive Access plugin server: the widget script, the REST API (Level 2), schema.org/JobPosting and LTI 1.3 (Level 3).
 // Storage is in memory only. Nothing is sent to any other service: there are no paid or external APIs.
 import express from 'express';
+import compression from 'compression';
 import cors from 'cors';
-import { randomUUID, randomBytes, createHmac, timingSafeEqual } from 'node:crypto';
+import { randomUUID, randomBytes, createHmac, createHash, timingSafeEqual } from 'node:crypto';
+import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { generateKeyPair, exportJWK, SignJWT, jwtVerify, createLocalJWKSet, createRemoteJWKSet } from 'jose';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
+// Release number: a hash of the widget, the service worker and every audio clip. It changes whenever any of them changes.
+const RELEASE = (() => {
+  const h = createHash('sha256'), add = f => { h.update(f); h.update(fs.readFileSync(f)); };
+  ['public/db-form.js', 'public/db-sw.js'].forEach(f => add(path.join(ROOT, f)));
+  const audio = path.join(ROOT, 'public/audio');
+  if (fs.existsSync(audio)) for (const l of fs.readdirSync(audio).sort()) {
+    const d = path.join(audio, l); if (!fs.statSync(d).isDirectory()) continue;
+    for (const f of fs.readdirSync(d).sort()) if (f.endsWith('.mp3')) add(path.join(d, f));
+  }
+  return h.digest('hex').slice(0, 12);
+})();
 const OFFERS = ['stepfree', 'reader', 'interp', 'hours', 'remote'];
 const OFFER_EN = { stepfree: 'Step-free workplace', reader: 'Screen-reader friendly tools', interp: 'Sign language interpreter', hours: 'Flexible hours', remote: 'Work from home' };
-const SUPPORT = ['screenreader', 'large', 'voice', 'sign', 'simple', 'human'];
+// 'Prefer not to say' is a choice on screen too, but it is never sent or stored: it means no support data at all.
+const SUPPORT = ['screenreader', 'large', 'voice', 'sign', 'captions', 'interp', 'time', 'simple', 'human'];
 const ID_ROUTES = ['kebele', 'refugee', 'other', 'refer'];
 const LANGS = ['en', 'am', 'om', 'ti', 'so', 'sid'];
 export const CONSENT_VERSION = '2026-11-15';
@@ -25,6 +39,9 @@ const str = (v, max) => (typeof v === 'string' ? v.normalize('NFC').trim().slice
 const list = (v, allowed) => (Array.isArray(v) ? [...new Set(v.filter(x => allowed.includes(x)))] : []);
 const date = v => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && !isNaN(Date.parse(v)) ? v : undefined);
 const isPhone = v => /^(0\d{9}|251\d{9})$/.test(String(v || '').replace(/\D/g, '')) && !String(v).includes('@');
+// One stored format for Ethiopian phone numbers: +251 and nine digits. Anything else (an email) is kept as it is.
+const phoneE164 = v => { if (!v || !isPhone(v)) return v; const d = String(v).replace(/\D/g, ''); return '+251' + (d.startsWith('251') ? d.slice(3) : d.slice(1)); };
+const phoneLocal = v => (isPhone(v) ? '0' + String(v).replace(/\D/g, '').slice(-9) : v);
 const mask = v => { const d = String(v).replace(/\D/g, ''); return d.slice(0, 2) + '•'.repeat(Math.max(0, d.length - 4)) + d.slice(-2); };
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';');
 
@@ -48,12 +65,15 @@ export function jobPosting(j, base) {
 }
 
 export async function createApp(opt = {}) {
-  const BASE = (opt.publicUrl || process.env.PUBLIC_URL || 'http://localhost:3000').replace(/\/$/, '');
+  // Render.com and similar hosts give the public address in RENDER_EXTERNAL_URL, so a one-click deploy needs no settings.
+  const BASE = (opt.publicUrl || process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000').replace(/\/$/, '');
   const SECRET = opt.secret || process.env.APP_SECRET || randomBytes(32).toString('hex');
   const ADMIN = opt.adminToken ?? process.env.ADMIN_TOKEN ?? '';
   const origins = (opt.origins ?? process.env.ALLOWED_ORIGINS ?? '').split(',').map(x => x.trim()).filter(Boolean);
 
   const app = express();
+  // gzip text (the widget, pages, JSON): the 160 kB widget travels as about 55 kB, which matters on 3G. Audio and fonts are already compressed.
+  app.use(compression());
   app.disable('x-powered-by');
   app.use(cors({ origin: origins.length ? origins : true }));
   app.use(express.json({ limit: '10kb' }));
@@ -71,14 +91,41 @@ export async function createApp(opt = {}) {
   const fail = (res, status, code, message, field) => res.status(status).json({ error: { code, message, ...(field ? { field } : {}) } });
 
   // ---- widget, docs, fonts, audio ----
-  app.get('/widget.js', (q, r) => r.type('application/javascript').set('Cache-Control', 'public, max-age=3600').sendFile(path.join(ROOT, 'public/db-form.js')));
-  app.get('/openapi.yaml', (q, r) => r.type('text/yaml').sendFile(path.join(ROOT, 'openapi.yaml')));
-  app.use(express.static(path.join(ROOT, 'public'), { maxAge: '1h' }));
+  // After an update, browsers must get the new widget and the new clips (clips keep their file names when their words
+  // change). So the widget and the clips are re-checked on every load (a cheap 304 when nothing changed), and the
+  // offline service worker gets a release number made from their content: a new release empties its old cache.
+  const fresh = r => r.set('Cache-Control', 'no-cache');
+  app.get(['/widget.js', '/db-form.js'], (q, r) => fresh(r.type('application/javascript')).sendFile(path.join(ROOT, 'public/db-form.js')));
+  app.get('/db-sw.js', (q, r) => fresh(r.type('application/javascript')).send(fs.readFileSync(path.join(ROOT, 'public/db-sw.js'), 'utf8').replace(/const DB_CACHE = '[^']*';/, `const DB_CACHE = 'db-form-${RELEASE}';`)));
+  // The API description names this server's own address, so "Try it out" works wherever it runs.
+  app.get('/openapi.yaml', (q, r) => r.type('text/yaml').send(fs.readFileSync(path.join(ROOT, 'openapi.yaml'), 'utf8').replace('url: http://localhost:3000', 'url: ' + BASE)));
+  // Interactive API documentation (Swagger UI, Apache-2.0, loaded from a pinned CDN version): a judge can try every call.
+  app.get('/docs', (q, r) => r.type('html').send(`<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>Inclusive Access API</title><link rel='stylesheet' href='https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui.css'></head>
+<body><main id='ui'><h1>Inclusive Access API</h1><p>Loading the interactive documentation. The plain specification is at <a href='/openapi.yaml'>/openapi.yaml</a>.</p></main>
+<script src='https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-bundle.js'></script>
+<script>window.SwaggerUIBundle && SwaggerUIBundle({ url: '/openapi.yaml', dom_id: '#ui' });</script></body></html>`));
+  app.use(express.static(path.join(ROOT, 'public'), { maxAge: '1h', setHeaders: (r, p) => { if (/[\\/]audio[\\/]/.test(p)) fresh(r); } }));
+  // The demo partner site, from this same server, at /site/ (one address for a deployed MVP). Its pages point at
+  // http://localhost:3000; that is replaced with this server's own address as they are sent.
+  const SITE = path.join(ROOT, 'demo-host'), STARTER = path.join(ROOT, 'savanna');
+  app.get('/site', (q, r, next) => (q.path === '/site' ? r.redirect(301, '/site/') : next()));
+  app.get(/^\/site\/(.*)$/, (q, r, next) => {
+    // /site/savanna/… is the official Savanna starter (savanna/), everything else the demo partner site.
+    const rel = q.params[0] || 'index.html', inStarter = rel.startsWith('savanna/'), base = inStarter ? STARTER : SITE;
+    const f = path.normalize(path.join(base, inStarter ? rel.slice('savanna/'.length) : rel));
+    if (!f.startsWith(base + path.sep) || !fs.existsSync(f) || !fs.statSync(f).isFile()) return next();
+    if (!/\.(html|js|css)$/.test(f)) return r.sendFile(f);
+    const type = f.endsWith('.html') ? 'html' : f.endsWith('.js') ? 'application/javascript' : 'css';
+    fresh(r.type(type)).send(fs.readFileSync(f, 'utf8').replaceAll('http://localhost:3000', BASE));
+  });
+  // The front door: people (and judges) opening the bare address land on the demo site; ?info shows the server summary.
+  app.get('/', (q, r, next) => ('info' in q.query || process.env.ROOT_INFO === '1' ? next() : r.redirect(302, '/site/')));
   app.get('/', (q, r) => r.type('text').send(`Inclusive Access plugin server.
 Widget: ${BASE}/widget.js   (also /db-form.js)
 API: ${BASE}/v1/health, ${BASE}/v1/jobs   OpenAPI: ${BASE}/openapi.yaml
 LTI 1.3: ${BASE}/lti/config.json   Demo LMS: ${BASE}/demo/lms   SMS inbox: ${BASE}/demo/sms-inbox
-Demo partner site: http://localhost:8080`));
+Demo partner site: ${BASE}/site/ (and http://localhost:8080 with docker compose)`));
 
   // ---- REST API (Level 2) ----
   app.get('/v1/health', (q, r) => r.json({ ok: true, consentVersion: CONSENT_VERSION }));
@@ -105,7 +152,8 @@ Demo partner site: http://localhost:8080`));
 
   // Each flow keeps only the fields it needs (data minimisation). Unknown fields are dropped.
   const FLOW = {
-    signup: { required: 'fullName', pick: b => ({ fullName: str(b.fullName, 120), contact: str(b.contact, 120), idRoute: ID_ROUTES.includes(b.idRoute) ? b.idRoute : undefined }) },
+    // A phone number is stored in one format (+251…), however it was typed or spoken (09…, 07…, 251…).
+    signup: { required: 'fullName', pick: b => ({ fullName: str(b.fullName, 120), contact: phoneE164(str(b.contact, 120)), idRoute: ID_ROUTES.includes(b.idRoute) ? b.idRoute : undefined }) },
     job: { required: 'role', pick: b => ({ role: str(b.role, 160), why: str(b.why, 1000) }) },
     employer: { required: 'job', pick: b => ({ job: str(b.job, 160), offers: list(b.offers, OFFERS), closes: date(b.closes), org: str(b.org, 120) }) },
   };
@@ -131,7 +179,7 @@ Demo partner site: http://localhost:8080`));
     if (flow === 'signup' && data.contact && isPhone(data.contact)) {
       const ref = id.slice(0, 8).toUpperCase();
       const text = { en: `Inclusive Access: we received your registration. Reference ${ref}.`, am: `Inclusive Access: ምዝገባዎን ተቀብለናል። መለያ ቁጥር ${ref}።` }[consent.lang] || `Inclusive Access: we received your registration. Reference ${ref}.`;
-      smsInbox.unshift({ to: mask(data.contact), text, lang: consent.lang, at });
+      smsInbox.unshift({ to: mask(phoneLocal(data.contact)), text, lang: consent.lang, at });
       if (smsInbox.length > 50) smsInbox.length = 50;
     }
     res.status(201).json({ id, receipt: receiptOf(id) });
@@ -144,6 +192,31 @@ Demo partner site: http://localhost:8080`));
   app.delete('/v1/records/:id', (q, r) => {
     const id = q.params.id, c = consents.get(id);
     if (!c || !same(q.get('x-receipt'), receiptOf(id))) return fail(r, 404, 'not_found', 'No record with this id and receipt.');
+    records.delete(id); supportPreferences.delete(id);
+    const k = jobs.findIndex(j => j.record === id); if (k >= 0) jobs.splice(k, 1);
+    c.withdrawnAt = new Date().toISOString();
+    r.status(204).end();
+  });
+
+  // Export: the learner (or the partner acting with their receipt) gets back everything held about this record,
+  // including support needs. Without the record's own receipt code it answers 404, exactly as for an unknown id.
+  app.get('/v1/records/:id', (q, r) => {
+    const id = q.params.id, c = consents.get(id), rec = records.get(id);
+    if (!c || !rec || !same(q.get('x-receipt'), receiptOf(id))) return fail(r, 404, 'not_found', 'No record with this id and receipt.');
+    r.set('Cache-Control', 'no-store').json({ id, flow: rec.flow, at: rec.at, answers: rec.data, support: supportPreferences.get(id) || [], consent: c });
+  });
+
+  // The learner's own controls, with only the receipt code they were given (they never see the record id): see their
+  // answers, or delete them. An unknown code answers 404, the same as a wrong one.
+  const byReceipt = code => { if (typeof code !== 'string' || code.length !== 24) return null; for (const id of consents.keys()) if (same(code, receiptOf(id))) return id; return null; };
+  app.get('/v1/receipts/:code', (q, r) => {
+    const id = byReceipt(q.params.code), c = id && consents.get(id), rec = id && records.get(id);
+    if (!rec || !c) return fail(r, 404, 'not_found', 'No answers with this receipt code.');
+    r.set('Cache-Control', 'no-store').json({ id, flow: rec.flow, at: rec.at, answers: rec.data, support: supportPreferences.get(id) || [], consent: c });
+  });
+  app.delete('/v1/receipts/:code', (q, r) => {
+    const id = byReceipt(q.params.code), c = id && consents.get(id);
+    if (!c || !records.has(id)) return fail(r, 404, 'not_found', 'No answers with this receipt code.');
     records.delete(id); supportPreferences.delete(id);
     const k = jobs.findIndex(j => j.record === id); if (k >= 0) jobs.splice(k, 1);
     c.withdrawnAt = new Date().toISOString();

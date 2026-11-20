@@ -144,11 +144,21 @@ test('every new text exists in all five languages', () => {
 });
 test('widget stays under 250 kB for 3G phones', () => { assert.ok(fs.statSync(file).size < 250 * 1024, fs.statSync(file).size + ' bytes'); });
 test('Sidaamu Afoo: every text, question, hint and choice has a Sidama version', () => {
-  const missing = Object.keys(UI).filter(k => !['langH', 'langAsk', 'langNone'].includes(k) && !UI[k].sid);
+  const missing = Object.keys(UI).filter(k => !['langH', 'langAsk', 'langNone', 'langAgain'].includes(k) && !UI[k].sid);
   for (const f of Object.values(F)) for (const s of f.steps) {
     if (!s.q.sid) missing.push('q.' + s.id);
     if (s.hint && !s.hint.sid) missing.push('hint.' + s.id);
     (s.options || []).forEach(([k, t]) => { if (!t.sid) missing.push(s.id + '.' + k); });
+  }
+  assert.deepEqual(missing, []);
+});
+test('every read-aloud clip in the recording script exists as an mp3 for its language, and none is empty', async () => {
+  const { execFileSync } = await import('node:child_process');
+  const clips = JSON.parse(execFileSync(process.execPath, ['tools/make-recording-script.mjs', '--no-write'], { cwd: new URL('..', import.meta.url) }));
+  const missing = [];
+  for (const [l, ids] of Object.entries(clips)) for (const id of Object.keys(ids)) {
+    const f = new URL(`../public/audio/${l}/${id}.mp3`, import.meta.url);
+    if (!fs.existsSync(f) || fs.statSync(f).size < 2048) missing.push(`${l}/${id}`);
   }
   assert.deepEqual(missing, []);
 });

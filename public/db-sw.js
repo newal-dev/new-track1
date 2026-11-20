@@ -6,12 +6,14 @@
    already heard keep working without a connection. Answers typed offline are kept by the widget itself (localStorage)
    and sent when the connection returns; this file never sees or stores answers (POST requests are not touched). */
 const DB_HOST = (self.DB_FORM_HOST || new URL('.', self.location).origin).replace(/\/$/, '');
-const DB_CACHE = 'db-form-v2';
+// The plugin server replaces this name with one made from the release (see server.js), so every update starts a fresh
+// cache and the old widget and old clips are deleted. Served from elsewhere, change it by hand on every update.
+const DB_CACHE = 'db-form-v3';
 const DB_PRECACHE = [DB_HOST + '/widget.js', DB_HOST + '/fonts/atkinson-hyperlegible-latin-400-normal.woff2', DB_HOST + '/fonts/atkinson-hyperlegible-latin-700-normal.woff2',
   DB_HOST + '/fonts/noto-sans-ethiopic-ethiopic-400-normal.woff2', DB_HOST + '/fonts/noto-sans-ethiopic-ethiopic-700-normal.woff2'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(DB_CACHE).then(c => Promise.all(DB_PRECACHE.map(u => fetch(u, { mode: 'cors' }).then(r => r.ok && c.put(u, r)).catch(() => {})))).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(DB_CACHE).then(c => Promise.all(DB_PRECACHE.map(u => fetch(u, { mode: 'cors', cache: 'no-cache' }).then(r => r.ok && c.put(u, r)).catch(() => {})))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('db-form-') && k !== DB_CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
@@ -27,7 +29,7 @@ async function dbRange(req, res) {
 async function dbCacheFirst(req, key) {
   const c = await caches.open(DB_CACHE), hit = await c.match(key);
   if (hit) return hit;
-  const r = await fetch(key, { mode: 'cors' });
+  const r = await fetch(key, { mode: 'cors', cache: 'no-cache' }); // never a stale copy from the browser's own cache
   if (r.ok) c.put(key, r.clone());
   return r;
 }
@@ -44,10 +46,11 @@ self.addEventListener('fetch', e => {
     const key = u.origin + u.pathname;
     e.respondWith(dbCacheFirst(req, key).then(r => (req.headers.has('range') ? dbRange(req, r.clone()) : r)).catch(() => fetch(req)));
   } else if (u.origin === DB_HOST && (u.pathname === '/widget.js' || u.pathname === '/db-form.js' || u.pathname.startsWith('/fonts/'))) {
+    // Network first: online, the newest widget is always used; the cached copy is only for offline.
     e.respondWith(caches.open(DB_CACHE).then(async c => {
-      const hit = await c.match(u.origin + u.pathname);
-      const net = fetch(req).then(r => { if (r.ok) c.put(u.origin + u.pathname, r.clone()); return r; }).catch(() => hit);
-      return hit || net;
+      const key = u.origin + u.pathname;
+      try { const r = await fetch(req, { cache: 'no-cache' }); if (r.ok) c.put(key, r.clone()); return r; }
+      catch (x) { const hit = await c.match(key); if (hit) return hit; throw x; }
     }));
   } else if (u.origin === DB_HOST && u.pathname.startsWith('/v1/jobs')) {
     e.respondWith(dbNetworkFirst(req));

@@ -6,3 +6,8 @@ test-results/
 playwright-report/
 __pycache__/
 *.pyc
+.env
+
+# Internal notes and scratch work: kept on the team's machines, not in the public repository
+HANDOFF.md
+New folder/

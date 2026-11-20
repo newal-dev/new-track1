@@ -135,7 +135,7 @@ Most phones have **no voice** for Amharic, Afaan Oromoo, Tigrinya or Somali. So 
 - The clips live in folders on the server: `audio/en/`, `audio/am/`, `audio/om/`, `audio/ti/`, `audio/so/`. File name = clip id + `.mp3`, for example `audio/am/fullName.mp3`.
 - **Making the clips** (free, about 20 minutes): follow "How to make the clips" in [`RECORDING_SCRIPT.md`](RECORDING_SCRIPT.md). In short: run `npm run recording`, paste `tools/colab_generate_audio.py` into Google Colab, press Run, unzip `audio.zip` into `public/audio/`.
 - **Licence:** the voice models (Meta MMS-TTS) are licensed **CC-BY-NC 4.0, non-commercial**. Clips made with them are fine for non-profit programmes. A commercial service needs human recordings or another voice; the file names stay the same.
-- **A native speaker must listen to every clip** before you go live. The Afaan Oromoo, Tigrinya and Somali text is a draft (marked `VERIFY_NATIVE` in the code), and the Amharic must also be checked.
+- **A native speaker must listen to every clip** before you go live. The Afaan Oromoo, Tigrinya, Somali and Sidaamu Afoo text is a draft (marked `VERIFY_NATIVE` in the code). The Amharic text has been checked by a native speaker.
 - If you change any wording in the form, run `npm run recording` again and remake the changed clips.
 - If you host the audio somewhere else (for example a CDN), point the `audio` attribute there. Audio files do not need any special CORS headers.
 
@@ -182,8 +182,19 @@ The form tells your page what happened. Listen on the element:
   form.addEventListener('db-sent', e => {
     // Answers saved while offline were sent. e.detail.ok is true if the server accepted them.
   });
+  // The organisers' data contract (Technical Guide): the same moments under their names.
+  // db-signup:step { step, of, id } · db-signup:done { profile, id, receipt } · db-signup:support { support }
+  // (support is a separate event, sent only when the learner agreed to share it). db-job:… and db-employer:… likewise.
+  document.addEventListener('db-signup:done', e => { /* go to the learner's home page */ });
   form.addEventListener('db-theme', e => {
     // The visitor chose new colours: e.detail.theme is auto | standard | dark | contrast | rg | by
+  });
+  // Text size (100%, 150% or 200%), also sent once when the form loads. Make your WHOLE page follow it, so your
+  // header, menu and footer grow too, and call preventDefault() so the form is not enlarged a second time.
+  // This works when your page uses rem units; if you do not listen, the form enlarges only itself.
+  document.addEventListener('db-textsize', e => {
+    document.documentElement.style.fontSize = e.detail.scale > 1 ? e.detail.scale * 100 + '%' : '';
+    e.preventDefault();
   });
 </script>
 ```
@@ -223,18 +234,20 @@ Do this once on a computer and once on a phone. It takes about 15 minutes.
 - [ ] `https://YOUR-HOST/v1/health` shows `{"ok":true}`.
 
 **Keyboard only (unplug the mouse)**
-- [ ] Tab and Shift+Tab reach every button and choice, with a clearly visible focus ring.
+- [ ] Tab and Shift+Tab reach every button and **every single choice** (radio choices too), with a clearly visible focus ring.
+- [ ] The keyboard help strip at the top of the form (Tab, Shift+Tab, Space/Enter, Esc) is in the chosen language.
 - [ ] With "read aloud" on, each choice is read as number, name and "selected" or "not selected", in the chosen language.
-- [ ] Space ticks a box; Enter goes to the next question; Escape stops the voice.
+- [ ] Space or Enter chooses; Enter on a choice that is already chosen goes to the next question; Escape stops the voice.
 
 **Sound and voice** (Chrome or Edge, on HTTPS)
 - [ ] After a page is read, you hear "Speak now", then a beep, and the **Listening** banner appears.
-- [ ] Saying a number ("two") or a word ("Next", "Back") works.
-- [ ] In Amharic, Afaan Oromoo, Tigrinya and Somali you hear the recorded clips (not silence).
+- [ ] On the language page, a beep follows the English question and each language's invitation; saying a language name right after the beep works, also in its own words ("አማርኛ", "Afaan Oromoo", "ትግርኛ", "Soomaali", "Sidaamu Afoo"). If the first try is not understood, it asks again in English and Amharic.
+- [ ] Saying a number ("two") or a word ("Next", "Back") works. A phone number can be spoken ("zero nine one one…") and is read back digit by digit.
+- [ ] In Amharic, Afaan Oromoo, Tigrinya, Somali and Sidaamu Afoo you hear the recorded clips (not silence), **including the review page**.
 
 **Seeing and colours**
 - [ ] With the sound off, the caption box shows everything that is spoken.
-- [ ] Each option in the **Colours** menu changes the form, and the choice is remembered after reloading.
+- [ ] Each option in the **Colours and text size** menu changes the form (including **Larger text**), and the choice is remembered after reloading.
 - [ ] At 200% browser zoom nothing is cut off; on a phone the form fits the screen.
 
 **Consent, drafts and offline**
@@ -251,6 +264,7 @@ Automated checks for developers: `npm test` (with the server running) and `npx p
 
 | What you see | Why | What to do |
 |---|---|---|
+| After an update, the old text or old voice is still there | The browser or the offline service worker still has the old copy | Reload the page twice: the first reload installs the new release, the second shows it. The plugin server names the offline cache after the release, so old clips are then deleted. Testers can use a private (incognito) window, or DevTools, Application, **Clear site data**. If you serve `db-sw.js` from your own server, change `DB_CACHE` in it on every update. |
 | Nothing appears where the form should be | The script did not load, or the page blocks scripts | Open `https://YOUR-HOST/widget.js` in the browser: you should see code. Check your CSP (section 8). In WordPress, check that `<script>` was not removed. |
 | "We could not send your answers" | The API address is wrong or the server is down | Check the `api` attribute ends in `/v1`, and that `/v1/health` works. |
 | No Speak button | This browser has no voice recognition (Firefox, some Safari versions) | Normal: visitors type instead. Chrome and Edge support voice. |
@@ -335,3 +349,25 @@ Each posting includes the title, employer, location (Addis Ababa, ET), date post
   customElements.get('db-form').registerASR('local', (lang, element) => new MyRecogniser({ lang }));
   ```
   Then use `asr='local'` on the tag.
+
+## 16. Make the rest of your page accessible too (ALX and other hosts)
+
+The plug-in is accessible on its own, but a person meets your whole page first. These checks take an hour and fix most of
+what stopped people on the 21 October test day. They apply to any ALX page (Savanna course pages, programme sign-up
+pages, job boards).
+
+- **Language:** set `<html lang='am'>` (or `en`, `om` …) to the page's language, and `lang` on any part in another language.
+  Screen readers choose their voice from it.
+- **A skip link** as the first thing on the page: `<a href='#main'>Skip to the form</a>`, and `id='main'` on the element that holds the plug-in.
+- **Headings in order** (one `h1`, then `h2` …) and landmarks (`header`, `nav` with `aria-label`, `main`, `footer`), so
+  screen-reader users can jump around.
+- **Keyboard:** every link and button reachable with Tab, in reading order, with a visible focus ring. Never remove the outline without a replacement.
+- **No time limits and no automatic log-out** on pages with forms. If a session must end, warn first and let the person extend it.
+- **Video and audio:** captions for every video (also in Amharic), a transcript for audio. Never autoplay sound.
+- **Images:** a short `alt` text for each image that carries meaning; `alt=''` for decoration.
+- **Contrast** at least 4.5:1 for text (3:1 for large text and icons). The plug-in's themes pass; check your header and footer too.
+- **Zoom to 200% and 400%:** no sideways scrolling, nothing cut off. Use relative units (`rem`, `%`), not fixed heights.
+- **Help in more than English:** link to help and contact details in the languages your learners use, by phone as well as email.
+- **Follow the person's colour choice:** listen to the `db-theme` event (section 7) so your header and footer match the colours they picked.
+- **Follow the person's text size:** listen to the `db-textsize` event (section 7) so the whole page, navigation included, grows to 150% or 200% with the form. Size text in `rem`, let menus wrap instead of scrolling sideways, and let long words break (`overflow-wrap:anywhere`), so nothing is cut off on a phone.
+- **Test** with the checklist in section 9, with axe DevTools (free browser extension), and with one real user of a screen reader.

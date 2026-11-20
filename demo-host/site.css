@@ -17,6 +17,8 @@ a:hover{color:var(--accent-hover)}
 :focus-visible{outline:3px solid var(--focus);outline-offset:2px;box-shadow:0 0 0 2px var(--focus-gap)}
 h1,h2,h3{font-family:var(--font-display);line-height:1.15;letter-spacing:-.01em;margin:0;color:var(--ink)}
 h1{font-size:clamp(2rem,1.4rem + 2.4vw,3rem);font-weight:700}
+/* At 150-200% text on a phone, one long word can be wider than the screen: hyphenate or break it, never scroll sideways. */
+h1,h2,h3,dt,dd,p,a,li{overflow-wrap:anywhere;hyphens:auto}
 h2{font-size:clamp(1.5rem,1.25rem + 1vw,2rem);font-weight:600}
 h3{font-size:1.1875rem;font-weight:600;font-family:var(--font-ui)}
 p{margin:0}
@@ -38,8 +40,8 @@ nav.util a{display:inline-flex;align-items:center;min-height:40px;padding:0 var(
 nav.util a:hover{border-color:var(--line-strong)}
 nav.util a[aria-current]{border-color:var(--accent);background:var(--accent-soft);font-weight:700}
 nav.primary{border-top:1px solid var(--line)}
-nav.primary ul{gap:0 var(--s5);overflow-x:auto;scrollbar-width:thin}
-nav.primary a{display:inline-flex;align-items:center;min-height:52px;color:var(--ink-2);text-decoration:none;font-weight:700;border-bottom:3px solid transparent;white-space:nowrap}
+nav.primary ul{gap:0 var(--s5)}
+nav.primary a{display:inline-flex;align-items:center;min-height:52px;color:var(--ink-2);text-decoration:none;font-weight:700;border-bottom:3px solid transparent}
 nav.primary a:hover{color:var(--ink);border-bottom-color:var(--line-strong)}
 nav.primary a[aria-current=page]{color:var(--ink);border-bottom-color:var(--accent)}
 
@@ -47,10 +49,12 @@ nav.primary a[aria-current=page]{color:var(--ink);border-bottom-color:var(--acce
 main.wrap{padding-top:var(--s7);padding-bottom:var(--s8)}
 .layout{display:grid;gap:var(--s6);grid-template-columns:minmax(0,1fr)}
 @media (min-width:60rem){.layout{grid-template-columns:minmax(0,5fr) minmax(0,7fr);align-items:start;gap:var(--s7)}.intro{position:sticky;top:var(--s5)}}
-.intro{display:grid;gap:var(--s4)}
+.intro{display:grid;gap:var(--s4);grid-template-columns:minmax(0,1fr)}
 .lead{font-size:1.1875rem;color:var(--ink-2);max-width:34rem}
 dl.facts{margin:var(--s2) 0 0;display:grid;gap:0;border-top:1px solid var(--line)}
 dl.facts div{display:grid;grid-template-columns:7.5rem 1fr;gap:var(--s3);padding:var(--s3) 0;border-bottom:1px solid var(--line)}
+/* Narrow screens, or text at 150-200%: the label goes above its answer instead of beside it. */
+@media (max-width:40rem){dl.facts div{grid-template-columns:minmax(0,1fr);gap:0}}
 dl.facts dt{font-size:.875rem;font-weight:700;color:var(--ink-2)}
 dl.facts dd{margin:0}
 .note{font-size:.9375rem;color:var(--ink-2);padding-left:var(--s3);border-left:3px solid var(--accent)}
@@ -82,7 +86,7 @@ footer.site{background:var(--surface);border-top:1px solid var(--line);padding:v
 @media (min-width:48rem){.fgrid{grid-template-columns:minmax(0,5fr) minmax(0,3fr) minmax(0,3fr)}}
 .fgrid h2{font-family:var(--font-ui);font-size:.8125rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);margin-bottom:var(--s3)}
 .fgrid address{font-style:normal;display:grid;gap:var(--s1)}
-.fgrid ul{list-style:none;margin:0;padding:0;display:grid;gap:var(--s2)}
+.fgrid ul{list-style:none;margin:0;padding:0;display:grid;gap:var(--s2);grid-template-columns:minmax(0,1fr)}
 .hours{display:grid;grid-template-columns:auto 1fr;gap:var(--s1) var(--s4);margin:var(--s3) 0 0}
 .hours dt{color:var(--ink-2)}.hours dd{margin:0}
 .small{margin-top:var(--s6);padding-top:var(--s4);border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:var(--s2) var(--s5);justify-content:space-between;color:var(--ink-2);font-size:.875rem}

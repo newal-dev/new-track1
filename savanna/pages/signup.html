@@ -1,0 +1,801 @@
+<!doctype html>
+<!--
+  Learner homepage — v1 self-paced course
+  Amara Nwosu, module 1 of 3 complete on VA-1: VA Foundations & Professional Identity.
+  Frozen from the local Savanna dev app; see ../README.md.
+-->
+<html lang="en">
+  <head>
+    <style class="vjs-styles-defaults">
+      .video-js {
+        width: 300px;
+        height: 150px;
+      }
+
+      .vjs-fluid:not(.vjs-audio-only-mode) {
+        padding-top: 56.25%;
+      }
+    </style>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="" />
+    <meta name="google" content="notranslate" />
+
+    <!-- Google Tag Manager -->
+
+    <!-- End Google Tag Manager -->
+
+    <title>Sign up | Digital Bridge on Savanna</title>
+
+    <link rel="stylesheet" href="../assets/css/typekit-xgz4ilr-css.css" />
+    <link rel="stylesheet" href="../assets/css/application_alx.css" media="all" />
+
+    <link rel="icon" type="image/x-icon" href="/favicon_alx.ico" />
+
+    <link rel="apple-touch-icon" href="/apple-touch-icon_alx.png" />
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- React -->
+
+    <link rel="stylesheet" href="../assets/css/app.css" media="all" />
+
+    <link rel="stylesheet" href="../assets/css/static-page.css" media="all" />
+  </head>
+
+  <body class="signed_in env_development notranslate" translate="no" data-theme-suffix="_alx">
+    <!-- Google Tag Manager (noscript) -->
+
+    <!-- End Google Tag Manager (noscript) -->
+
+    <div data-react-class="header/Header" data-react-cache-id="header/Header-0">
+      <div class="header d-flex align-items-center position-fixed top-0 w-100" style="z-index: 1000">
+        <div class="header-left align-items-center d-flex position-fixed px-2" style="z-index: 2">
+          <div class="hamburger mb-0 p-2 color-primary" style="cursor: pointer; font-size: 24px">
+            <i class="fa-solid fa-fas fa-bars"></i>
+          </div>
+          <a class="logo-container p-1" href="#" rel="noreferrer" target=""
+            ><div
+              class="logo mx-auto"
+              style="background-image: url(&quot;../assets/img/holberton-logo-full-alx.png&quot;)"
+            ></div
+          ></a>
+        </div>
+        <div class="header-right d-flex align-items-center flex-grow-1 justify-content-center" style="z-index: 1"></div>
+      </div>
+      <div
+        class="sidebar navigation bg-white border-end position-fixed overflow-scroll bottom-0 start-0 expanded"
+        id="sidebar"
+        style="background-color: rgb(255, 255, 255); border-color: rgb(238, 238, 238)"
+      >
+        <ul class="px-2">
+          <li>
+            <a href="#" rel="noreferrer" target="_self"
+              ><div class="icon active"><i aria-hidden="true" class="fa-solid fa-home"></i></div>
+              <div class="ps-3 overflow-hidden text-nowrap" style="display: block">Home</div></a
+            >
+          </li>
+          <li>
+            <a href="#" rel="noreferrer" target="_self"
+              ><div class="icon"><i aria-hidden="true" class="fa-solid fa-chalkboard-teacher"></i></div>
+              <div class="ps-3 overflow-hidden text-nowrap" style="display: block">Access my learning</div></a
+            >
+          </li>
+          <hr title="My resources" />
+          <li>
+            <a href="#" rel="noreferrer" target="_self"
+              ><div class="icon"><i aria-hidden="true" class="fa-solid fa-graduation-cap"></i></div>
+              <div class="ps-3 overflow-hidden text-nowrap" style="display: block">My courses</div></a
+            >
+          </li>
+          <li id="sidebar-dashboards-video-rooms">
+            <a href="#" rel="noreferrer" target="_self"
+              ><div class="icon"><i aria-hidden="true" class="fa-solid fa-comments"></i></div>
+              <div class="ps-3 overflow-hidden text-nowrap" style="display: block">Conference rooms</div></a
+            >
+          </li>
+          <li>
+            <a href="#" rel="noreferrer" target="_self"
+              ><div class="icon"><i aria-hidden="true" class="fa-solid fa-server"></i></div>
+              <div class="ps-3 overflow-hidden text-nowrap" style="display: block">Servers</div></a
+            >
+          </li>
+          <li id="sidebar-dashboards-my-containers">
+            <a href="#" rel="noreferrer" target="_self"
+              ><div class="icon"><i aria-hidden="true" class="fa-solid fa-terminal"></i></div>
+              <div class="ps-3 overflow-hidden text-nowrap" style="display: block">Sandboxes</div></a
+            >
+          </li>
+          <li>
+            <a href="#" rel="noreferrer" target="_self"
+              ><div class="icon"><i aria-hidden="true" class="fa-solid fa-film"></i></div>
+              <div class="ps-3 overflow-hidden text-nowrap" style="display: block">Video on demand</div></a
+            >
+          </li>
+          <hr title="My Campus" />
+          <li>
+            <a href="#" rel="noreferrer" target="_self"
+              ><div class="icon"><i aria-hidden="true" class="fa-solid fa-users"></i></div>
+              <div class="ps-3 overflow-hidden text-nowrap" style="display: block">Peers</div></a
+            >
+          </li>
+          <li
+            class="bg-white border-top border-end position-fixed p-2 bottom-0 start-0 mb-0"
+            style="background-color: rgb(255, 255, 255); border-color: rgb(238, 238, 238)"
+          >
+            <a href="#"
+              ><div class="image"><i aria-hidden="true" class="fa-solid fa-user"></i></div>
+              <div class="flex-grow-1 ps-3 overflow-hidden text-nowrap" style="display: block">My Profile</div></a
+            >
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <main class="content" id="content">
+      <div id="layout-bars" style="padding-top: 118px">
+        <div class="container py-4" style="max-width: 48rem">
+          <h1 class="h3 mb-2">Join Digital Bridge</h1>
+          <p class="mb-4">Sign up for the programme in a few minutes, one question at a time, by typing or by voice, in your own language.</p>
+          <!-- Inclusive Access, Level 1: the only two lines this page needs. -->
+          <script src="http://localhost:3000/widget.js" defer></script>
+          <db-onboarding api="http://localhost:3000/v1" audio="http://localhost:3000/audio" partner="Digital Bridge (ALX)"></db-onboarding>
+          <script>
+            // ?lang=am (or om, ti, so, sid, en) opens straight in that language and skips the language page:
+            // signup.html?lang=am is the voice-first Amharic sign-up. Runs before the deferred widget starts.
+            (function () {
+              var l = new URLSearchParams(location.search).get('lang');
+              if (!/^(en|am|om|ti|so|sid)$/.test(l || '')) return;
+              var f = document.querySelector('db-onboarding');
+              f.setAttribute('lang', l); f.setAttribute('lang-ask', 'no');
+              document.documentElement.lang = l;
+            })();
+            // The host decides what happens next: when sign-up is done, go to the learner homepage.
+            document.addEventListener('db-signup:done', function () {
+              setTimeout(function () { window.location.href = 'homepage-v1-self-paced.html'; }, 6000);
+            });
+          </script>
+        </div>
+      </div>
+    </main>
+
+    <div
+      data-react-class="curriculums/CurriculumValidationCongrats"
+      data-react-cache-id="curriculums/CurriculumValidationCongrats-0"
+    >
+      <div
+        aria-hidden="true"
+        aria-labelledby="curriculum-validation-congrats-label"
+        class="modal fade"
+        id="curriculum-validation-congrats-modal"
+        tabindex="-1"
+      >
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content curriculum-validation-congrats">
+            <div aria-hidden="true" class="confetti-container">
+              <span class="confetti-piece" style="--confetti-delay: 0s; --confetti-left: 0%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 0.12s; --confetti-left: 37%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 0.24s; --confetti-left: 74%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 0.36s; --confetti-left: 11%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 0.48s; --confetti-left: 48%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 0.6s; --confetti-left: 85%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 0.72s; --confetti-left: 22%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 0.84s; --confetti-left: 59%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 0.96s; --confetti-left: 96%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 1.08s; --confetti-left: 33%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 1.2s; --confetti-left: 70%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 1.32s; --confetti-left: 7%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 1.44s; --confetti-left: 44%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 1.56s; --confetti-left: 81%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 1.68s; --confetti-left: 18%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 1.8s; --confetti-left: 55%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 1.92s; --confetti-left: 92%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 2.04s; --confetti-left: 29%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 2.16s; --confetti-left: 66%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 2.28s; --confetti-left: 3%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 2.4s; --confetti-left: 40%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 2.52s; --confetti-left: 77%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 2.64s; --confetti-left: 14%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 2.76s; --confetti-left: 51%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 2.88s; --confetti-left: 88%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 3s; --confetti-left: 25%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 3.12s; --confetti-left: 62%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 3.24s; --confetti-left: 99%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 3.36s; --confetti-left: 36%"></span
+              ><span class="confetti-piece" style="--confetti-delay: 3.48s; --confetti-left: 73%"></span>
+            </div>
+            <div class="modal-header border-0 justify-content-end">
+              <button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
+            </div>
+            <div class="modal-body text-center px-4 pb-2">
+              <div class="d-flex justify-content-center">
+                <div class="d-inline-block mb-3 position-relative">
+                  <span
+                    class="graduation-badge d-inline-block position-relative curriculum-validation-congrats-badge"
+                    style="height: 184px; width: 184px"
+                    ><img
+                      alt="Graduation badge"
+                      class="d-block h-100 w-100"
+                      src="../assets/img/graduation-badge-alx.svg"
+                    /><span
+                      class="graduation-badge-title position-absolute start-50 top-50 translate-middle text-white fw-medium text-uppercase text-center text-nowrap text-truncate lh-1"
+                      style="font-size: 20px; max-width: 147px"
+                      >VA-1</span
+                    ></span
+                  >
+                </div>
+              </div>
+              <h3 class="fw-bold mb-2">Congratulations, Amara!</h3>
+              <p class="text-muted mb-0">You earned a new badge for VA-1: VA Foundations &amp; Professional Identity</p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center gap-2 pb-4">
+              <a class="btn btn-outline-secondary" href="#">Continue this course</a
+              ><button class="btn btn-primary" disabled="" type="button">
+                <span aria-hidden="true" class="spinner-border spinner-border-sm me-2"></span>Go to the next course
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      aria-hidden="true"
+      aria-labelledby="markdown-guide-modal-label"
+      class="modal modal-lg fade"
+      id="markdown-guide-modal"
+      tabindex="-1"
+    >
+      <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="markdown-guide-modal-label">Markdown guide</h1>
+            <button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
+          </div>
+          <div class="modal-body">
+            <h4>Emphasis</h4>
+            <pre>
+**<strong>bold</strong>**
+*<em>italics</em>*
+~~<strike>strikethrough</strike>~~</pre
+            >
+            <h4>Headers</h4>
+            <pre>
+# Big header
+## Medium header
+### Small header
+#### Tiny header</pre
+            >
+            <h4>Lists</h4>
+            <pre>
+* Generic list item
+* Generic list item
+* Generic list item
+
+1. Numbered list item
+2. Numbered list item
+3. Numbered list item</pre
+            >
+            <h4>Links</h4>
+            <pre>[Text to display](http://www.example.com)</pre>
+            <h4>Quotes</h4>
+            <pre>
+&gt; This is a quote.
+&gt; It can span multiple lines!</pre
+            >
+            <h4>Images</h4>
+            <p>CSS style available: <code>width, height, opacity</code></p>
+            <pre>
+![](http://www.example.com/image.jpg)
+![](http://www.example.com/image.jpg | width: 200px)
+![](http://www.example.com/image.jpg | height: 124px | width: 80px | opacity: 0.6)
+</pre
+            >
+            <h4>Downloadable file</h4>
+            <p>
+              Insert a file hosted at a public <code>https://</code> URL as a clickable download link. The icon and
+              label are auto-detected from the file extension. Use the <i class="fa-solid fa-file-arrow-down"></i> tool
+              in the editor toolbar to generate it.
+            </p>
+            <pre>
+::file src: https://example.com/handout.pdf ::
+</pre
+            >
+            <p>
+              <strong>Auto-detected types:</strong> <code>image</code> (.jpg, .jpeg, .png, .gif, .webp, .svg, .bmp,
+              .ico), <code>video</code> (.mp4, .mov, .webm, .avi, .mkv, .m4v), <code>pdf</code>,
+              <code>notebook</code> (.ipynb), <code>python</code> (.py), <code>js</code> (.js, .jsx, .mjs, .cjs),
+              <code>c</code> (.c, .h), <code>text</code> (.txt, .md, .csv, .log). Unrecognized extensions render with a
+              generic file icon.
+            </p>
+            <h4>Video</h4>
+            <p>
+              Embed a single on-demand video by its <code>id</code> from the Video library. Use the
+              <i class="fa-solid fa-film"></i> tool in the editor toolbar to pick a video — only online, public, and
+              fully transcoded videos can be embedded.
+            </p>
+            <pre>
+::video 42 ::
+</pre
+            >
+            <h4>Rive Animations</h4>
+            <p>
+              The recommended way to embed a Rive animation is the <strong>Library Files</strong> tool (<i
+                class="fa-solid fa-photo-film"
+              ></i
+              >) in the editor toolbar: pick a <code>.riv</code> asset, choose its artboard and data bindings, and
+              insert it. This produces a library-anchored <code>::asset&nbsp;ID&nbsp;...&nbsp;::</code> tag whose
+              overrides are independent on each page — double-click an inserted asset to reopen the configurator. The
+              raw <code>::rive data:</code> form below is a low-level escape hatch.
+            </p>
+            <p>
+              <strong>Per-page overrides.</strong> The same library asset can render a different artboard, state machine
+              or data bindings on each page. The overrides are configured in the Library Files tool and stored on the
+              tag as a Base64 <code>data:</code> payload
+              (<code>::asset&nbsp;42&nbsp;data:&lt;base64-json&gt;&nbsp;::</code>) — you do not construct this by hand;
+              double-click an inserted asset to reopen the configurator. The <code>src</code>, dimensions, brand and
+              version still resolve from the library file, so the asset stays anchored.
+            </p>
+            <pre>
+::rive data: &lt;base64-encoded-JSON&gt; ::
+</pre
+            >
+            <p><strong>JSON shape:</strong></p>
+            <pre>
+{
+  "src": "https://example.com/animation.riv",
+  "width": 1920,
+  "height": 540,
+  "stateMachine": "State Machine 1",
+  "artboard": "MasterBanner",
+  "viewModelName": "mbViewModel",
+  "viewModelInstanceName": "Instance",
+  "bindings": {
+    "bannerTitle": "Introduction to the Learning Content",
+    "courseSelect": "artboard:SAMPLE_ARTBOARD"
+  }
+}
+</pre
+            >
+            <p><strong>Fields:</strong></p>
+            <ul>
+              <li><code>src</code> — URL to the hosted Rive file (<code>.riv</code>) — <strong>required</strong></li>
+              <li><code>width</code>, <code>height</code> — canvas size in pixels (defaults: 400×225)</li>
+              <li><code>stateMachine</code> — name of the state machine to play</li>
+              <li><code>artboard</code> — name of the artboard to render (uses default if omitted)</li>
+              <li>
+                <code>viewModelName</code>, <code>viewModelInstanceName</code> — data binding View Model and instance
+                names
+              </li>
+              <li>
+                <code>bindings</code> — object of <code>{ propertyName: value }</code> pairs. Type (string, number,
+                boolean, color, enum) is auto-detected. Use <code>"artboard:&lt;name&gt;"</code> as the value to bind an
+                artboard property (e.g., to swap branded variants).
+              </li>
+            </ul>
+            <p>
+              <strong>Dynamic values.</strong> Binding values may embed <code>{{key}}</code> placeholders, replaced per
+              learner at render time (e.g. <code>"Hello {{learner.first_name}}"</code>). Available keys:
+              <code>learner.first_name</code>, <code>learner.last_name</code>, <code>learner.full_name</code>,
+              <code>learner.email</code>, <code>course</code>, <code>brand</code>, <code>page_name</code>,
+              <code>locale</code>.
+            </p>
+            <p>
+              <strong>Worked example.</strong> The JSON
+              <code>{"src":"https://example.com/animation.riv","stateMachine":"State Machine 1"}</code> becomes:
+            </p>
+            <pre>
+::rive data: eyJzcmMiOiJodHRwczovL2V4YW1wbGUuY29tL2FuaW1hdGlvbi5yaXYiLCJzdGF0ZU1hY2hpbmUiOiJTdGF0ZSBNYWNoaW5lIDEifQ== ::
+</pre
+            >
+            <h4>GitHub Content</h4>
+            <p>
+              GitHub content embeds pull a file from a repository's default branch at render time and display it inline.
+              Use the GitHub insert tool in the editor toolbar to fill in the fields and validate the paths — you do not
+              need to construct this by hand.
+            </p>
+            <pre>
+::github-content data: &lt;base64-encoded-JSON&gt; ::
+</pre
+            >
+            <p><strong>JSON shape:</strong></p>
+            <pre>
+{
+  "org": "&lt;org&gt;",
+  "repo": "&lt;repo&gt;",
+  "path": "&lt;path/to/file.md&gt;",
+  "files": ["&lt;path/to/file1.py&gt;", "&lt;path/to/file2.py&gt;"]
+}
+</pre
+            >
+            <p><strong>Fields:</strong></p>
+            <ul>
+              <li><code>org</code> — GitHub organization or user — <strong>required</strong></li>
+              <li><code>repo</code> — repository name — <strong>required</strong></li>
+              <li>
+                <code>path</code> — path to the main content file, relative to the repository root —
+                <strong>required</strong>
+              </li>
+              <li>
+                <code>files</code> — array of supporting file paths, rendered as download links above the main content.
+                Each path is relative to the repository root (same format as <code>path</code>).
+              </li>
+            </ul>
+            <p>
+              Markdown files (<code>.md</code>, <code>.markdown</code>) are rendered inline; other UTF-8 text files are
+              shown in a code block, while non-UTF-8/binary files show a warning instead. Fetched content is cached for
+              1 hour.
+            </p>
+            <p>
+              <strong>Worked example.</strong> Embed <code>docs/topic/readme.md</code> from
+              <code>acme-corp/concepts</code> with a helper file and an image:
+            </p>
+            <pre>
+::github-content data: eyJvcmciOiJhY21lLWNvcnAiLCJyZXBvIjoiY29uY2VwdHMiLCJwYXRoIjoiZG9jcy90b3BpYy9yZWFkbWUubWQiLCJmaWxlcyI6WyJkb2NzL3RvcGljL2hlbHBlci5weSIsImRvY3MvdG9waWMvYXNzZXRzL2RpYWdyYW0ucG5nIl19 ::
+</pre
+            >
+            <h4>Chidi InlineChat</h4>
+            <p>
+              Chidi embeds use a single <code>data:</code> attribute holding a Base64-encoded JSON config. Use the Chidi
+              insert tool (<i class="fa-solid fa-robot"></i>) in the editor toolbar to generate it; double-click an
+              existing tag to edit its config in place — you do not need to construct this by hand.
+            </p>
+            <pre>
+::chidi data: &lt;base64-encoded-JSON&gt; ::
+</pre
+            >
+            <p><strong>JSON shape:</strong></p>
+            <pre>
+{
+  "activityType": "tutor",
+  "apiUrl": "https://example.com",
+  "cssUrl": "https://example.com/inline/llm-tutor-inline.css",
+  "greeting": "Hello! I'm here to help.",
+  "jsUrl": "https://example.com/inline/llm-tutor-inline.js",
+  "starters": ["I'm ready", "Check my code"],
+  "systemPrompt": "You are a helpful tutor..."
+}
+</pre
+            >
+            <p><strong>Fields:</strong></p>
+            <ul>
+              <li>
+                <code>jsUrl</code>, <code>cssUrl</code>, <code>apiUrl</code> — URLs for the InlineChat assets and API —
+                <strong>required</strong>
+              </li>
+              <li><code>greeting</code> — initial greeting displayed to the student — <strong>required</strong></li>
+              <li><code>starters</code> — array of suggested starter prompts (optional)</li>
+              <li><code>systemPrompt</code> — system prompt for the AI tutor — <strong>required</strong></li>
+              <li>
+                <code>activityType</code> — one of <code>tutor</code>, <code>reflection</code>, <code>guide</code>,
+                <code>content_clarity</code>
+              </li>
+            </ul>
+            <h4>Tables</h4>
+            <pre>| Column 1 | Column 2 | Column 3 |
+| -------- | -------- | -------- |
+| John     | Doe      | Male     |
+| Mary     | Smith    | Female   |
+
+<em>Or without aligning the columns...</em>
+
+| Column 1 | Column 2 | Column 3 |
+| -------- | -------- | -------- |
+| John | Doe | Male |
+| Mary | Smith | Female |
+</pre>
+            <h4>Displaying code</h4>
+            <pre>`var example = "hello!";`
+
+<em>Or spanning multiple lines...</em>
+
+```
+var example = "hello!";
+alert(example);
+```</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      aria-labelledby="program-structure-modal-label"
+      class="modal fade"
+      id="program-structure-modal"
+      tabindex="-1"
+      style="display: none"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="program-structure-modal-label">ALX program</h1>
+            <button aria-label="Close" class="btn-close" data-bs-dismiss="modal" type="button"></button>
+          </div>
+          <div class="modal-body">
+            <div class="align-items-center d-flex flex-wrap gap-3 mb-4">
+              <span class="fs-sm text-muted text-nowrap">0 of 1 completed courses</span>
+              <div class="flex-grow-1 progress" style="height: 0.5rem; min-width: 6rem">
+                <div class="progress-bar rounded-pill" style="width: 0%"></div>
+              </div>
+              <span class="fs-sm text-muted text-nowrap">0%</span>
+            </div>
+            <div class="border mb-3 overflow-hidden rounded-3">
+              <div class="align-items-center d-flex gap-3 p-3">
+                <button
+                  aria-expanded="true"
+                  class="align-items-center bg-transparent border-0 d-flex flex-grow-1 gap-3 min-width-0 p-0 text-start"
+                  type="button"
+                  data-static-collapse-toggle="0"
+                >
+                  <span
+                    class="align-items-center border d-inline-flex flex-shrink-0 fs-sm fw-medium justify-content-center rounded-circle"
+                    style="height: 2.25rem; width: 2.25rem"
+                    >1</span
+                  ><span class="d-flex flex-column gap-2 min-width-0 w-100"
+                    ><span class="align-items-center d-flex flex-wrap gap-2"
+                      ><span class="fw-medium">VA-1: VA Foundations &amp; Professional Identity</span
+                      ><span class="badge rounded-pill text-bg-secondary">In progress</span></span
+                    ><span class="align-items-center d-flex flex-wrap gap-2"
+                      ><span class="fs-sm text-muted text-nowrap">1 of 3 completed modules</span
+                      ><span class="flex-grow-1 progress" style="height: 0.5rem; min-width: 4rem"
+                        ><span class="progress-bar rounded-pill" style="width: 33%"></span></span></span></span
+                  ><i aria-hidden="true" class="fa-solid fa-angle-up fa-fw flex-shrink-0 text-muted"></i></button
+                ><span class="badge rounded-pill text-bg-light">Current</span>
+              </div>
+              <div class="border-top px-3 py-2" data-static-collapse-body="0">
+                <div class="">
+                  <button
+                    aria-expanded="true"
+                    class="align-items-center bg-transparent border-0 d-flex fs-sm gap-3 px-0 py-2 text-start w-100"
+                    type="button"
+                    data-static-collapse-toggle="1"
+                  >
+                    <span class="flex-shrink-0 text-muted">1.</span
+                    ><span class="flex-grow-1 min-width-0 text-truncate">Welcome and Getting Started</span
+                    ><span class="text-muted text-nowrap">14 of 14 done</span
+                    ><i aria-hidden="true" class="fa-solid fa-angle-up fa-fw text-muted"></i>
+                  </button>
+                  <div class="pb-2 ps-4" data-static-collapse-body="1">
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate"
+                        >Karibu to the ALX Virtual Assistant (VA) Program</span
+                      ><i aria-hidden="true" class="fa-solid fa-check fa-fw text-primary"></i
+                      ><span class="visually-hidden">Completed</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">Community and Support</span
+                      ><i aria-hidden="true" class="fa-solid fa-check fa-fw text-primary"></i
+                      ><span class="visually-hidden">Completed</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">COUCOUC</span
+                      ><i aria-hidden="true" class="fa-solid fa-check fa-fw text-primary"></i
+                      ><span class="visually-hidden">Completed</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">Meet the Trendsetters</span
+                      ><i aria-hidden="true" class="fa-solid fa-check fa-fw text-primary"></i
+                      ><span class="visually-hidden">Completed</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">How This Program Works</span
+                      ><i aria-hidden="true" class="fa-solid fa-check fa-fw text-primary"></i
+                      ><span class="visually-hidden">Completed</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">Tools You'll Use Along the Way</span
+                      ><i aria-hidden="true" class="fa-solid fa-check fa-fw text-primary"></i
+                      ><span class="visually-hidden">Completed</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">Navigating the Learning Platform</span
+                      ><i aria-hidden="true" class="fa-solid fa-check fa-fw text-primary"></i
+                      ><span class="visually-hidden">Completed</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">Learning Your Own Way</span
+                      ><i aria-hidden="true" class="fa-solid fa-check fa-fw text-primary"></i
+                      ><span class="visually-hidden">Completed</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">Community Code of Conduct</span
+                      ><i aria-hidden="true" class="fa-solid fa-check fa-fw text-primary"></i
+                      ><span class="visually-hidden">Completed</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate"
+                        >Overview of Course 1: VA Foundations &amp; Professional Identity</span
+                      ><i aria-hidden="true" class="fa-solid fa-check fa-fw text-primary"></i
+                      ><span class="visually-hidden">Completed</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">Introducing Mastery Projects</span
+                      ><i aria-hidden="true" class="fa-solid fa-check fa-fw text-primary"></i
+                      ><span class="visually-hidden">Completed</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">Module 1 Wrap Up</span
+                      ><i aria-hidden="true" class="fa-solid fa-check fa-fw text-primary"></i
+                      ><span class="visually-hidden">Completed</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-file-code fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">End of Module 1 Check</span
+                      ><i aria-hidden="true" class="fa-solid fa-check fa-fw text-primary"></i
+                      ><span class="visually-hidden">Completed</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-circle-question fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">Module 1 Recap Quiz</span
+                      ><i aria-hidden="true" class="fa-solid fa-check fa-fw text-primary"></i
+                      ><span class="visually-hidden">Completed</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="border-top">
+                  <button
+                    aria-expanded="false"
+                    class="align-items-center bg-transparent border-0 d-flex fs-sm gap-3 px-0 py-2 text-start w-100"
+                    type="button"
+                    data-static-collapse-toggle="2"
+                  >
+                    <span class="flex-shrink-0 text-muted">2.</span
+                    ><span class="flex-grow-1 min-width-0 text-truncate">What is a VA</span
+                    ><span class="text-muted text-nowrap">5 of 12 done</span
+                    ><i aria-hidden="true" class="fa-solid fa-fw text-muted fa-angle-down"></i>
+                  </button>
+                  <div class="pb-2 ps-4" data-static-collapse-body="2" hidden="">
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">Module 2 Overview</span
+                      ><i aria-hidden="true" class="fa-solid fa-check fa-fw text-primary"></i
+                      ><span class="visually-hidden">Completed</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">Advice: Tackling the Recap Quiz</span
+                      ><i aria-hidden="true" class="fa-solid fa-check fa-fw text-primary"></i
+                      ><span class="visually-hidden">Completed</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate"
+                        >So, What Exactly Is a Virtual Assistant?</span
+                      ><i aria-hidden="true" class="fa-solid fa-check fa-fw text-primary"></i
+                      ><span class="visually-hidden">Completed</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate"
+                        >Defining the VA Role: Tasks and Specialisations</span
+                      ><i aria-hidden="true" class="fa-solid fa-check fa-fw text-primary"></i
+                      ><span class="visually-hidden">Completed</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">Where Do Virtual Assistants Work?</span
+                      ><i aria-hidden="true" class="fa-solid fa-check fa-fw text-primary"></i
+                      ><span class="visually-hidden">Completed</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">Evolution of the VA Role</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">The Future of the VA Industry</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">Why Become a VA?</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate"
+                        >Reflection: Your Reasons to Become a VA</span
+                      >
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">Module 2 Wrap Up</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-file-code fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">End of Module 2 Check</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-circle-question fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">Module 2 Recap Quiz</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="border-top">
+                  <button
+                    aria-expanded="false"
+                    class="align-items-center bg-transparent border-0 d-flex fs-sm gap-3 px-0 py-2 text-start w-100"
+                    type="button"
+                    data-static-collapse-toggle="3"
+                  >
+                    <span class="flex-shrink-0 text-muted">3.</span
+                    ><span class="flex-grow-1 min-width-0 text-truncate">VA Skills and Mindsets</span
+                    ><span class="text-muted text-nowrap">0 of 10 done</span
+                    ><i aria-hidden="true" class="fa-solid fa-fw text-muted fa-angle-down"></i>
+                  </button>
+                  <div class="pb-2 ps-4" data-static-collapse-body="3" hidden="">
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">Module 3 Overview</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">Core Skills of a Virtual Assistant</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">What Makes a Good VA?</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">Know Yourself as a Professional</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate"
+                        >The Growth Mindset of a Virtual Assistant</span
+                      >
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate"
+                        >Grit and Perseverance in the VA Profession</span
+                      >
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate"
+                        >Reflection: Your VA Strengths and Growth Areas</span
+                      >
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">Growing Together: Peer Coaching</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-book-open fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">Course 1 Wrap Up</span>
+                    </div>
+                    <div class="align-items-center d-flex fs-sm gap-3 py-2">
+                      <i aria-hidden="true" class="fa-solid fa-file-code fa-fw text-muted"></i
+                      ><span class="flex-grow-1 min-width-0 text-truncate">Mastery Project: VA Profile Video</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="../assets/js/popper.js"></script>
+    <script src="../assets/js/bootstrap.bundle.js"></script>
+    <script src="../assets/js/static-page.js"></script>
+  </body>
+</html>

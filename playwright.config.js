@@ -7,7 +7,7 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   reporter: [['list'], ['json', { outputFile: 'test-results/a11y-results.json' }]],
-  use: { baseURL: 'http://localhost:8080', ...devices['Desktop Chrome'], permissions: [] },
+  use: { baseURL: 'http://localhost:8080', ...devices['Desktop Chrome'], permissions: [], ...(process.env.PW_CHROMIUM ? { launchOptions: { executablePath: process.env.PW_CHROMIUM } } : {}) },
   webServer: [
     { command: 'node server.js', url: 'http://localhost:3000/v1/health', reuseExistingServer: !process.env.CI, timeout: 30000 },
     { command: 'node tools/serve-demo.mjs', url: 'http://localhost:8080/index.html', reuseExistingServer: !process.env.CI, timeout: 30000 },

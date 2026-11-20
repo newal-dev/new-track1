@@ -61,17 +61,26 @@ NUMBERS = {
 }
 AT_SIGN = {"en": "at", "am": "at", "om": "at", "ti": "at", "so": "at", "sid": "at"}
 
+# Key names are said with the English voice in every language: people know the keys by their English names.
+KEY_WORDS = r"\b(Tab|Shift|Space|Enter|Escape|Esc)\b"
+# Words the romaniser spells badly for the voice (uroman adds a vowel after every vowelless Ge'ez letter, so ሁለት became
+# "hulate"). Whole phrase -> the Latin spelling the voice model is given instead. Chosen by a native speaker, by ear.
+PRONOUNCE = {
+    # Digits chosen by a native Amharic speaker, by ear (15 Nov 2026). ዜሮ, ሁለት, ስምንት, ዘጠኝ keep the romaniser's spelling.
+    "am": {"አንድ": "aand", "ሦስት": "sosst", "አራት": "aratt", "አምስት": "amest", "ስድስት": "sidist", "ሰባት": "sabaat",
+           "አሥር": "asser"},  # አሥር: same pattern as the chosen digits; a native speaker should listen to it
+}
 CLIPS = json.loads(r'''{
  "sid": {
-  "langSelf": "Sidaamu Afoo doorate, Sidama yi, woy Sidaamu Afoo yitanno ilkaawa xiiwi.",
+  "langSelf": "Sidaamu Afoo doorate, Sidaamu Afoo yi, woy Sidaamu Afoo yitanno ilkaawa xiiwi.",
   "raAsk": "Kuni qoolu qaalinke nabbawamanno gede hasatto? Ikkitinni Ee woy Dee'ni yi, woy mitte ilkaawa xiiwi. Ee yitto ikkiro, woy gedensaanni Hasaawi xiiwitto ikkiro, barbaarsaasikki qaalekki borrote soorrate abbaasi aana soyannosi. Dee'ni yitte borreessa dandaatto.",
   "raAgain": "Dawaro dimacciishshinoommo, kawule Dee'ni yinoonni gede adhineemmo. Qoolu nabbawamanno gede hasatto ikkiro, xa Ee yi, woy Ee ilkaawa xiiwi.",
-  "welcome": "Dancha dayitine! Borreessamate nna loosu dandoowa afate shota doogo. Hanafi. Qaalinke hanafi. Ane nabbawi. Hanafate Hanafi yi.",
+  "welcome": "Dancha dayitine! Borreessamate nna loosu dandoowa afate shota doogo. Hanafi. Qaalinke hanafi. Ane nabbawi. Keyboorde aana: woroonni higate Tab, aliidi higate Shift nna Tab, doorate Space woy Enter, qaala uurrisate Escape xiiwi. Hanafate Hanafi yi.",
   "prefs": "Konne foormu hiittoo horoonsi'rate hasatto? Dooro. Darba dandaatto. 1: Lowo borro. 2: Doorshu gaxa misilla. Doorshikki kiiro woy su'ma yi. Albisate Albisi, wole macciishshate Qaalinke nabbawi yi. Tenne xa'mo darbate Darbi yi.",
   "fullName": "Wo'mu su'mikki ayeti? Barru barrunni horoonsi'ratto su'mu ikkanno. Xa dawarokki hasaawi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi.",
-  "contact": "Hiittoo silki kiiro woy imeelenni dandoonketa? Tenne pirogiraame daafira dandoonketa calla. Silki kiiro tonne kiiro afi'rinohanna zeerotenni hanafanno. Ikkitinni dawarokki saaxine giddo borreessi. Aanchite Enter, woy Albisi ilkaawa xiiwi.",
+  "contact": "Hiittoo silki kiiro woy imeelenni dandoonketa? Tenne pirogiraame daafira dandoonketa calla. Silki kiiro tonne kiiro afi'rinohanna zeerotenni hanafanno. Hasaawa woy borreessa dandaatto. Xa dawarokki hasaawi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi.",
   "idRoute": "Ati ayeti ikkitoota hiittoo leellisate hasatto? 1: Qebeele eeshsha woy paaspoorte. 2: Baqatu woy higgaanchu eeshsha. 3: Wole bortaje. 4: Eeshsha diafi'rino. Jaala dirijjiteenni hoolisi'e. Doorshikki kiiro woy su'ma yi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi.",
-  "support": "Hiittoo kaa'lo kaa'lannohe? Ayeeno doori. Tenne darba dandaatto. Ragi dihasiissanno. Qixxeessitooti calla la'anno, kaa'lo qixxeessate calla. 1: Leellisaancho nabbawaancho horoonsi'reemmo. 2: Lowo borro. 3: Dawaro qaalinke hasaawa doorreemmo. 4: Itiyoophiyu Malaatu Afoo turjimaancho. 5: Shota qaalla nna misilla. 6: Ikkitinni kaa'lo daafira silki xa'mi. Doorshikki kiiro woy su'ma yi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi. Tenne xa'mo darbate Darbi yi.",
+  "support": "Hiittoo kaa'lo kaa'lannohe? Ayeeno doori. Tenne darba dandaatto. Ragi dihasiissanno. Qixxeessitooti calla la'anno, kaa'lo qixxeessate calla. 1: Leellisaancho nabbawaancho horoonsi'reemmo. 2: Lowo borro. 3: Dawaro qaalinke hasaawa doorreemmo. 4: Itiyoophiyu Malaatu Afoo turjimaancho. 5: Viidiyoo aana borro. 6: Afoo'yanni turjimaancho. 7: Fayyimmaranna loosora roore yanna. 8: Shota qaalla nna misilla. 9: Ikkitinni kaa'lo daafira silki xa'mi. 10: Kulla dihasi'reemmo. Doorshikki kiiro woy su'ma yi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi. Tenne xa'mo darbate Darbi yi.",
   "needs": "Loosu aana hiittoo kaa'lo hasiissannohe? Ayeeno doori. Ma'nunni. Konne uduunnichokki aana keeshshanno, coyi'nanno loosuwa leellisate calla. 1: Gadu dinokki loosu bayicho. 2: Leellisaancho nabbawaanchora coyi'nanno uduunnicho. 3: Malaatu afoo turjimaancho. 4: Soorramanno loosu saate. 5: Mineenni loosa. Doorshikki kiiro woy su'ma yi. Albisate Albisi, wole macciishshate Qaalinke nabbawi yi. Tenne xa'mo darbate Darbi yi.",
   "why": "Konne loosu mayira hasatto? Shiima qaalla ikkanno. Hasaawa dandaatto. Xa dawarokki hasaawi. Albisate Albisi, higate Higi, wole macciishshate Qaalinke nabbawi yi.",
   "job": "Loosu su'mi ayeti? Xa dawarokki hasaawi. Albisate Albisi, wole macciishshate Qaalinke nabbawi yi.",
@@ -94,6 +103,8 @@ CLIPS = json.loads(r'''{
   "queued": "Interneete aana dikiitto. Dawaro keeshshi konne uduunnicho aana agarantino, interneete aana higgitto wote soyamanno.",
   "sentLater": "Agarantino dawaro keeshshi xa soyamino.",
   "tapToHear": "Xa'muwa macciishshate ayee ilkaawa xiiwi woy leellisaancho kaali.",
+  "n10": "Tonne",
+  "n0": "Zeero",
   "n1": "Mitto",
   "n2": "Lame",
   "n3": "Sase",
@@ -102,6 +113,25 @@ CLIPS = json.loads(r'''{
   "n6": "Lee",
   "n7": "Lamala",
   "n8": "Sette",
+  "n9": "Honse",
+  "reviewH": "Dawaro keeshshi buuxi",
+  "skipped": "(darbamino)",
+  "reviewKeys": "Dawaro keyboordetenni soorrate, Soorri ilkaawa iillitto geeshsha Tab xiiwi, aanchite Enter xiiwi.",
+  "consentOrg": "Kuri dawaro konne weebsaytete qixxeessitootara soyamanno gede ammanaammo.",
+  "consentSendA": "Kuri dawaro ",
+  "consentSendB": "ra soyamanno gede ammanaammo.",
+  "consentSupport": "Kaa'lo doorshoyya qixxeessitootira qoodi, kaa'lo qixxeessanno gede. Tenne mullicho agurtto ikkiro, kaa'lo doorshoyyikki disoyamanno.",
+  "askSupport": "Kaa'lo doorte. Kaa'lo qixxeessanno gede kaa'lo doorshoyyikki qixxeessitootira qoolate hasatto? Ee woy Dee'ni yi.",
+  "heardA": "Macciishshoonnihu",
+  "heardB": "Albisate Albisi yi, woy dawarokki wole yi.",
+  "display": "Kuulla nna borrote lowina",
+  "textSize": "Borrote lowina",
+  "th_auto": "Uduunnichoyi'ya gede",
+  "th_standard": "Rosu",
+  "th_dark": "Tuqa",
+  "th_contrast": "Lowo babbaxxe (kolishsho nna waajjo)",
+  "th_rg": "Hoogora nna burtukaane (duumo nna haqqaa kuulla babbaxxe dandiitinokketa)",
+  "th_by": "Haqqaa-hoogora nna duumo (hoogora nna dalla kuulla babbaxxe dandiitinokketa)",
   "reviewFix": "Umi xa'mora higate Wole hanafi yi, woy soorrate hasatto xa'mo kiiro yi.",
   "done": "Galateemmo. Dawaro keeshshi adhinoonni.",
   "speakNow": "Xa hasaawi.",
@@ -124,20 +154,28 @@ CLIPS = json.loads(r'''{
   "b_raYes": "Ee, nabbawi",
   "b_raNo": "Dee'ni, galateemmo",
   "b_draftGo": "Uurrinoommohunni albisi",
+  "q_prefs": "Konne foormu hiittoo horoonsi'rate hasatto?",
   "o_prefs_large": "Lowo borro",
   "o_prefs_simple": "Doorshu gaxa misilla",
   "q_fullName": "Wo'mu su'mikki ayeti?",
   "q_contact": "Hiittoo silki kiiro woy imeelenni dandoonketa?",
+  "q_idRoute": "Ati ayeti ikkitoota hiittoo leellisate hasatto?",
   "o_idRoute_kebele": "Qebeele eeshsha woy paaspoorte",
   "o_idRoute_refugee": "Baqatu woy higgaanchu eeshsha",
   "o_idRoute_other": "Wole bortaje",
   "o_idRoute_refer": "Eeshsha diafi'rino. Jaala dirijjiteenni hoolisi'e",
+  "q_support": "Hiittoo kaa'lo kaa'lannohe? Ayeeno doori.",
   "o_support_screenreader": "Leellisaancho nabbawaancho horoonsi'reemmo",
   "o_support_large": "Lowo borro",
   "o_support_voice": "Dawaro qaalinke hasaawa doorreemmo",
   "o_support_sign": "Itiyoophiyu Malaatu Afoo turjimaancho",
+  "o_support_captions": "Viidiyoo aana borro",
+  "o_support_interp": "Afoo'yanni turjimaancho",
+  "o_support_time": "Fayyimmaranna loosora roore yanna",
   "o_support_simple": "Shota qaalla nna misilla",
   "o_support_human": "Ikkitinni kaa'lo daafira silki xa'mi",
+  "o_support_prefer": "Kulla dihasi'reemmo",
+  "q_needs": "Loosu aana hiittoo kaa'lo hasiissannohe? Ayeeno doori.",
   "o_needs_stepfree": "Gadu dinokki loosu bayicho",
   "o_needs_reader": "Leellisaancho nabbawaanchora coyi'nanno uduunnicho",
   "o_needs_interp": "Malaatu afoo turjimaancho",
@@ -146,14 +184,16 @@ CLIPS = json.loads(r'''{
   "q_role": "Ayi loosora xa'mitto?",
   "q_why": "Konne loosu mayira hasatto?",
   "q_job": "Loosu su'mi ayeti?",
+  "q_offers": "Kuni loosu hiittoo qixxeessuwa aamanno?",
   "o_offers_stepfree": "Gadu dinokki loosu bayicho",
   "o_offers_reader": "Leellisaancho nabbawaanchora coyi'nanno uduunnicho",
   "o_offers_interp": "Malaatu afoo turjimaancho",
   "o_offers_hours": "Soorramanno loosu saate",
-  "o_offers_remote": "Mineenni loosa"
+  "o_offers_remote": "Mineenni loosa",
+  "q_closes": "Xa'muwu ayi yanna gufamanno?"
  },
  "en": {
-  "langAsk": "Which language would you like to use? Say English, Amharic, Oromo, Tigrinya, Somali or Sidama, or press a button."
+  "langAsk": "Which language would you like to use? For English, say English, or press the English button."
  }
 }''')
 
@@ -214,6 +254,19 @@ def romanise(s, lang):
         romaniser = ur.Uroman()
     return romaniser.romanize_string(s, lcode=UROMAN_CODE[lang])
 
+_eng = {}
+def english_voice():
+    if not _eng:
+        _eng["tok"] = AutoTokenizer.from_pretrained(MODELS["en"])
+        m = VitsModel.from_pretrained(MODELS["en"]).to(device).eval(); m.speaking_rate = SPEAKING_RATE; _eng["model"] = m
+    return _eng["tok"], _eng["model"]
+def synth(tok, model, s):
+    inputs = tok(s, return_tensors="pt").to(device)
+    if inputs["input_ids"].shape[-1] < 2:                                        # nothing the model can say
+        return None
+    set_seed(SEED)
+    with torch.no_grad():
+        return model(**inputs).waveform[0].cpu().numpy().astype(np.float32)
 if os.path.isdir(OUT):
     shutil.rmtree(OUT)
 report, dropped = [], {}
@@ -232,20 +285,39 @@ for lang in LANGS_TO_MAKE:
             continue
         pieces = []
         for phrase, pause in segments(spoken(lang, text)):
-            s = romanise(phrase, lang) if needs_latin else phrase
-            s = s.lower()
-            lost = {c for c in s if c != " " and c not in vocab}
-            if lost:
-                dropped.setdefault(lang, {}).setdefault("".join(sorted(lost)), []).append(cid)
-            inputs = tok(s, return_tensors="pt").to(device)
-            if inputs["input_ids"].shape[-1] < 2:                                # nothing the model can say
-                continue
-            set_seed(SEED)
-            with torch.no_grad():
-                w = model(**inputs).waveform[0].cpu().numpy().astype(np.float32)
-            w = trim(w, rate)
-            if len(w):
-                pieces += [w, np.zeros(int(rate * pause), np.float32)]
+            # A phrase in another language can contain key names: those parts are said by the English voice.
+            parts = re.split(KEY_WORDS, phrase) if lang != "en" else [phrase]
+            ws = []
+            for j, part in enumerate(parts):
+                part = part.strip()
+                if not part:
+                    continue
+                if j % 2 == 1:
+                    et, em = english_voice(); w = synth(et, em, part.lower())
+                else:
+                    fixed = PRONOUNCE.get(lang, {}).get(part.strip(" .,!?።፣"))
+                    if fixed:
+                        s = fixed
+                    elif needs_latin and any(w.strip(" .,!?።፣") in PRONOUNCE.get(lang, {}) for w in part.split()):
+                        # A sentence with one of those words in it (a numbered choice): that word as chosen, the rest romanised.
+                        s = " ".join(PRONOUNCE[lang].get(w.strip(" .,!?።፣")) or romanise(w, lang) for w in part.split())
+                    else:
+                        s = romanise(part, lang) if needs_latin else part
+                    s = s.lower()
+                    # Letters this voice has no sound for: the nearest one it has (ቪዲዮ "video" -> "bidiyo", as many say it).
+                    for miss, near in (("v", "b"), ("p", "b")):
+                        if miss not in vocab and near in vocab:
+                            s = s.replace(miss, near)
+                    lost = {c for c in s if c != " " and c not in vocab}
+                    if lost:
+                        dropped.setdefault(lang, {}).setdefault("".join(sorted(lost)), []).append(cid)
+                    w = synth(tok, model, s)
+                if w is not None:
+                    w = trim(w, rate)
+                    if len(w):
+                        ws += [w / (float(np.abs(w).max()) or 1.0) * 0.9, np.zeros(int(rate * 0.06), np.float32)]
+            if ws:
+                pieces += [*ws[:-1], np.zeros(int(rate * pause), np.float32)]
         if not pieces:
             print(f"  !! {cid}: nothing to say, skipped")
             report.append((lang, cid, 0.0, "EMPTY"))

@@ -5,7 +5,7 @@
    <db-form flow='employer' api='https://YOUR-HOST/v1'></db-form>     any flow (the original tag)
    partner: name shown in the consent question.  sw: path of the partner's one-line service worker (offline).  asr: browser | off | a name registered with DbForm.registerASR().  fonts='no': do not load the local fonts.  jsonld='no': do not add schema.org/JobPosting to the page.
    flow: signup | job | employer.  lang: en | am | om | ti | so | sid (anything else falls back to en).  lang-ask='no': skip the first page that asks for the language (shown in English by default).  theme: auto | standard | dark | contrast | rg | by (the person's own choice in the Colours menu wins).  CSS hooks on <db-form>: --db-accent, --db-font.  hide: optional comma list of question ids to leave out, e.g. hide='idRoute,support' (fullName, role and job cannot be hidden).  audio: optional base URL of recorded .mp3 files (BASE/en|am|om|ti|so/QUESTIONID.mp3).  Events: db-complete, db-error.
-   Amharic text is a DRAFT: have a native speaker check every string before submitting.
+   Amharic text was checked by a native Amharic speaker (15 Nov 2026).
    Afaan Oromoo (om), Tigrinya (ti), Somali (so) and Sidaamu Afoo (sid, see the SID block) text is a machine-assisted DRAFT: every line marked // VERIFY_NATIVE must be reviewed by a native speaker. */
 // Everything below is block-scoped so its names (LANGS, UI, T, ...) never clash with the host page's own scripts.
 {
@@ -38,21 +38,52 @@ const isoOf = d => d.toISOString().slice(0, 10);
 // ---- Speech recognition router: 'browser' (Web Speech API) by default; a partner can register a self-hosted recogniser. ----
 // A factory gets (bcp47Lang, element) and returns an object with start(), abort() and onresult / onerror / onend, like SpeechRecognition.
 const ASR = {
-  browser: lang => { const R = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition); if (!R) return null; const r = new R(); r.lang = lang; r.interimResults = false; return r; },
+  // Several guesses per answer: a name like "አማርኛ" said into an English recogniser is rarely its first guess.
+  browser: lang => { const R = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition); if (!R) return null; const r = new R(); r.lang = lang; r.interimResults = false; r.maxAlternatives = 5; return r; },
 };
+// Every guess the recogniser made for the first result, best first.
+const alts = e => { const r = e && e.results && e.results[0]; if (!r) return []; const out = []; for (let k = 0; k < (r.length || 1); k++) if (r[k] && r[k].transcript) out.push(r[k].transcript); return out; };
+
+// ---- Ge'ez to Latin letters. Only used when a device has no voice for Amharic or Tigrinya: a name or answer in Ge'ez is
+// then spelled in Latin letters for an English voice (close enough for names), while the screen shows the real text.
+const GZ = ['h', 'l', 'h', 'm', 's', 'r', 's', 'sh', 'q', 'qw', 'q', 'qw', 'b', 'v', 't', 'ch', 'h', 'hw', 'n', 'ny', '', 'k', 'kw', 'h', 'hw', 'w', '', 'z', 'zh', 'y', 'd', 'd', 'j', 'g', 'gw', 'ng', 't', 'ch', 'p', 'ts', 'ts', 'f', 'p'];
+const GV = ['e', 'u', 'i', 'a', 'e', '', 'o', 'wa'];
+const romanize = t => String(t || '').normalize('NFC').replace(/[፩-፱]/g, d => String(d.charCodeAt(0) - 0x1368)).replace(/[፡።፣፤፥፦፧፨]/g, ' ').split(/(\s+)/).map(w => {
+  let out = '', first = true;
+  for (const ch of w) {
+    const c = ch.codePointAt(0) - 0x1200, row = c >> 3, v = c & 7;
+    if (c < 0 || row >= GZ.length) { out += ch; first = false; continue; }
+    const k = GZ[row], glottal = k === '';
+    out += k + (glottal && (v === 0 || v === 3) ? 'a' : v === 5 ? (first ? 'i' : '') : GV[v]);
+    first = false;
+  }
+  return out;
+}).join('');
+const GEEZ = /[ሀ-፿]/;
 const o = (k, en, am, om, ti, so) => [k, { en, am, om, ti, so }];
 
 // Supported languages. sr = speech recognition locale; tts = prefixes that match a device voice (2- and 3-letter codes).
-// en = English name (shown under the native name on the language page). say = words recognised (in English speech) on the language page.
+// en = English name (shown under the native name on the language page).
+// say = Latin-letter words that name the language: the English name, the language's own name, and what an English recogniser
+// often writes when someone says the name in their own language ("Amarinya" -> "a marina"). Near misses also count (pickLang).
+// gz = beginnings of Ge'ez words that name the language (what an Amharic recogniser writes for አማርኛ, ኦሮምኛ, ትግርኛ, ሶማልኛ, ሲዳምኛ ...).
 const LANGS = [
-  { id: 'en', name: 'English', en: 'English', sr: 'en-US', tts: ['en'], say: ['english', 'inglizii', 'ingliffa'] },
-  { id: 'am', name: 'አማርኛ', en: 'Amharic', sr: 'am-ET', tts: ['am'], say: ['amharic', 'amharigna', 'amarigna', 'amarinya', 'አማርኛ'] },
-  { id: 'om', name: 'Afaan Oromoo', en: 'Oromo', sr: 'om-ET', tts: ['om', 'orm'], say: ['oromo', 'oromoo', 'oromiffa', 'oromifa', 'oromigna'] }, // VERIFY_NATIVE
-  { id: 'ti', name: 'ትግርኛ', en: 'Tigrinya', sr: 'ti-ET', tts: ['ti', 'tir'], say: ['tigrinya', 'tigrigna', 'tigrinia', 'tigrina', 'ትግርኛ'] }, // VERIFY_NATIVE
-  { id: 'so', name: 'Soomaali', en: 'Somali', sr: 'so-SO', tts: ['so', 'som'], say: ['somali', 'soomaali', 'somaali', 'somalia'] }, // VERIFY_NATIVE
-  { id: 'sid', name: 'Sidaamu Afoo', en: 'Sidama', sr: 'sid-ET', tts: ['sid'], say: ['sidama', 'sidamo', 'sidaama', 'sidaamu', 'sidaamigna'] }, // VERIFY_NATIVE
+  { id: 'en', name: 'English', en: 'English', sr: 'en-US', tts: ['en'], say: ['english', 'inglish', 'ingles', 'inglizii', 'ingliffa', 'englis'], gz: ['እንግሊ', 'ኢንግሊ', 'እንግሊዝ', 'ኢንግሊሽ'] },
+  { id: 'am', name: 'አማርኛ', en: 'Amharic', sr: 'am-ET', tts: ['am'], say: ['amharic', 'amharik', 'amaric', 'amarik', 'amharigna', 'amarigna', 'amarinya', 'amarina', 'amarenya', 'amharinya', 'amarinia', 'amharinia', 'amarignya', 'amhara', 'amhari'], gz: ['አማር', 'አማሪ', 'አምሀር', 'አምሃር', 'አማራ'] },
+  { id: 'om', name: 'Afaan Oromoo', en: 'Oromo', sr: 'om-ET', tts: ['om', 'orm'], say: ['oromo', 'oromoo', 'oromiffa', 'oromifa', 'oromigna', 'oromoffa', 'oromia', 'aroma', 'oroma', 'afaan', 'afan'], gz: ['ኦሮ', 'አፋን'] }, // VERIFY_NATIVE
+  { id: 'ti', name: 'ትግርኛ', en: 'Tigrinya', sr: 'ti-ET', tts: ['ti', 'tir'], say: ['tigrinya', 'tigrigna', 'tigrinia', 'tigrina', 'tigrignya', 'tegrinya', 'tigray', 'tigrai', 'tigre', 'tigrayan'], gz: ['ትግር', 'ትግሬ', 'ትግራ', 'ትግሪ'] }, // VERIFY_NATIVE
+  { id: 'so', name: 'Soomaali', en: 'Somali', sr: 'so-SO', tts: ['so', 'som'], say: ['somali', 'soomaali', 'somaali', 'somalia', 'somalian', 'somaliya', 'somalli', 'somaligna', 'somalinya'], gz: ['ሶማ', 'ሱማ', 'ሶማሌ'] }, // VERIFY_NATIVE
+  { id: 'sid', name: 'Sidaamu Afoo', en: 'Sidama', sr: 'sid-ET', tts: ['sid'], say: ['sidama', 'sidamo', 'sidaama', 'sidaamu', 'sidamu', 'sidaamigna', 'sidamigna', 'sidaminya', 'sedama', 'afoo'], gz: ['ሲዳ', 'ሲዳማ', 'ሲዳም'] }, // VERIFY_NATIVE
 ];
+// Edit distance, for near misses of a language name ("amharik", "somaly").
+const lev = (a, b) => { const d = Array.from({ length: b.length + 1 }, (x, k) => k); for (let i = 1; i <= a.length; i++) { let p = d[0]; d[0] = i; for (let j = 1; j <= b.length; j++) { const t = d[j]; d[j] = Math.min(d[j] + 1, d[j - 1] + 1, p + (a[i - 1] === b[j - 1] ? 0 : 1)); p = t; } } return d[b.length]; };
+// Spelling differences that do not matter when matching a spoken name: vowels, doubled letters, ph/f, gn/ny.
+const fold = w => w.replace(/ph/g, 'f').replace(/gn|ny/g, 'n').replace(/[aeiouy]+/g, 'a').replace(/(.)\1+/g, '$1');
 const LANG_RE = /^(en|am|om|ti|so|sid)$/;
+// Language page: which recogniser listens after each language's invitation, and for how long (ms after the microphone
+// is on). Amharic writes Ge'ez names (አማርኛ, ትግርኛ); Oromo and Sidama names are in Latin letters, which English catches.
+const LANG_EAR = { en: ['en-US'], am: ['am-ET', 'en-US'], om: ['en-US'], ti: ['am-ET', 'en-US'], so: ['so-SO', 'en-US'], sid: ['en-US'] };
+const LANG_WINDOW = 4000;
 const LANG = id => LANGS.find(x => x.id === id) || LANGS[0];
 // Keyboards differ: full-width digits and ＠ (phone keyboards, IMEs) and Arabic-Indic digits become plain 0-9 and @ before checking.
 const ascii = v => String(v == null ? '' : v).normalize('NFKC').replace(/[٠-٩۰-۹]/g, d => String(d.charCodeAt(0) & 0xF));
@@ -72,8 +103,30 @@ const BTN = { next: 'next', back: 'back', skip: 'skip', read: 'read', mic: 'spea
 const UI = {
   // Language page. It is always in English first (langH, langAsk, langNone); each language then invites its own speakers (langSelf).
   langH: { en: 'Which language would you like to use?' },
-  langAsk: { en: 'Which language would you like to use? Say English, Amharic, Oromo, Tigrinya, Somali or Sidama, or press a button.' },
+  // The English voice names only English: each other language is then invited by its own voice, in its own words (langSelf).
+  langAsk: { en: 'Which language would you like to use? For English, say English, or press the English button.' },
   langNone: { en: 'We did not hear a language. Please press a language button.' },
+  // Second try on the language page, said in Amharic before an Amharic recogniser listens (it knows the Ge'ez names best).
+  langAgain: { en: 'Please say the name of your language again.', am: 'እባክዎ የቋንቋዎን ስም እንደገና ይናገሩ።' },
+  // Keyboard help, shown on every page (for keyboard-only, deaf and hard-of-hearing users), in the chosen language.
+  keysH: { en: 'Keyboard', am: 'የቁልፍ ሰሌዳ', om: 'Kiiboordii', ti: 'ኪቦርድ', so: 'Kiiboodhka' }, // VERIFY_NATIVE (om ti so)
+  keyTab: { en: 'go down', am: 'ወደ ታች ለመሄድ', om: 'gara gadiitti deemuuf', ti: 'ናብ ታሕቲ ንምኻድ', so: 'hoos u dhaqaaq' }, // VERIFY_NATIVE (om ti so)
+  keyShiftTab: { en: 'go up', am: 'ወደ ላይ ለመመለስ', om: 'gara oliitti deebi\'uuf', ti: 'ናብ ላዕሊ ንምምላስ', so: 'kor u dhaqaaq' }, // VERIFY_NATIVE (om ti so)
+  keyEnter: { en: 'choose', am: 'ለመምረጥ', om: 'filachuuf', ti: 'ንምምራጽ', so: 'dooro' }, // VERIFY_NATIVE (om ti so)
+  keyEsc: { en: 'stop the voice', am: 'ድምፁን ለማቆም', om: 'sagalee dhaabuuf', ti: 'ድምጺ ንምቁራጽ', so: 'jooji codka' }, // VERIFY_NATIVE (om ti so)
+  keysSay: { en: 'On a keyboard: press Tab to go down, Shift and Tab to go up, Space or Enter to choose, and Escape to stop the voice.', am: 'በቁልፍ ሰሌዳ፦ ወደ ታች ለመሄድ Tab፣ ወደ ላይ ለመመለስ Shift እና Tab፣ ለመምረጥ Space ወይም Enter፣ ድምፁን ለማቆም Escape ይጫኑ።', om: "Kiiboordii irratti: gara gadiitti deemuuf Tab, gara oliitti deebi'uuf Shift fi Tab, filachuuf Space ykn Enter, sagalee dhaabuuf Escape tuqi.", ti: 'ብኪቦርድ፦ ናብ ታሕቲ ንምኻድ Tab፣ ናብ ላዕሊ ንምምላስ Shift ምስ Tab፣ ንምምራጽ Space ወይ Enter፣ ድምጺ ንምቁራጽ Escape ጠውቑ።', so: 'Kiiboodhka: riix Tab si aad hoos ugu dhaqaaqdo, Shift iyo Tab si aad kor ugu dhaqaaqdo, Space ama Enter si aad u doorato, iyo Escape si aad u joojiso codka.' }, // VERIFY_NATIVE (om ti so)
+  // Review page: how to change one answer with the keyboard (shown and spoken).
+  reviewKeys: { en: 'To change an answer with the keyboard, press Tab until you reach its Change button, then press Enter.', am: 'መልስ በቁልፍ ሰሌዳ ለመቀየር፣ የመልሱ «ቀይር» ቁልፍ ላይ እስኪደርሱ Tab ይጫኑ፤ ከዚያ Enter ይጫኑ።', om: 'Deebii kiiboordiin jijjiiruuf, hanga qabduu Jijjiiri isaa geessutti Tab tuqi, achiis Enter tuqi.', ti: 'መልሲ ብኪቦርድ ንምቕያር፣ ክሳብ «ቀይር» ዝብል መጠወቒኡ ትበጽሑ Tab ጠውቑ፣ ድሕሪኡ Enter ጠውቑ።', so: 'Si aad jawaab ugu beddesho kiiboodhka, riix Tab ilaa aad gaarto badhankeeda Beddel, kadibna riix Enter.' }, // VERIFY_NATIVE (om ti so)
+  // Text size choice in the Display menu: the percentages themselves need no translation.
+  voiceSpeed: { en: 'Voice speed', am: 'የድምፅ ፍጥነት', om: 'Saffisa sagalee', ti: 'ቅልጣፈ ድምጺ', so: 'Xawaaraha codka' }, // VERIFY_NATIVE (all but en)
+  textSize: { en: 'Text size', am: 'የጽሑፍ መጠን', om: 'Guddina barreeffamaa', ti: 'ዓቐን ጽሑፍ', so: 'Cabbirka qoraalka' }, // VERIFY_NATIVE (om ti so)
+  // Display menu (colours and text size). The larger-text choice uses the same words as the first question's choice.
+  display: { en: 'Colours and text size', am: 'ቀለምና የጽሑፍ መጠን', om: 'Halluu fi guddina barreeffamaa', ti: 'ሕብርን ዓቐን ጽሑፍን', so: 'Midabka iyo cabbirka qoraalka' }, // VERIFY_NATIVE (om ti so)
+  // Spoken read-back of an answer, in two recorded parts around the answer itself (so it works without a device voice).
+  heardA: { en: 'We heard', am: 'የሰማነው', om: 'Kan dhageenye', ti: 'ዝሰማዕናዮ', so: 'Waxaan maqalnay' }, // VERIFY_NATIVE (om ti so)
+  heardB: { en: 'Say Next to continue, or say your answer again.', am: 'ለመቀጠል «ቀጥል» ይበሉ ወይም መልስዎን እንደገና ይናገሩ።', om: 'Itti fufuuf Itti fufi jedhi, ykn deebii kee ammas jedhi.', ti: 'ንምቕጻል «ቀጽል» በሉ፣ ወይ መልስኹም ደጊምኩም በሉ።', so: 'Dheh Xiga si aad u sii socoto, ama mar kale dheh jawaabtaada.' }, // VERIFY_NATIVE (om ti so)
+  // Review page by voice: support choices need their own Yes, separate from sending the answers.
+  askSupport: { en: 'You chose some support. Do you also want to share your support choices with the organisers, so they can prepare help? Say Yes or No.', am: 'የእገዛ ምርጫ መርጠዋል። እገዛ እንዲያዘጋጁ የእገዛ ምርጫዎችዎን ለአዘጋጆቹም ማጋራት ይፈልጋሉ? «አዎ» ወይም «አይ» ይበሉ።', om: 'Deeggarsa filatteetta. Akka gargaarsa qopheessaniif filannoo deeggarsa kee qindeessitootaaf qooduu barbaaddaa? Eeyyee ykn Lakki jedhi.', ti: 'ደገፍ መሪጽኩም ኣለኹም። ሓገዝ ምእንቲ ከዳልዉ ምርጫታት ደገፍኩም ንኣወሃሃድቲ ከተካፍሉ ትደልዩ ዶ? «እወ» ወይ «ኣይፋል» በሉ።', so: 'Waxaad dooratay taageero. Ma rabtaa inaad sidoo kale la wadaagto doorashooyinkaaga taageerada qabanqaabiyayaasha, si ay caawimaad u diyaariyaan? Dheh Haa ama Maya.' }, // VERIFY_NATIVE (om ti so)
   colours: { en: 'Colours', am: 'ቀለሞች', om: "Halluuwwan", ti: "ሕብርታት", so: "Midabada" }, // VERIFY_NATIVE (om ti so)
   th_auto: { en: 'Same as my device', am: 'እንደ መሣሪያዬ', om: "Akkuma meeshaa koo", ti: "ከም መሳርሒየ", so: "Sida qalabkayga" }, // VERIFY_NATIVE (om ti so)
   th_standard: { en: 'Standard', am: 'መደበኛ', om: "Idilee", ti: "ልሙድ", so: "Caadi" }, // VERIFY_NATIVE (om ti so)
@@ -85,7 +138,8 @@ const UI = {
   speakNow: { en: 'Speak now.', am: 'አሁን ይናገሩ።', om: "Amma dubbadhu.", ti: "ሕጂ ተዛረቡ።", so: "Hadda hadal." }, // VERIFY_NATIVE (om ti so)
   sel: { en: 'selected', am: 'ተመርጧል', om: "filatameera", ti: "ተመሪጹ", so: "waa la doortay" }, // VERIFY_NATIVE (om ti so)
   unsel: { en: 'not selected', am: 'አልተመረጠም', om: "hin filatamne", ti: "ኣይተመርጸን", so: "lama dooran" }, // VERIFY_NATIVE (om ti so)
-  langSelf: { en: 'For English, say English, or press the English button.', am: 'ለአማርኛ «Amharic» ይበሉ፤ ወይም «አማርኛ» የሚለውን ቁልፍ ይጫኑ።', om: "Afaan Oromoo filachuuf Oromo jedhi, ykn qabduu Afaan Oromoo tuqi.", ti: "ንትግርኛ «Tigrinya» በሉ፣ ወይ «ትግርኛ» ዝብል መጠወቒ ጠውቑ።", so: "Af Soomaali: dheh Somali, ama riix badhanka Soomaali." }, // VERIFY_NATIVE (om ti so)
+  // Each language names itself in its own words, so its speakers can answer with the name they know.
+  langSelf: { en: 'For English, say English, or press the English button.', am: 'ለአማርኛ «አማርኛ» ይበሉ፤ ወይም «አማርኛ» የሚለውን ቁልፍ ይጫኑ።', om: "Afaan Oromoo filachuuf 'Afaan Oromoo' jedhi, ykn qabduu Afaan Oromoo tuqi.", ti: "ንትግርኛ «ትግርኛ» በሉ፣ ወይ «ትግርኛ» ዝብል መጠወቒ ጠውቑ።", so: "Af Soomaali: dheh Soomaali, ama riix badhanka Soomaali." }, // VERIFY_NATIVE (om ti so)
   next: { en: 'Next', am: 'ቀጥል', om: "Itti fufi", ti: "ቀጽል", so: "Xiga" }, // VERIFY_NATIVE
   back: { en: 'Back', am: 'ተመለስ', om: "Duubatti", ti: "ተመለስ", so: "Dib u noqo" }, // VERIFY_NATIVE
   read: { en: 'Read aloud', am: 'አንብብልኝ', om: "Sagaleedhaan dubbisi", ti: "ኣንብበለይ", so: "Akhri" }, // VERIFY_NATIVE
@@ -152,6 +206,20 @@ const UI = {
   consentNeed: { en: 'Please tick the box to agree before sending, or press Back.', am: 'ከመላክዎ በፊት ለመስማማት ሳጥኑን ምልክት ያድርጉ፤ ወይም ተመለስ ይጫኑ።', om: "Maaloo osoo hin ergin dura walii galuuf saanduqa mallattoo godhi, ykn Duubatti tuqi.", ti: "በጃኹም ቅድሚ ምልኣኽ ንምስምማዕ ነቲ ሳንዱቕ ምልክት ግበሩ፣ ወይ «ተመለስ» ጠውቑ።", so: "Fadlan calaamadee sanduuqa si aad u oggolaato ka hor intaadan dirin, ama riix Dib u noqo." }, // VERIFY_NATIVE
   org: { en: 'the organisers of this website', am: 'የዚህ ድረ-ገጽ አዘጋጆች', om: "qindeessitoota marsariitii kanaa", ti: "ኣወሃሃድቲ እዚ መርበብ", so: "qabanqaabiyayaasha boggan" }, // VERIFY_NATIVE
   receipt: { en: 'Your receipt code is {r}. Keep it if you may want your answers deleted later.', am: 'የደረሰኝ ኮድዎ {r} ነው። መልሶችዎ በኋላ እንዲሰረዙ ሊፈልጉ ከቻሉ ይያዙት።', om: "Koodiin ragaa kee {r} dha. Booda deebiin kee akka haqamu barbaaduu yoo dandeesse qabadhu.", ti: "ኮድ ቅብሊትኩም {r} እዩ። ደሓር መልስታትኩም ክድምሰሱ ክትደልዩ እንተ ኽኢልኩም ሓዝዎ።", so: "Koodhkaaga rasiidka waa {r}. Hayso haddii aad hadhow rabto in jawaabahaaga la tirtiro." }, // VERIFY_NATIVE
+  // The learner's own record (thank-you page and the "My answers" page): download it, or delete it with the receipt code.
+  // Added 19 Nov from the organisers' feedback. All languages, Amharic too, are drafts: VERIFY_NATIVE.
+  myDownload: { en: 'Download my answers', am: 'መልሶቼን አውርድ', om: 'Deebii koo buusi', ti: 'መልስታተይ ኣውርድ', so: 'Soo dejiso jawaabahayga' },
+  myDelete: { en: 'Delete my answers', am: 'መልሶቼን ሰርዝ', om: 'Deebii koo haqi', ti: 'መልስታተይ ደምስስ', so: 'Tirtir jawaabahayga' },
+  mySure: { en: 'Delete all your answers? This cannot be undone. Your support choices are deleted too.', am: 'ሁሉንም መልሶችዎን መሰረዝ ይፈልጋሉ? ይህ ሊመለስ አይችልም። የእገዛ ምርጫዎችዎም ይሰረዛሉ።', om: "Deebii kee hunda haquu barbaaddaa? Kun deebi'uu hin danda'u. Filannoon deeggarsa kees ni haqama.", ti: 'ኩሉ መልስታትኩም ክትድምስሱ ትደልዩ ዶ? እዚ ክምለስ ኣይክእልን። ምርጫታት ደገፍኩም እውን ይድምሰሱ።', so: 'Ma rabtaa inaad tirtirto dhammaan jawaabahaaga? Tan dib looma celin karo. Doorashooyinkaaga taageerada sidoo kale waa la tirtirayaa.' },
+  myYes: { en: 'Yes, delete them', am: 'አዎ፣ ሰርዛቸው', om: 'Eeyyee, haqi', ti: 'እወ፣ ደምስሶም', so: 'Haa, tirtir' },
+  myNo: { en: 'No, keep them', am: 'አይ፣ ይቆዩ', om: 'Lakki, haa turan', ti: 'ኣይፋል፣ ይጽንሑ', so: 'Maya, ha joogaan' },
+  myDeleted: { en: 'Your answers have been deleted.', am: 'መልሶችዎ ተሰርዘዋል።', om: 'Deebiin kee haqameera.', ti: 'መልስታትኩም ተደምሲሶም።', so: 'Jawaabahaaga waa la tirtiray.' },
+  myFail: { en: 'We could not do that. Please try again.', am: 'ይህን ማድረግ አልቻልንም። እባክዎ እንደገና ይሞክሩ።', om: "Kana gochuu hin dandeenye. Maaloo irra deebi'ii yaali.", ti: 'ነዚ ክንገብሮ ኣይከኣልናን። በጃኹም ደጊምኩም ፈትኑ።', so: 'Ma aanaan samayn karin. Fadlan mar kale isku day.' },
+  myH: { en: 'Your answers', am: 'መልሶችዎ', om: 'Deebii kee', ti: 'መልስታትኩም', so: 'Jawaabahaaga' },
+  myCode: { en: 'Your receipt code', am: 'የደረሰኝ ኮድዎ', om: 'Koodii ragaa kee', ti: 'ኮድ ቅብሊትኩም', so: 'Koodhka rasiidkaaga' },
+  myHint: { en: 'It is on the thank-you page you saw after sending: 24 letters and numbers.', am: 'ከላኩ በኋላ ባዩት የምስጋና ገጽ ላይ ያለው፣ 24 ፊደላትና ቁጥሮች ያሉት ኮድ ነው።', om: 'Fuula galataa erga ergitee booda argite irratti argama: qubeewwanii fi lakkoofsota 24.', ti: 'ድሕሪ ምልኣኽ ኣብ ዝረኣኹምዎ ገጽ ምስጋና ዘሎ፣ 24 ፊደላትን ቁጽርታትን ዘለዎ ኮድ እዩ።', so: 'Waa koodhka 24 xaraf iyo lambar ah ee ku qoran bogga mahadnaqa ee aad aragtay kadib markaad dirtay.' },
+  myShow: { en: 'Show my answers', am: 'መልሶቼን አሳይ', om: 'Deebii koo agarsiisi', ti: 'መልስታተይ ኣርእይ', so: 'I tus jawaabahayga' },
+  myNotFound: { en: 'No answers were found with this code. Check the code and try again.', am: 'በዚህ ኮድ ምንም መልስ አልተገኘም። ኮዱን አረጋግጠው እንደገና ይሞክሩ።', om: 'Koodii kanaan deebiin hin argamne. Koodii mirkaneessii irra deebi\'ii yaali.', ti: 'ብዚ ኮድ ዝተረኽበ መልሲ የለን። ኮዱ ኣረጋግጹ ደጊምኩም ፈትኑ።', so: 'Jawaab looma helin koodhkan. Hubi koodhka oo mar kale isku day.' },
   // Drafts and offline: answers are kept on this device and sent when the connection comes back.
   draftH: { en: 'Welcome back', am: 'እንኳን ደህና ተመለሱ', om: "Baga nagaan deebitan", ti: "እንቋዕ ብደሓን ተመለስኩም", so: "Ku soo dhawoow mar kale" }, // VERIFY_NATIVE
   draftP: { en: 'Your answers from last time are kept on this device.', am: 'ካለፈው ጊዜ መልሶችዎ በዚህ መሣሪያ ላይ ተቀምጠዋል።', om: "Deebiin kee yeroo darbe meeshaa kana irratti kuufameera.", ti: "መልስታትኩም ካብ ዝሓለፈ ግዜ ኣብዚ መሳርሒ ተዓቂቦም ኣለዉ።", so: "Jawaabahaagii hore waxay ku kaydsan yihiin qalabkan." }, // VERIFY_NATIVE
@@ -190,9 +258,11 @@ const FLOWS = {
       q: { en: 'What is your full name?', am: 'ሙሉ ስምዎ ማነው?', om: "Maqaan kee guutuun eenyu?", ti: "ምሉእ ስምኩም መን እዩ?", so: "Waa maxay magacaaga oo buuxa?" }, // VERIFY_NATIVE
       hint: { en: 'The name you use every day is fine.', am: 'በየቀኑ የሚጠቀሙበት ስም በቂ ነው።', om: "Maqaan guyyaa guyyaan itti fayyadamtu gahaadha.", ti: "እቲ መዓልታዊ እትጥቀሙሉ ስም ይኣክል።", so: "Magaca aad maalin walba isticmaasho waa ku filan yahay." }, // VERIFY_NATIVE
       type: 'text' },
-    { id: 'contact', novoice: true,
+    // Spoken numbers ("zero nine one one ...", "ዜሮ ዘጠኝ ...") and emails ("abebe at gmail dot com") are turned into text (spokenContact)
+    // and read back digit by digit from recorded clips, so it can be checked by ear.
+    { id: 'contact', spoken: 'contact',
       q: { en: 'What phone number or email can we use?', am: 'ልናገኝዎ የምንችልበት ስልክ ቁጥር ወይም ኢሜይል ምንድን ነው?', om: "Lakkoofsa bilbilaa ykn imeelii kamiin si quunnamuu dandeenya?", ti: "ብኣየናይ ቁጽሪ ስልኪ ወይ ኢመይል ክንረኽበኩም ንኽእል?", so: "Lambarkee taleefan ama iimayl ayaan isticmaali karnaa?" }, // VERIFY_NATIVE
-      hint: { en: 'Only used to contact you about this programme. A phone number has 10 digits and starts with 0.', am: 'ስለዚህ ፕሮግራም ለማግኘት ብቻ ነው የሚያገለግለው። ስልክ ቁጥር በዜሮ የሚጀምር ባለ አሥር አሃዝ ነው።', om: "Waa'ee sagantaa kanaa qofa si quunnamuuf. Lakkoofsi bilbilaa dijiitii 10 qaba, 0n jalqaba.", ti: "ብዛዕባ እዚ መደብ ንምርካብኩም ጥራይ። ቁጽሪ ስልኪ 10 ኣሃዝ ኣለዎ፣ ብ0 ይጅምር።", so: "Kaliya si laguula soo xiriiro barnaamijkan. Lambar taleefan wuxuu leeyahay 10 god, wuxuuna ku bilaabmaa 0." }, // VERIFY_NATIVE
+      hint: { en: 'Only used to contact you about this programme. A phone number has 10 digits and starts with 0. You can say it or type it.', am: 'ስለዚህ ፕሮግራም ለማግኘት ብቻ ነው የሚያገለግለው። ስልክ ቁጥር በዜሮ የሚጀምር ባለ አሥር አሃዝ ነው። መናገር ወይም መጻፍ ይችላሉ።', om: "Waa'ee sagantaa kanaa qofa si quunnamuuf. Lakkoofsi bilbilaa dijiitii 10 qaba, 0n jalqaba. Dubbachuu ykn barreessuu dandeessa.", ti: "ብዛዕባ እዚ መደብ ንምርካብኩም ጥራይ። ቁጽሪ ስልኪ 10 ኣሃዝ ኣለዎ፣ ብ0 ይጅምር። ክትዛረቡዎ ወይ ክትጽሕፉዎ ትኽእሉ ኢኹም።", so: "Kaliya si laguula soo xiriiro barnaamijkan. Lambar taleefan wuxuu leeyahay 10 god, wuxuuna ku bilaabmaa 0. Waad dhihi kartaa ama qori kartaa." }, // VERIFY_NATIVE
       type: 'text',
       check: v => (v = ascii(v)).includes('@') || /^(0\d{9}|251\d{9})$/.test(v.replace(/[^0-9]/g, '')), bad: 'bad' },
     { id: 'idRoute',
@@ -210,8 +280,14 @@ const FLOWS = {
         o('large', 'Large text', 'ትልቅ ጽሑፍ', "Barreeffama guddaa", "ዓቢ ጽሑፍ", "Qoraal weyn"), // VERIFY_NATIVE
         o('voice', 'I prefer to speak my answers', 'መልሶቼን በድምፅ መናገር እመርጣለሁ', "Deebii koo dubbachuu nan filadha", "መልስታተይ ብድምጺ ክዛረብ እመርጽ", "Waxaan doorbidaa inaan ku hadlo jawaabahayga"), // VERIFY_NATIVE
         o('sign', 'Ethiopian Sign Language interpreter', 'የኢትዮጵያ ምልክት ቋንቋ አስተርጓሚ', "Hiikaa Afaan Mallattoo Itoophiyaa", "ተርጓሚ ቋንቋ ምልክት ኢትዮጵያ", "Turjubaan Luqadda Calaamadaha Itoobiya"), // VERIFY_NATIVE
+        // Added 15 Nov from the Technical Guide's support list. The Amharic of these four is a draft too: VERIFY_NATIVE.
+        o('captions', 'Captions on videos', 'በቪዲዮዎች ላይ የጽሑፍ ትርጉም', "Barreeffama viidiyoo irratti", "ኣብ ቪድዮታት ጽሑፍ", "Qoraal ku qoran muuqaallada"), // VERIFY_NATIVE
+        o('interp', 'An interpreter in my language', 'በቋንቋዬ አስተርጓሚ', "Hiikaa afaan kootiin", "ብቋንቋየ ተርጓሚ", "Turjubaan ku hadla luqaddayda"), // VERIFY_NATIVE
+        o('time', 'More time for tests and tasks', 'ለፈተናና ለተግባራት ተጨማሪ ጊዜ', "Qormaataa fi hojiif yeroo dabalataa", "ንፈተናታትን ዕማማትን ተወሳኺ ግዜ", "Waqti dheeraad ah oo imtixaannada iyo hawlaha"), // VERIFY_NATIVE
         o('simple', 'Simple words and pictures', 'ቀላል ቃላትና ሥዕሎች', "Jechoota salphaa fi fakkiiwwan", "ቀለልቲ ቃላትን ስእልታትን", "Erayo fudud iyo sawirro"), // VERIFY_NATIVE
-        o('human', 'Please call me to help', 'እባክዎ ደውለው ያግዙኝ', "Maaloo na gargaaruuf natti bilbilaa", "በጃኹም ደዊልኩም ሓግዙኒ", "Fadlan ii soo wac si aad ii caawiso")] }, // VERIFY_NATIVE
+        o('human', 'Please call me to help', 'እባክዎ ደውለው ያግዙኝ', "Maaloo na gargaaruuf natti bilbilaa", "በጃኹም ደዊልኩም ሓግዙኒ", "Fadlan ii soo wac si aad ii caawiso"), // VERIFY_NATIVE
+        // As easy to choose as any other: it clears the other choices, and nothing about support is sent.
+        o('prefer', 'Prefer not to say', 'መናገር አልፈልግም', "Dubbachuu hin barbaadu", "ክገልጽ ኣይደልን", "Ma doonayo inaan sheego")], exclusive: 'prefer' }, // VERIFY_NATIVE
   ] },
   job: { path: '/applications', steps: [
     { id: 'needs', local: true,
@@ -258,7 +334,32 @@ const SID = {
     speakNow: 'Xa hasaawi.',
     sel: 'doodamino',
     unsel: 'doodaminokki',
-    langSelf: 'Sidaamu Afoo doorate, Sidama yi, woy Sidaamu Afoo yitanno ilkaawa xiiwi.',
+    langSelf: 'Sidaamu Afoo doorate, Sidaamu Afoo yi, woy Sidaamu Afoo yitanno ilkaawa xiiwi.',
+    keysH: 'Keyboorde',
+    keyTab: 'woroonni higate',
+    keyShiftTab: 'aliidi higate',
+    keyEnter: 'doorate',
+    keyEsc: 'qaala uurrisate',
+    keysSay: 'Keyboorde aana: woroonni higate Tab, aliidi higate Shift nna Tab, doorate Space woy Enter, qaala uurrisate Escape xiiwi.',
+    display: 'Kuulla nna borrote lowina',
+    heardA: 'Macciishshoonnihu',
+    heardB: 'Albisate Albisi yi, woy dawarokki wole yi.',
+    voiceSpeed: 'Qaalu saffisa', // VERIFY_NATIVE
+    textSize: 'Borrote lowina',
+    myDownload: 'Dawaro keeshsha ajiisi',
+    myDelete: 'Dawaro keeshsha huqisi',
+    mySure: 'Dawaro keeshsha baala huqisate hasatto? Kuni higge didandiitanno. Kaa\'lo doorshoyyikkino huqqisamanno.',
+    myYes: 'Ee, huqisi',
+    myNo: 'Dee\'ni, agari',
+    myDeleted: 'Dawaro keeshshi huqqisamino.',
+    myFail: 'Konne assa didandiinoommo. Ikkitinni wole paaxi.',
+    myH: 'Dawaro keeshshi',
+    myCode: 'Qiinoo koodekki',
+    myHint: 'Soyitto gedensaanni la\'itto galatu qoolu aana no: 24 fidalla nna kiiro.',
+    myShow: 'Dawaro keeshsha leellishi',
+    myNotFound: 'Konne koodenni dawaro diafamino. Koode buuxe wole paaxi.',
+    reviewKeys: 'Dawaro keyboordetenni soorrate, Soorri ilkaawa iillitto geeshsha Tab xiiwi, aanchite Enter xiiwi.',
+    askSupport: 'Kaa\'lo doorte. Kaa\'lo qixxeessanno gede kaa\'lo doorshoyyikki qixxeessitootira qoolate hasatto? Ee woy Dee\'ni yi.',
     next: 'Albisi',
     back: 'Higi',
     read: 'Qaalinke nabbawi',
@@ -355,7 +456,7 @@ const SID = {
   hint: {
     prefs: 'Dooro. Darba dandaatto.',
     fullName: 'Barru barrunni horoonsi\'ratto su\'mu ikkanno.',
-    contact: 'Tenne pirogiraame daafira dandoonketa calla. Silki kiiro tonne kiiro afi\'rinohanna zeerotenni hanafanno.',
+    contact: 'Tenne pirogiraame daafira dandoonketa calla. Silki kiiro tonne kiiro afi\'rinohanna zeerotenni hanafanno. Hasaawa woy borreessa dandaatto.',
     support: 'Tenne darba dandaatto. Ragi dihasiissanno. Qixxeessitooti calla la\'anno, kaa\'lo qixxeessate calla.',
     needs: 'Ma\'nunni. Konne uduunnichokki aana keeshshanno, coyi\'nanno loosuwa leellisate calla.',
     why: 'Shiima qaalla ikkanno. Hasaawa dandaatto.',
@@ -364,7 +465,7 @@ const SID = {
   opt: {
     prefs: { large: 'Lowo borro', simple: 'Doorshu gaxa misilla' },
     idRoute: { kebele: 'Qebeele eeshsha woy paaspoorte', refugee: 'Baqatu woy higgaanchu eeshsha', other: 'Wole bortaje', refer: 'Eeshsha diafi\'rino. Jaala dirijjiteenni hoolisi\'e' },
-    support: { screenreader: 'Leellisaancho nabbawaancho horoonsi\'reemmo', large: 'Lowo borro', voice: 'Dawaro qaalinke hasaawa doorreemmo', sign: 'Itiyoophiyu Malaatu Afoo turjimaancho', simple: 'Shota qaalla nna misilla', human: 'Ikkitinni kaa\'lo daafira silki xa\'mi' },
+    support: { screenreader: 'Leellisaancho nabbawaancho horoonsi\'reemmo', large: 'Lowo borro', voice: 'Dawaro qaalinke hasaawa doorreemmo', sign: 'Itiyoophiyu Malaatu Afoo turjimaancho', captions: 'Viidiyoo aana borro', interp: 'Afoo\'yanni turjimaancho', time: 'Fayyimmaranna loosora roore yanna', simple: 'Shota qaalla nna misilla', human: 'Ikkitinni kaa\'lo daafira silki xa\'mi', prefer: 'Kulla dihasi\'reemmo' },
   },
   work: { stepfree: 'Gadu dinokki loosu bayicho', reader: 'Leellisaancho nabbawaanchora coyi\'nanno uduunnicho', interp: 'Malaatu afoo turjimaancho', hours: 'Soorramanno loosu saate', remote: 'Mineenni loosa' },
 };
@@ -405,6 +506,7 @@ section[data-theme=by]{${TOKENS.by}}
 :lang(am),:lang(ti){line-height:1.8}
 *{box-sizing:border-box}
 svg{flex:none}
+h2,legend,p,label,button,dd,dt{overflow-wrap:break-word;hyphens:auto}
 h2,legend{font-size:1.375em;line-height:1.3;font-weight:700;letter-spacing:-.005em;margin:0;padding:0;color:var(--ink)}
 p{margin:0}
 fieldset{border:0;padding:0;margin:0;min-width:0}
@@ -415,11 +517,12 @@ fieldset{border:0;padding:0;margin:0;min-width:0}
 .lang{display:flex;flex-wrap:wrap;gap:var(--s1);flex:1 1 18rem}
 .lang button{flex:0 1 auto;min-height:40px;padding:.25rem .7rem;font-size:.875em;border-color:var(--line)}
 .lang button[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--ink);font-weight:700}
-details.disp{position:relative;font-size:.875em;margin-left:auto}
+details.disp{position:relative;font-size:.875em;margin-left:auto;text-align:right}
+.disp .panel{text-align:left;margin-left:auto}
 details.disp summary{display:inline-flex;align-items:center;gap:var(--s2);min-height:40px;padding:.25rem .7rem;border:var(--bw) solid var(--line);border-radius:var(--r1);cursor:pointer;list-style:none;color:var(--ink);background:var(--surface)}
 details.disp summary::-webkit-details-marker{display:none}
 details.disp[open] summary{border-color:var(--accent)}
-.disp .panel{position:absolute;right:0;z-index:2;margin-top:var(--s1);width:min(20rem,80vw);padding:var(--s3);background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--r2);box-shadow:var(--shadow)}
+.disp .panel{margin-top:var(--s1);width:min(20rem,80vw);padding:var(--s3);background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--r2);box-shadow:var(--shadow)}
 .disp label{display:flex;gap:var(--s2);align-items:center;min-height:44px;padding:0 var(--s2);border-radius:var(--r1);cursor:pointer}
 .disp label:has(input:checked){background:var(--accent-soft);font-weight:700}
 .sw{display:inline-flex;gap:2px}.sw i{width:10px;height:18px;border-radius:2px;border:1px solid rgb(0 0 0 / .25)}
@@ -440,6 +543,16 @@ button:disabled,button[aria-disabled=true]{opacity:.55;cursor:not-allowed;transf
 .row .split{display:flex;gap:var(--s3)}.row .split button{flex:1}
 .tools{display:flex;gap:var(--s2);margin:0 0 var(--s4)}
 .tools button{font-size:.9375em;min-height:44px}
+/* keyboard help: always on screen, in the chosen language (keyboard-only, deaf and hard-of-hearing users) */
+.keys{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s4);margin:0 0 var(--s4);padding:var(--s2) var(--s3);list-style:none;font-size:.875em;color:var(--ink-2);background:var(--surface-2);border-radius:var(--r1)}
+.keys li{display:inline-flex;flex-wrap:wrap;gap:var(--s1);align-items:center}
+.keys .kh{font-weight:700;color:var(--ink)}
+kbd{font:inherit;font-size:.9em;font-weight:700;color:var(--ink);padding:0 .4em;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:3px;background:var(--surface);white-space:nowrap}
+.disp .ts{margin-top:var(--s2);padding-top:var(--s2);border-top:1px solid var(--line)}
+.disp .ts legend{font-weight:700;padding:0 var(--s2);margin-bottom:var(--s1)}
+.tsr{display:flex;flex-wrap:wrap;gap:var(--s1)}
+.tsr label{flex:1 1 4.5em;flex-direction:column;justify-content:center;gap:2px;padding:var(--s2) var(--s1);border:var(--bw) solid var(--line);text-align:center}
+.tsr .aa{font-weight:700;line-height:1;font-family:var(--font)}
 
 /* captions: everything spoken is also shown (for deaf and hard-of-hearing people) */
 .cap{display:none;gap:var(--s3);align-items:flex-start;margin:0 0 var(--s4);padding:var(--s3) var(--s4);border-radius:var(--r2);border:1px solid var(--line);background:var(--surface-2);color:var(--ink)}
@@ -504,6 +617,7 @@ dl.review{margin:var(--s4) 0 0;border-top:1px solid var(--line)}
 .after{margin-top:var(--s4)}
 .done{display:flex;flex-direction:column;gap:var(--s3);padding:var(--s4) 0}
 .done svg{color:var(--accent)}
+.sure{margin-top:var(--s4);padding:var(--s3);border-left:6px solid var(--error);border-radius:var(--r1);background:var(--error-soft)}
 .done .receipt{font-family:ui-monospace,Consolas,monospace;font-weight:700;letter-spacing:.04em}
 .when{color:var(--ink-2);font-size:.9375em}
 .note{padding:var(--s3);border-left:4px solid var(--accent);background:var(--accent-soft);color:var(--ink)}
@@ -511,16 +625,16 @@ dl.review{margin:var(--s4) 0 0;border-top:1px solid var(--line)}
 fieldset.consent{margin-top:var(--s5);padding:var(--s4);border:var(--bw) solid var(--line-strong);border-radius:var(--r2)}
 fieldset.consent legend{font-size:1.0625em;padding:0 var(--s2);margin-bottom:var(--s2)}
 .consent .opt{margin-top:var(--s2)}
-.consent .opt span{flex:1}
+.consent .opt span:not(.tick){flex:1;min-width:0}
 .consent p{font-size:.9375em;color:var(--ink-2);margin-top:var(--s3)}
 /* Ethiopian date: three labelled selects */
-.ecd{display:grid;grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr));gap:var(--s3)}
+.ecd{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(8.5rem,100%),1fr));gap:var(--s3)}
 .ecd label{display:flex;flex-direction:column;gap:var(--s1);font-size:.9375em;font-weight:700;color:var(--ink-2)}
 select{font:inherit;font-weight:400;min-height:52px;padding:.5rem .6rem;border:var(--bw) solid var(--line-strong);border-radius:var(--r1);background:var(--surface);color:var(--ink)}
 select:hover{border-color:var(--ink)}
 select[aria-invalid=true]{border-color:var(--error);border-width:3px}
 
-@media (max-width:30rem){section{position:relative;padding:var(--s4);border-radius:0;border-left:0;border-right:0}details.disp{position:static}.disp .panel{left:var(--s4);right:var(--s4);width:auto}}
+@media (max-width:30rem){section{position:relative;padding:var(--s4);border-radius:0;border-left:0;border-right:0}details.disp{position:static}.disp .panel{width:auto}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media (forced-colors:active){button,.opt,input[type=text],select,.cap,.err,details.disp summary{border:2px solid CanvasText}.opt:has(input:checked){outline:3px solid Highlight}.track i{background:Highlight}}
 `;
@@ -552,6 +666,8 @@ const P = {
   remote: "<path d='M3 11l9-7 9 7M5 9.5V20h14V9.5M10 20v-6h4v6'/>",
 };
 P.reader = P.screenreader; P.interp = P.sign;
+P.captions = "<rect x='3' y='5' width='18' height='14' rx='2'/><path d='M10 10.5a2 2 0 1 0 0 3M17 10.5a2 2 0 1 0 0 3'/>";
+P.time = "<circle cx='12' cy='12' r='9'/><path d='M12 7v5l3 2'/>";
 const I = (k, s) => svg(P[k], s);
 const LOGO = `<svg class='logo' width='44' height='44' viewBox='0 0 56 56' aria-hidden='true' focusable='false'><circle cx='28' cy='12' r='8' fill='currentColor'/><path d='M6 22c14 0 20 8 22 26C26 30 20 24 6 22zM50 22c-14 0-20 8-22 26 2-18 8-24 22-26z' fill='currentColor' opacity='.75'/></svg>`;
 const CHECK = svg("<circle cx='12' cy='12' r='10'/><path d='M7 12.5l3.2 3.2L17 9'/>", 56);
@@ -565,14 +681,58 @@ const NUM = {
   'ሓደ': 1, 'ክልተ': 2, 'ሰለስተ': 3, 'ኣርባዕተ': 4, 'ሓሙሽተ': 5, 'ሽዱሽተ': 6, 'ሸውዓተ': 7, 'ሸሞንተ': 8, // ti, VERIFY_NATIVE
   kow: 1, hal: 1, laba: 2, saddex: 3, afar: 4, lix: 6, toddoba: 7, siddeed: 8, // so (shan = 5 is shared with om), VERIFY_NATIVE
   mitto: 1, lame: 2, sase: 3, shoole: 4, onte: 5, lee: 6, lamala: 7, sette: 8, // sid, VERIFY_NATIVE
+  nine: 9, ten: 10, 'ዘጠኝ': 9, 'አሥር': 10, 'አስር': 10, '፱': 9, '፲': 10, sagal: 9, kudhan: 10, 'ትሽዓተ': 9, 'ዓሰርተ': 10, sagaal: 9, toban: 10, honse: 9, tonne: 10, // VERIFY_NATIVE (om ti so sid)
 };
 const NUM1 = { won: 1, to: 2, too: 2, for: 4 };
+// Ordinals ("the first one"): English, and Amharic stems (አንደኛ, ሁለተኛ ...; the ending is cut off by numOf).
+const ORD = { first: 1, second: 2, third: 3, fourth: 4, fifth: 5, sixth: 6, seventh: 7, eighth: 8,
+  'አንደ': 1, 'ሁለተ': 2, 'ሦስተ': 3, 'ሶስተ': 3, 'አራተ': 4, 'አምስተ': 5, 'ስድስተ': 6, 'ሰባተ': 7, 'ስምንተ': 8 };
+// Amharic joins small words to a number: አንድና (one-and), ሁለቱም (both), ሁለትን, አንደኛው. Cut those endings off.
+const NUM_END = /(ኛውን|ኛውም|ኛውና|ኛው|ኛና|ኛን|ኛ|ውን|ንም|ና|ን|ም|ው)$/;
+// A number word, digit or ordinal -> its value (0 if it is none). one = the only word said (then "to" = 2 is allowed).
+const numOf = (x, one) => {
+  if (/^\d+$/.test(x)) return +x;
+  if (NUM[x] || ORD[x] || (one && NUM1[x])) return NUM[x] || ORD[x] || NUM1[x];
+  for (let y = x, k = 0; k < 2 && NUM_END.test(y); k++) { y = y.replace(NUM_END, ''); if (NUM[y] || ORD[y]) return NUM[y] || ORD[y]; }
+  return 0;
+};
+// Digits said aloud, for the phone number: 0-9 in every language (om, ti, so, sid: VERIFY_NATIVE).
+const DIGITS = [
+  ['zero', 'oh', 'ዜሮ', 'ዜሮው', 'zeeroo', 'zeero', 'eber'],
+  ['one', 'won', 'አንድ', 'tokko', 'ሓደ', 'kow', 'hal', 'mitto'],
+  ['two', 'to', 'too', 'ሁለት', 'lama', 'ክልተ', 'laba', 'lame'],
+  ['three', 'tree', 'ሦስት', 'ሶስት', 'sadii', 'ሰለስተ', 'saddex', 'sase'],
+  ['four', 'for', 'አራት', 'afur', 'ኣርባዕተ', 'afar', 'shoole'],
+  ['five', 'አምስት', 'shan', 'ሓሙሽተ', 'onte'],
+  ['six', 'ስድስት', 'jaha', 'ሽዱሽተ', 'lix', 'lee'],
+  ['seven', 'ሰባት', 'torba', 'ሸውዓተ', 'toddoba', 'lamala'],
+  ['eight', 'ate', 'ስምንት', 'saddeet', 'ሸሞንተ', 'siddeed', 'sette'],
+  ['nine', 'ዘጠኝ', 'sagal', 'sagla', 'ትሽዓተ', 'sagaal', 'honse'],
+].reduce((m, ws, d) => { ws.forEach(w => { m[w] = String(d); }); return m; }, {});
+// What someone said for the phone-or-email question, as text: "zero nine one one 22 33 44" -> "0911223344";
+// "abebe at gmail dot com" -> "abebe@gmail.com". Digits in any script count (ascii()). "double 4" = "44".
+const spokenContact = raw => {
+  const w = ascii(raw).normalize('NFC').toLowerCase().replace(/[,;!?፣።]/g, ' ').split(/\s+/).filter(Boolean);
+  const email = w.some(x => x.includes('@') || ['at', 'አት', 'ኣት'].includes(x)) && w.some(x => /[a-z]/.test(x) && !DIGITS[x]);
+  if (email) {
+    return w.map(x => (['at', 'አት', 'ኣት'].includes(x) ? '@' : ['dot', 'ነጥብ', 'point', 'tuqaa'].includes(x) ? '.' : ['underscore'].includes(x) ? '_' : ['dash', 'hyphen'].includes(x) ? '-' : x)).join('').replace(/\.$/, '');
+  }
+  let out = '', rep = 1;
+  for (const x of w) {
+    if (x === 'double') { rep = 2; continue; }
+    if (x === 'triple') { rep = 3; continue; }
+    if (x === 'plus' || x === '+') continue;
+    const d = DIGITS[x] || x.replace(/[^0-9]/g, '');
+    if (d) { out += d.length === 1 ? d.repeat(rep) : d; rep = 1; }
+  }
+  return out || String(raw).trim();
+};
 const STOP = ['use', 'the', 'and', 'for', 'you', 'can', 'not', 'don', 'have', 'please', 'through', 'any',
   'ykn', 'kan', 'fi', 'maaloo', // om, VERIFY_NATIVE
   'ama', 'iyo', 'aan', 'fadlan']; // so, VERIFY_NATIVE
 // Voice commands. Words are compared one by one after norm(), which turns apostrophes into spaces, so no entry contains one.
 const CMD = {
-  next: ['next', 'continue', 'done', 'finished', 'ቀጥል', 'ቀጥሉ', 'ጨርሻለሁ',
+  next: ['next', 'continue', 'done', 'finished', 'ቀጥል', 'ቀጥሉ', 'ቀጥይ', 'ቀጣይ', 'ጨርሻለሁ',
     'fufi', 'ቀጽል', 'ቀጽሉ', 'xiga'], // om ti so, VERIFY_NATIVE
   back: ['back', 'previous', 'ተመለስ', 'ኋላ',
     'duubatti', 'ተመለሱ', 'noqo'], // om ti so, VERIFY_NATIVE
@@ -591,6 +751,11 @@ const CMD = {
   stop: ['stop', 'ቁም', 'አቁም',
     'dhaabi', 'ኣቋርጽ', 'ደው', 'jooji'], // om ti so, VERIFY_NATIVE
 };
+// Speech recognisers spell a spoken Ge'ez word in several ways (ቀጥል, ቀጠለ, ቀጥሎ, ቅጥል): the vowels differ, the consonants
+// do not. So a one-word Ge'ez command also counts when its consonants match one in CMD.
+const skel = w => romanize(w).toLowerCase().replace(/[aeiou]/g, '');
+const CMD_SKEL = Object.fromEntries(Object.entries(CMD).map(([k, ws]) => [k, new Set(ws.filter(x => GEEZ.test(x)).map(skel).filter(x => x.length >= 2))]));
+const isCmd = (c, w) => w.some(x => CMD[c].includes(x) || (GEEZ.test(x) && CMD_SKEL[c].has(skel(x))));
 // Yes / No for the first question and the review page.
 const YES = ['አዎ', 'አዎን', 'ይሁን', 'yes', 'yeah', 'yep', 'ok', 'okay', 'sure',
   'eeyyee', 'eeyye', 'eeyee', 'እወ', 'እዉ', 'haa', 'haye', 'haah', 'ee']; // om ti so sid, VERIFY_NATIVE
@@ -603,7 +768,38 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (x) { /* storage blocked or full: the form still works */ } },
   del(k) { try { localStorage.removeItem(k); } catch (x) { /* ignore */ } },
 };
+// Recorded clips: one Audio element per file, kept for reuse, and loaded one step ahead, so a list of short clips
+// ("2" + "Refugee or returnee ID" + "selected") plays without gaps on a slow connection. Missing files are remembered,
+// so the device voice takes over at once the next time instead of waiting for the network again.
+const CLIP_CACHE = new Map(), CLIP_MISSING = new Set();
+const clipAudio = url => {
+  let a = CLIP_CACHE.get(url);
+  if (a) { try { a.pause(); a.currentTime = 0; } catch (x) { /* not loaded yet */ } return a; }
+  a = new Audio(); a.preload = 'auto'; a.addEventListener('error', () => CLIP_MISSING.add(url)); a.src = url;
+  CLIP_CACHE.set(url, a);
+  if (CLIP_CACHE.size > 80) CLIP_CACHE.delete(CLIP_CACHE.keys().next().value);
+  return a;
+};
+// Phone numbers are said in groups: 0902 57 65 70 (10 digits), 251 902 57 65 70 (12 digits), else threes.
+const phoneGroups = ds => (ds.length === 10 ? [4, 2, 2, 2] : ds.length === 12 ? [3, 3, 2, 2, 2] : []).reduce((g, n) => { g.parts.push(g.rest.slice(0, n)); g.rest = g.rest.slice(n); return g; }, { parts: [], rest: ds }).parts.concat(ds.length === 10 || ds.length === 12 ? [] : ds.match(/.{1,3}/g) || []).filter(Boolean);
+// Decoded digit clips (Web Audio), cut to the voice itself so digits can be joined with even, short gaps.
+const DIGIT_BUF = new Map();
+const digitBuf = (ctx, url) => {
+  if (!DIGIT_BUF.has(url)) DIGIT_BUF.set(url, fetch(url).then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); }).then(b => ctx.decodeAudioData(b)).then(buf => {
+    const ch = buf.getChannelData(0); let peak = 0; for (let i = 0; i < ch.length; i++) peak = Math.max(peak, Math.abs(ch[i]));
+    const thr = peak * 0.03; let a = 0, z = ch.length - 1; while (a < z && Math.abs(ch[a]) < thr) a++; while (z > a && Math.abs(ch[z]) < thr) z--;
+    const pad = Math.round(buf.sampleRate * 0.02); a = Math.max(0, a - pad); z = Math.min(ch.length - 1, z + pad);
+    return { rate: buf.sampleRate, data: ch.slice(a, z + 1) };
+  }).catch(e => { DIGIT_BUF.delete(url); throw e; }));
+  return DIGIT_BUF.get(url);
+};
+const preload = url => { if (url && typeof Audio !== 'undefined' && !CLIP_CACHE.has(url) && !CLIP_MISSING.has(url)) clipAudio(url); };
 const QUEUE = 'db-form-queue';
+// Text size: 100%, 150% or 200% of the form's normal text (WCAG 1.4.4 asks for 200% without loss).
+const SIZES = [1, 1.5, 2];
+// Read-aloud speed. 1.3x by default (the team's choice after listening); the person can choose 1x or 1.6x under
+// "Colours and text size", and a host can set its own default with speed='1'. The pitch stays the same.
+const SPEEDS = [1, 1.3, 1.6], SPEED_DEFAULT = 1.3;
 const CONSENT_VERSION = '2026-11-15';
 // An Ethiopian date the person chose, with "Not sure" filled in: no day = last day of the month (approximate),
 // no year = the next time that month comes round.
@@ -675,7 +871,7 @@ class DbForm extends HTMLElement {
     if (this.f) { window.addEventListener('online', this.onOnline); return; } // moved within the page: keep the current state
     if (this.getAttribute('fonts') !== 'no') loadFonts();
     const sw = this.getAttribute('sw');
-    if (sw && typeof navigator !== 'undefined' && navigator.serviceWorker) navigator.serviceWorker.register(sw).catch(() => { /* drafts still work without it */ });
+    if (sw && typeof navigator !== 'undefined' && navigator.serviceWorker) navigator.serviceWorker.register(sw, { updateViaCache: 'none' }).catch(() => { /* drafts still work without it */ });
     const d = store.get(this.draftKey);
     this.draft = d && d.v === 1 && Date.now() - d.at < DRAFT_DAYS * 864e5 ? d : null;
     if (d && !this.draft) this.dropDraft();
@@ -691,10 +887,31 @@ class DbForm extends HTMLElement {
     this.theme = THEMES.includes(saved) ? saved : THEMES.includes(this.getAttribute('theme')) ? this.getAttribute('theme') : 'auto';
     if (this.lp) this.l = 'en';
     this.hide = (this.getAttribute('hide') || '').split(',').map(x => x.trim()).filter(x => x && !['fullName', 'role', 'job'].includes(x));
+    // Larger text chosen in the Display menu (or in the first question) is kept on this device.
+    { const v = +store.get('db-form-speed'), h = +this.getAttribute('speed'); this.speed = SPEEDS.includes(v) ? v : SPEEDS.includes(h) ? h : SPEED_DEFAULT; }
+    { const z = +store.get('db-form-size'); this.size = SIZES.includes(z) ? z : store.get('db-form-large') ? 1.5 : 1; this.pref.large = this.size > 1; this.announceSize(); }
+    // Chrome loads its list of device voices late: ask for it now, so the first page knows whether a voice exists.
+    if (typeof window !== 'undefined' && window.speechSynthesis) { try { speechSynthesis.getVoices(); speechSynthesis.addEventListener('voiceschanged', () => speechSynthesis.getVoices()); } catch (x) { /* old browsers */ } }
     this.addEventListener('keydown', e => {
       if (e.key === 'Escape' && this.active()) { e.preventDefault(); if (this.welcome && this.ra < 2) { this.stopRA(); this.say(this.u('stopped')); } else this.stopRead(); return; }
       // Modifier keys alone (e.g. Alt+Shift or Win+Space to switch keyboard layout) and IME key events do not stop the voice.
       if (QUIET_KEYS.includes(e.key) || e.isComposing || e.keyCode === 229) return;
+      const t = e.composedPath ? e.composedPath()[0] : e.target, opt = t && t.name === 'f' && (t.type === 'radio' || t.type === 'checkbox');
+      // Enter on a choice chooses it (people expect this; the browser would send the page instead and show "please answer").
+      // Enter on a choice that is already chosen goes on to the next question. Space ticks and unticks, as usual.
+      if (e.key === 'Enter' && opt && !e.shiftKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault(); this.kbd = Date.now(); if (this.vrec) this.stopVoice();
+        if (t.checked) { this.next(this.steps[this.i]); return; }
+        t.checked = true;
+        t.dispatchEvent(new Event('change', { bubbles: true }));
+        return;
+      }
+      // Tab and Shift+Tab visit every radio choice, one by one, like the checkboxes (the browser would jump over the group).
+      // The arrow keys still work as usual.
+      if (e.key === 'Tab' && opt && t.type === 'radio' && !e.ctrlKey && !e.altKey) {
+        const all = [...this.r.querySelectorAll('input[name=f]')], n = all.indexOf(t) + (e.shiftKey ? -1 : 1);
+        if (n >= 0 && n < all.length) { e.preventDefault(); this.kbd = Date.now(); if (this.vrec) this.stopVoice(); all[n].focus(); return; }
+      }
       // Tab, Shift+Tab, arrows (radio groups) and Space (tick a box) move or change the focus: stop listening so the mic does not hear the read-out.
       if (NAV_KEYS.includes(e.key)) { this.kbd = Date.now(); if (this.vrec) this.stopVoice(); if (this.welcome && this.ra < 2) this.stopRA(); return; }
       if (this.welcome && this.ra < 2) this.stopRA();
@@ -703,7 +920,9 @@ class DbForm extends HTMLElement {
     // Tab / Shift+Tab: read the newly focused control aloud, in the chosen language.
     this.r.addEventListener('focusin', e => { if (Date.now() - (this.kbd || 0) < 600) this.readFocus(e.target); });
     // Space on a checkbox changes it without moving focus: read the new state.
-    this.r.addEventListener('change', e => { if ((e.target.type === 'checkbox' || e.target.tagName === 'SELECT') && Date.now() - (this.kbd || 0) < 600) this.readFocus(e.target); });
+    // Space or Enter on a choice changes it without moving focus: read the new state. (Radios too: the arrow keys and Enter
+    // change them, and the focus event alone can come before the new state.)
+    this.r.addEventListener('change', e => { if ((e.target.type === 'checkbox' || e.target.type === 'radio' || e.target.tagName === 'SELECT') && e.target.name !== 'th' && Date.now() - (this.kbd || 0) < 600) this.readFocus(e.target); });
     // Typing with an input method (Ge'ez, Keyman, phone keyboards): Enter that ends a composition must not submit the form.
     this.r.addEventListener('compositionstart', () => { this.composing = true; });
     this.r.addEventListener('compositionend', () => { this.composedAt = Date.now(); this.composing = false; });
@@ -767,7 +986,7 @@ class DbForm extends HTMLElement {
   }
 
   field(s, n) {
-    const v = this.a[s.id] || (s.type === 'checkbox' ? [] : '');
+    const v = this.a[s.id] || (s.id === 'prefs' && this.size > 1 ? ['large'] : s.type === 'checkbox' ? [] : '');
     const inp = s.type === 'ecdate' ? this.dateHTML(this.a[s.id]) : s.type === 'text'
       ? `<input id='f' type='text' value='${esc(v)}' aria-labelledby='h' aria-describedby='hint err' ${this.err ? "aria-invalid='true'" : ''} lang='${this.l}' dir='auto' ${INPUT_HINTS[s.id] || "autocomplete='off' spellcheck='false'"}>`
       : `<div class='opts'>${s.options.map(([k, t]) => `<label class='opt'><input type='${s.type}' name='f' value='${esc(k)}' ${[].concat(v).includes(k) ? 'checked' : ''}>${this.pref.simple && P[k] ? `<span class='pic'>${I(k, 28)}</span>` : ''}<span>${esc(T(t, this.l))}</span><span class='tick'>${I('check', 20)}</span></label>`).join('')}</div>`;
@@ -780,7 +999,7 @@ class DbForm extends HTMLElement {
 
   // Consent, on the review page: required to send; support choices need a second, separate tick.
   consentHTML() {
-    const bad = this.err && this.errKey === 'consentNeed', sup = this.f === FLOWS.signup && (this.a.support || []).length;
+    const bad = this.err && this.errKey === 'consentNeed', sup = this.f === FLOWS.signup && this.supportChosen().length;
     const box = (k, text, extra = '') => `<label class='opt'><input type='checkbox' data-consent='${k}' ${this.consent[k] ? 'checked' : ''} ${extra}><span>${esc(text)}</span><span class='tick'>${I('check', 20)}</span></label>`;
     return `<fieldset class='consent'><legend>${this.u('consentH')}</legend>${box('a', this.u('consentSend', { p: this.partner() }), "id='cons'" + (bad ? " aria-invalid='true' aria-describedby='err'" : ''))}${sup ? box('s', this.u('consentSupport')) : ''}<p>${this.u('consentNote')}</p></fieldset>`;
   }
@@ -818,49 +1037,99 @@ class DbForm extends HTMLElement {
     if (this.done) return j([n(this.queued ? 'queued' : 'thanks'), this.receipt ? this.u('receipt', { r: this.receipt.split('').join(' ') }) : '']);
     if (this.lp) return UI.langAsk.en;
     if (this.welcome && this.draft) return j([n('draftH'), n('draftP'), n('draftGo'), n('restart')]);
-    if (this.welcome) return j([n('welcomeH'), n('welcomeP'), n('start'), n('startVoice'), n('readToMe'), v ? n('sayWelcome') : '']);
+    if (this.welcome) return j([n('welcomeH'), n('welcomeP'), n('start'), n('startVoice'), n('readToMe'), n('keysSay'), v ? n('sayWelcome') : '']);
     if (!s) {
       if (this.rs) return err + n('reviewFix');
       const rv = this.steps.filter(x => !x.local);
-      return err + j([n('review'), ...rv.map((x, k) => (k + 1) + ': ' + T(x.q, l) + ': ' + this.show(x)), this.u('consentSend', { p: this.partner() }), n('reviewAsk')]);
+      return err + j([n('review'), ...rv.map((x, k) => (k + 1) + ': ' + T(x.q, l) + ': ' + this.show(x)), n('reviewKeys'), this.u('consentSend', { p: this.partner() }), n('reviewAsk')]);
     }
     const opts = (s.options || []).map((p, i) => (v ? (i + 1) + ': ' : '') + T(p[1], l));
     const f = this.i ? '' : '1', ins = !v ? '' : s.novoice ? n('sayType') : s.type === 'text' ? n('sayText' + f) : n('sayChoose' + f) + (s.optional ? ' ' + n('saySkip') : '');
     return err + j([T(s.q, l), T(s.hint, l), ...opts, ins]);
   }
 
-  // Language page, spoken: the English question, then each language's own invitation (from its own recorded clip), then listen.
+  // Language page, spoken. People answer as soon as they hear their own language, so the page does not wait until the
+  // end: after the English question, and after each language's own invitation, there is a beep and a short listening
+  // window (LANG_WINDOW) with a recogniser that suits that language (LANG_EAR). Any language name counts in any window.
+  // If nothing is caught, it asks once more in English and Amharic and listens with an Amharic recogniser.
   askLang() {
     if (this.manual || !this.lp) return;
-    const items = [{ l: 'en', id: 'langAsk', t: UI.langAsk.en }, ...LANGS.filter(x => x.id !== 'en').map(x => ({ l: x.id, id: 'langSelf', t: UI.langSelf[x.id] }))];
     this.say(UI.langAsk.en);
-    this.playList(items, () => this.cue(() => this.hearLang()));
+    this.langMicOff = false;
+    let n = 0;
+    const step = () => {
+      if (this.manual || !this.lp) return;
+      if (n >= LANGS.length) return this.langAgain();
+      const x = LANGS[n++], item = x.id === 'en' ? { l: 'en', id: 'langAsk', t: UI.langAsk.en } : { l: x.id, id: 'langSelf', t: UI.langSelf[x.id] };
+      this.playList([item], () => {
+        if (this.langMicOff || !this.canHear()) return step();
+        const k = this.tok; this.beep();
+        setTimeout(() => { if (k === this.tok) this.listenLang(LANG_EAR[x.id], step, LANG_WINDOW); }, 250);
+      });
+    };
+    step();
+  }
+  langAgain() {
+    if (this.manual || !this.lp || this.langMicOff || !this.canHear()) return;
+    const none = () => { this.say(UI.langNone.en); this.playList([{ l: 'en', id: 'langNone', t: UI.langNone.en }]); };
+    this.say(UI.langAgain.en + ' ' + UI.langAgain.am);
+    this.playList([{ l: 'en', id: 'langAgain', t: UI.langAgain.en }, { l: 'am', id: 'langAgain', t: UI.langAgain.am }], () => this.cue(() => this.listenLang(['am-ET', 'en-US'], none, 0), 'am'));
   }
 
   // Play clips that may be in different languages. A missing clip is read by a device voice for its language; if there is none, it is skipped.
-  playList(items, cb) {
+  // caption: the text shown in the caption box (default: every item's text).
+  playList(items, cb, caption) {
     const base = this.getAttribute('audio'), k = ++this.tok, vs = window.speechSynthesis ? speechSynthesis.getVoices() : [];
-    if (this.aud) this.aud.pause();
+    if (this.aud) this.aud.pause(); this.stopDigits();
     if (window.speechSynthesis) speechSynthesis.cancel();
+    items = items.filter(x => x && x.t != null && /[\p{L}\p{N}]/u.test(String(x.t))); // nothing to say in "." or ""
     let n = 0;
-    this.cap('speaking', items.map(x => x.t).join(' · '), items.every(x => x.l === items[0].l) ? items[0].l : null);
+    const url = x => (base && x && x.id ? base + '/' + (LANG_RE.test(x.l) ? x.l : 'en') + '/' + x.id + '.mp3' : null);
+    this.cap('speaking', caption || items.map(x => x.t).join(' · '), items.length && items.every(x => x.l === items[0].l) ? items[0].l : null);
     const go = () => {
       if (k !== this.tok) return;
       if (n >= items.length) { this.cap('idle'); if (cb) cb(); return; }
-      const it = items[n++];
+      const it = items[n++], src = url(it);
+      preload(url(items[n]));
+      if (it.digits) { this.playDigits(it, go, k); return; }
       let used = false;
       const fb = () => {
         if (used || k !== this.tok) return; used = true;
-        const v = vs.find(x => this.vmatch(x, it.l));
-        if (!window.speechSynthesis || (vs.length && !v)) { go(); return; }
-        const u = new SpeechSynthesisUtterance(it.t); u.lang = LANG(it.l).sr; if (v) u.voice = v; u.onend = go; u.onerror = go; speechSynthesis.speak(u);
+        const v = vs.find(x => this.vmatch(x, it.l)), en = it.any && !v && vs.find(x => this.vmatch(x, 'en'));
+        if (!window.speechSynthesis || (vs.length && !v && !en)) { go(); return; }
+        // No voice for this language: an English voice reads the name or answer, Ge'ez spelled in Latin letters.
+        const u = new SpeechSynthesisUtterance(en ? romanize(it.t) : it.t);
+        u.lang = en ? 'en-US' : LANG(it.l).sr; u.rate = this.speed || 1; if (v || en) u.voice = v || en; u.onend = go; u.onerror = go; speechSynthesis.speak(u);
       };
-      if (!base || !it.id) { fb(); return; }
-      const a = this.aud = new Audio(base + '/' + it.l + '/' + it.id + '.mp3');
+      if (!src || CLIP_MISSING.has(src)) { fb(); return; }
+      const a = this.aud = clipAudio(src);
+      a.defaultPlaybackRate = a.playbackRate = this.speed || 1; a.preservesPitch = true;
       a.onended = () => { if (!used) { used = true; go(); } }; a.onerror = fb; a.play().catch(fb);
     };
     go();
   }
+
+  // A phone number as one recording: the digit clips (n0-n9), cut to the voice, with a short even gap between digits and
+  // a longer one between groups. Without Web Audio or clips, the digits are played one by one instead.
+  playDigits(it, done, k) {
+    const base = this.getAttribute('audio'), C = window.AudioContext || window.webkitAudioContext, l = LANG_RE.test(it.l) ? it.l : 'en';
+    const oneByOne = () => this.playList([...it.digits].map(d => ({ l, id: 'n' + d, t: d })), done);
+    if (!base || !C) return oneByOne();
+    const ctx = this.ac || (this.ac = new C());
+    Promise.all([...it.digits].map(d => digitBuf(ctx, base + '/' + l + '/n' + d + '.mp3'))).then(parts => {
+      if (k !== this.tok) return;
+      const rate = parts[0].rate, groups = phoneGroups(it.digits), ends = new Set(); let c = 0;
+      groups.forEach(g => { c += g.length; ends.add(c - 1); });
+      const gap = i => Math.round(rate * (i === parts.length - 1 ? 0 : ends.has(i) ? 0.38 : 0.07) / (this.speed || 1));
+      const out = ctx.createBuffer(1, parts.reduce((t, p, i) => t + p.data.length + gap(i), 0), rate), ch = out.getChannelData(0);
+      let at = 0; parts.forEach((p, i) => { ch.set(p.data, at); at += p.data.length + gap(i); });
+      const src = this.digitSrc = ctx.createBufferSource(); src.buffer = out; src.connect(ctx.destination);
+      src.onended = () => { if (this.digitSrc === src) this.digitSrc = null; if (k === this.tok) done(); };
+      if (ctx.state === 'suspended') ctx.resume();
+      src.start();
+    }).catch(() => { if (k === this.tok) oneByOne(); });
+  }
+  stopDigits() { const s = this.digitSrc; this.digitSrc = null; if (s) { s.onended = null; try { s.stop(); } catch (x) { /* already stopped */ } } }
 
   // What to say when a control gets keyboard focus: [{ l: language, id: clip id (null = device voice only), t: text }].
   focusItems(el) {
@@ -871,22 +1140,73 @@ class DbForm extends HTMLElement {
     if (d.ra) return [it(d.ra === 'y' ? 'b_raYes' : 'b_raNo', this.u(d.ra === 'y' ? 'raYes' : 'raNo'))];
     if ('fresh' in d) return [it('b_restart', this.u('restart'))];
     if ('resume' in d) return [it('b_draftGo', this.u('draftGo'))];
-    if (d.consent) return [it(null, el.closest('label').querySelector('span').textContent), it(el.checked ? 'sel' : 'unsel', this.u(el.checked ? 'sel' : 'unsel'))];
-    if (el.tagName === 'SELECT') { const lab = el.closest('label'); return [it(null, lab ? lab.firstChild.textContent : ''), it(null, el.selectedOptions[0] ? el.selectedOptions[0].textContent : '')]; }
+    const state = () => it(el.checked ? 'sel' : 'unsel', this.u(el.checked ? 'sel' : 'unsel'));
+    if (d.consent) return [...this.consentItems(d.consent), state()];
+    if (el.name === 'sp') return [it(null, this.u('voiceSpeed')), { l, id: null, t: el.value, any: true }, state()];
+    if (el.name === 'ts') return [it('textSize', this.u('textSize')), { l, id: null, t: Math.round(+el.value * 100) + '%', any: true }, state()];
+    if (el.tagName === 'SUMMARY') return [it('display', this.u('display'))];
+    if (el.tagName === 'SELECT') { const lab = el.closest('label'); return [{ l, id: null, t: lab ? lab.firstChild.textContent : '', any: true }, { l, id: null, t: el.selectedOptions[0] ? el.selectedOptions[0].textContent : '', any: true }]; }
     if (d.start) return [it(d.start === 'v' ? 'b_startVoice' : 'b_start', this.u(d.start === 'v' ? 'startVoice' : 'start'))];
     if (el.name === 'f' && s && s.options) {
       const n = s.options.findIndex(p => p[0] === el.value);
       if (n < 0) return [];
-      return [it('n' + (n + 1), String(n + 1)), it('o_' + s.id + '_' + el.value, T(s.options[n][1], l)), it(el.checked ? 'sel' : 'unsel', this.u(el.checked ? 'sel' : 'unsel'))];
+      // Job titles change, so they have no clip: a voice reads them (never silent: see playList).
+      const name = s.dyn ? { l, id: null, t: T(s.options[n][1], l), any: true } : it('o_' + s.id + '_' + el.value, T(s.options[n][1], l));
+      return [it('n' + (n + 1), String(n + 1)), name, it(el.checked ? 'sel' : 'unsel', this.u(el.checked ? 'sel' : 'unsel'))];
     }
-    if (el.id === 'f' && s) return [it('q_' + s.id, T(s.q, l)), ...(el.value.trim() ? [it(null, el.value.trim())] : [])];
+    if (el.id === 'f' && s) return [it('q_' + s.id, T(s.q, l)), ...(el.value.trim() ? this.valueItems(el.value.trim(), s) : [])];
     const k = Object.keys(BTN).find(x => x in d);
     if (k === 'edit') { const rv = this.steps.filter(x => !x.local), n = rv.indexOf(this.steps[+d.edit]) + 1; return [it('b_change', this.u('change')), it('n' + n, String(n))]; }
     if (k) return [it('b_' + BTN[k], this.u(BTN[k]))];
-    if (el.name === 'th') return [it(null, this.u('th_' + el.value)), it(el.checked ? 'sel' : 'unsel', this.u(el.checked ? 'sel' : 'unsel'))];
+    if (el.name === 'th') return [it('th_' + el.value, this.u('th_' + el.value)), state()];
     const t = (el.textContent || '').trim();
     return t ? [it(null, t)] : [];
   }
+
+  // ---- Spoken lists built from recorded clips. Each item: { l: language, id: clip (null = device voice), t: text,
+  // any: true = the text is the person's own answer or a name: if there is no voice for the language, an English voice
+  // reads it (Ge'ez is spelled in Latin letters first), so it is never silent }.
+  // The consent sentence, around the partner's name: recorded clips before and after it, the name itself by a voice.
+  consentItems(k) {
+    const l = this.l, it = (id, t, any) => ({ l, id, t, any });
+    if (k === 's') return [it('consentSupport', this.u('consentSupport'))];
+    const p = this.getAttribute('partner');
+    if (!p) return [it('consentOrg', this.u('consentSend', { p: this.u('org') }))];
+    const [a, b] = T(UI.consentSend, l).split('{p}');
+    return [it('consentSendA', a), it(null, p, true), ...(/[\p{L}]/u.test(b) ? [it('consentSendB', b)] : [])];
+  }
+  // A typed or spoken answer: a phone number digit by digit (clips n0-n9), anything else by a voice.
+  valueItems(v, s) {
+    const l = this.l, t = String(v == null ? '' : v).trim();
+    // A phone number: one item; playList joins the digit clips into one smooth recording, grouped like 0902 57 65 70.
+    if (s && s.spoken === 'contact' && /^[0-9+\s-]+$/.test(ascii(t))) { const ds = ascii(t).replace(/\D/g, ''); return ds ? [{ l, id: null, digits: ds, t: phoneGroups(ds).join(' ') }] : []; }
+    return t ? [{ l, id: null, t, any: true }] : [];
+  }
+  // The answer to one question, as it is shown on the review page.
+  answerItems(x) {
+    const l = this.l, v = this.a[x.id], skipped = [{ l, id: 'skipped', t: this.u('skipped') }];
+    const nm = k => T((x.options.find(p => p[0] === k) || [])[1], l);
+    if (x.type === 'ecdate') return v && v.m ? [{ l, id: null, t: this.show(x), any: true }] : skipped;
+    if (Array.isArray(v)) return v.length ? v.map(k => ({ l, id: 'o_' + x.id + '_' + k, t: nm(k) })) : skipped;
+    if (!v) return skipped;
+    if (x.options && x.dyn) return [{ l, id: null, t: nm(v) || v, any: true }]; // job titles change, so a voice reads them
+    if (x.options) return [{ l, id: 'o_' + x.id + '_' + v, t: nm(v) }];
+    return this.valueItems(v, x);
+  }
+  // The whole review page: heading, then each answer numbered as on screen, then the consent sentence and the question.
+  reviewItems() {
+    const l = this.l, rv = this.steps.filter(x => !x.local);
+    return [{ l, id: 'reviewH', t: this.u('review') },
+      ...rv.flatMap((x, k) => [{ l, id: 'n' + (k + 1), t: String(k + 1) }, { l, id: 'q_' + x.id, t: T(x.q, l) }, ...this.answerItems(x)]),
+      { l, id: 'reviewKeys', t: this.u('reviewKeys') }, ...this.consentItems('a'), { l, id: 'reviewAsk', t: this.u('reviewAsk') }];
+  }
+  // "We heard: ... Say Next to continue, or say your answer again." If no voice at all can say the answer, say so instead.
+  heardItems(v, s) {
+    const l = this.l, mid = this.valueItems(v, s);
+    const silent = mid.some(x => !x.id && !x.digits) && !this.canSay(l) && !this.canSay('en');
+    return silent ? [{ l, id: 'heardGeneric', t: this.u('heardGeneric') }] : [{ l, id: 'heardA', t: this.u('heardA') }, ...mid, { l, id: 'heardB', t: this.u('heardB') }];
+  }
+  canSay(l) { const vs = window.speechSynthesis ? speechSynthesis.getVoices() : []; return vs.some(v => this.vmatch(v, l)); }
 
   // Read the focused control, but only while the voice is in use (language page, the "read aloud?" question, or Read to me mode).
   readFocus(el) {
@@ -896,9 +1216,10 @@ class DbForm extends HTMLElement {
   }
 
   // Before the microphone opens: say "Speak now" in the chosen language, then a short beep, then listen.
-  cue(cb) {
-    this.say(this.u('speakNow'));
-    this.playList([{ l: this.l, id: 'speakNow', t: this.u('speakNow') }], () => {
+  cue(cb, l = this.l) {
+    const t = T(UI.speakNow, l);
+    this.say(t);
+    this.playList([{ l, id: 'speakNow', t }], () => {
       const k = this.tok; this.beep();
       setTimeout(() => { if (k === this.tok) cb(); }, 300);
     });
@@ -915,21 +1236,43 @@ class DbForm extends HTMLElement {
     if (c) { c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash'); }
   }
 
-  // Which language did the person name? English speech recognition is used, because the question is asked in English.
+  // Which language did the person name? t is one transcript or the recogniser's list of guesses (best first).
+  // A name counts in Latin letters (English name, own name, common mis-hearings, or a near miss) or in Ge'ez.
   pickLang(t) {
-    const w = this.norm(t).split(' '), hit = LANGS.filter(x => x.say.some(s => w.includes(s)));
-    return hit.length === 1 ? hit[0].id : '';
+    for (const s of [].concat(t || [])) { const id = this.langOf(s); if (id) return id; }
+    return '';
+  }
+  langOf(s) {
+    const w = this.norm(s).split(' ').filter(Boolean), words = [...w, ...w.slice(1).map((x, k) => w[k] + x)]; // "a marina" -> "amarina"
+    const has = x => words.some(y => (GEEZ.test(y) ? x.gz.some(g => y.startsWith(g)) : x.say.includes(y)));
+    const exact = LANGS.filter(has);
+    if (exact.length) return exact.length === 1 ? exact[0].id : '';
+    const near = LANGS.filter(x => words.some(y => y.length >= 5 && !GEEZ.test(y) && x.say.some(z => z.length >= 5 && lev(fold(y), fold(z)) <= (fold(z).length >= 6 ? 1 : 0))));
+    return near.length === 1 ? near[0].id : '';
   }
 
-  hearLang() {
+  // Listen once for a language name. srs: recogniser languages to try, in order (the next one if a language is not
+  // supported). miss(): called when nothing usable was heard. ms: how long to wait for speech to begin once the
+  // microphone is on (0 = as long as the browser waits). Once the person starts speaking, it waits for them to finish.
+  listenLang(srs, miss, ms) {
     if (this.manual || !this.lp) return;
-    const rec = this.recog('en-US'); if (!rec) return;
-    let fin = false;
-    rec.onresult = e => { fin = true; const id = this.pickLang(e.results[0][0].transcript); if (id) this.chooseLang(id); else this.say(UI.langNone.en); };
-    rec.onerror = e => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { fin = true; this.say(UI.micblocked.en); } };
-    rec.onend = () => { this.cap('idle'); if (!fin) this.say(UI.langNone.en); };
+    const [sr, ...rest] = srs, rec = this.recog(sr);
+    if (!rec) return miss();
+    let fin = false, spoke = false, timer = null;
+    const end = () => { fin = true; clearTimeout(timer); this.cap('idle'); if (this.rec === rec) this.rec = null; };
+    const done = id => { if (fin || this.manual) return; end(); if (id) this.chooseLang(id); else miss(); };
+    rec.onspeechstart = () => { spoke = true; clearTimeout(timer); };
+    // The window starts when the microphone is really on (not while Chrome still asks for permission).
+    rec.onaudiostart = () => { if (ms) timer = setTimeout(() => { if (spoke || fin || this.manual) return; end(); rec.onend = null; rec.onresult = null; try { rec.abort(); } catch (x) { /* ignore */ } miss(); }, ms); };
+    rec.onresult = e => done(this.pickLang(alts(e)));
+    rec.onerror = e => {
+      if (fin) return;
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { end(); this.langMicOff = true; this.say(UI.micblocked.en); miss(); }
+      else if (e.error === 'language-not-supported' && rest.length) { end(); rec.onend = null; this.listenLang(rest, miss, ms); }
+    };
+    rec.onend = () => done('');
     this.rec = rec; this.cap('listening');
-    try { rec.start(); } catch (x) { /* the buttons still work */ }
+    try { rec.start(); } catch (x) { done(''); }
   }
 
   // A language was chosen (button or voice): switch, then ask "read aloud?" in that language.
@@ -967,7 +1310,7 @@ class DbForm extends HTMLElement {
     if (this.ra > 1 || !this.welcome) return;
     this.moved = true;
     if (a === 'y') { this.ra = 2; this.rm = true; this.draw(); }
-    else if (a === 'n') { this.ra = 2; this.rm = false; this.draw(); this.say(this.u('intro')); }
+    else if (a === 'n') { this.ra = 2; this.rm = false; this.draw(); this.say(this.u('intro') + ' ' + this.u('keysSay')); }
     else if (this.ra === 0) { this.ra = 1; this.draw(); this.askRA(); }
     else { this.ra = 2; this.draw(); this.say(this.u('raNone')); }
   }
@@ -975,22 +1318,23 @@ class DbForm extends HTMLElement {
   stopRA() {
     this.manual = true; this.cap('idle');
     if (window.speechSynthesis) speechSynthesis.cancel();
-    if (this.aud) this.aud.pause();
+    if (this.aud) this.aud.pause(); this.stopDigits();
     if (this.rec) { this.rec.onend = null; this.rec.onerror = null; this.rec.onresult = null; try { this.rec.abort(); } catch (x) { /* ignore */ } }
   }
 
   say(t) { const x = this.r.querySelector('#live'); if (x) x.textContent = t; }
 
   draw() {
-    if (this.moved) this.halt();
+    if (this.moved) { this.halt(); this.sup = 0; }
     const st = this.steps, s = st[this.i];
     let b;
-    if (this.done) b = `<div class='done'>${CHECK}<h2 id='h' tabindex='-1'>${this.u(this.queued ? 'queued' : 'thanks')}</h2>${this.receipt ? `<p>${this.u('receipt', { r: `<span class='receipt'>${esc(this.receipt)}</span>` })}</p>` : ''}<p class='when'>${esc(this.todayText())}</p></div>`;
+    if (this.done) b = `<div class='done'>${CHECK}<h2 id='h' tabindex='-1'>${this.u(this.queued ? 'queued' : 'thanks')}</h2>${this.receipt ? `<p>${this.u('receipt', { r: `<span class='receipt'>${esc(this.receipt)}</span>` })}</p>` : ''}<p class='when'>${esc(this.todayText())}</p>${this.mineHtml()}</div>`;
     else if (this.welcome) b = this.welcomeHTML();
     else if (!s) {
       const rv = st.map((x, n) => [x, n]).filter(([x]) => !x.local);
       b = `<h2 id='h' tabindex='-1'>${this.u('review')}</h2><dl class='review'>${rv.map(([x, n], k) =>
         `<div class='item'><dt>${k + 1}. ${esc(T(x.q, this.l))}</dt><dd><span>${esc(this.show(x))}</span><button type='button' data-edit='${n}'>${this.u('change')}<span class='sr'> ${k + 1}</span></button></dd></div>`).join('')}</dl>
+      <p class='after'>${this.u('reviewKeys')}</p>
       ${this.consentHTML()}
       <p class='after'>${this.u(this.rs ? 'reviewFix' : 'reviewAsk')}</p>
       ${this.errHTML()}
@@ -1002,12 +1346,16 @@ class DbForm extends HTMLElement {
     const tools = tb ? `<div class='tools'>${tb}</div>` : '';
     // On the language page the buttons themselves are the language choice, so the language buttons are not repeated there.
     const langs = this.lp ? '' : `<div class='lang' role='group' aria-label='Language'>${LANGS.map(x => `<button type='button' data-lang='${x.id}' lang='${x.id}' aria-pressed='${this.l === x.id}'>${x.name}</button>`).join('')}</div>`;
-    const disp = `<details class='disp'><summary>${I('palette', 20)}${this.u('colours')}</summary><fieldset class='panel'><legend class='sr'>${this.u('colours')}</legend>${THEMES.map(t => `<label><input type='radio' name='th' value='${t}' ${this.theme === t ? 'checked' : ''}><span class='sw' aria-hidden='true'>${SWATCH[t].map(c => `<i style='background:${c}'></i>`).join('')}</span><span>${this.u('th_' + t)}</span></label>`).join('')}</fieldset></details>`;
+    // Display menu: colour themes, and larger text (also offered by the first sign-up question). Both are kept on this device.
+    const disp = `<details class='disp'><summary>${I('palette', 20)}${this.u('display')}</summary><div class='panel'><fieldset><legend class='sr'>${this.u('colours')}</legend>${THEMES.map(t => `<label><input type='radio' name='th' value='${t}' ${this.theme === t ? 'checked' : ''}><span class='sw' aria-hidden='true'>${SWATCH[t].map(c => `<i style='background:${c}'></i>`).join('')}</span><span>${this.u('th_' + t)}</span></label>`).join('')}</fieldset><fieldset class='ts'><legend>${this.u('textSize')}</legend><div class='tsr'>${SIZES.map(z => `<label><input type='radio' name='ts' value='${z}' ${this.size === z ? 'checked' : ''}><span class='aa' aria-hidden='true' style='font-size:${0.75 + z * 0.25}em'>A</span><span>${z * 100}%</span></label>`).join('')}</div></fieldset><fieldset class='ts'><legend>${this.u('voiceSpeed')}</legend><div class='tsr'>${SPEEDS.map(z => `<label><input type='radio' name='sp' value='${z}' ${this.speed === z ? 'checked' : ''}><span>${z}×</span></label>`).join('')}</div></fieldset></div></details>`;
+    // Keyboard help on every page, in the chosen language: what Tab, Shift+Tab, Space/Enter and Esc do.
+    const keys = this.done ? '' : `<ul class='keys' aria-label='${esc(this.u('keysH'))}'><li class='kh' aria-hidden='true'>${esc(this.u('keysH'))}:</li><li><kbd>Tab</kbd> ${esc(this.u('keyTab'))}</li><li><kbd>Shift</kbd>+<kbd>Tab</kbd> ${esc(this.u('keyShiftTab'))}</li><li><kbd>Space</kbd>/<kbd>Enter</kbd> ${esc(this.u('keyEnter'))}</li><li><kbd>Esc</kbd> ${esc(this.u('keyEsc'))}</li></ul>`;
     // The caption box shows, as text, everything that is being spoken, and a clear "Listening" state (for deaf and hard-of-hearing people).
     // It is aria-hidden because screen-reader users already hear the same words; the short role=status line below is for them.
     const cap = `<div class='cap' id='cap' data-state='idle' aria-hidden='true'><span class='ic'></span><div><span class='k'></span><span class='t'></span></div><span class='lvl'><i></i><i></i><i></i><i></i></span></div>`;
-    this.r.innerHTML = `<style>${CSS}</style><section lang='${this.l}' data-theme='${this.theme || 'auto'}'${this.pref.large ? " style='font-size:1.375rem'" : ''}><div class='bar'>${langs}${disp}</div>${tools}${cap}<p class='status' id='live' role='status'></p>${b}</section>`;
+    this.r.innerHTML = `<style>${CSS}</style><section lang='${this.l}' data-theme='${this.theme || 'auto'}'${this.sizeStyle()}><div class='bar'>${langs}${disp}</div>${keys}${tools}${cap}<p class='status' id='live' role='status'></p>${b}</section>`;
     this.bind(s);
+    if (s && !this.welcome && !this.done) this.emit('step', { step: this.i + 1, of: st.length, id: s.id });
     if (!this.said) {
       this.said = true;
       const go = ms => setTimeout(() => { if (this.lp) this.askLang(); else if (this.welcome) this.askRA(); else this.say(this.u('intro')); }, ms);
@@ -1025,6 +1373,24 @@ class DbForm extends HTMLElement {
     else if (this.err && this.moved && !quiet && (this.vm || this.usedRead)) this.readErr();
   }
 
+  // Events named as in the organisers' data contract: db-signup:step / :done / :support (db-job:…, db-employer:… for the
+  // other flows). They bubble out of the shadow DOM, like db-complete.
+  // Thank-you page: the learner can keep a copy of their answers, or delete them with the receipt (no account needed).
+  mineHtml() {
+    const api = this.getAttribute('api');
+    if (this.mine === 'gone') return `<p id='mymsg' tabindex='-1' role='status'>${esc(this.u('myDeleted'))}</p>`;
+    if (this.mine === 'sure') return `<div class='sure' role='group' aria-labelledby='sureq'><p id='sureq' tabindex='-1'><strong>${esc(this.u('mySure'))}</strong></p><div class='row'><button type='button' class='p' data-mydel-yes>${esc(this.u('myYes'))}</button><button type='button' data-mydel-no>${esc(this.u('myNo'))}</button></div></div>`;
+    const dl = this.sent ? `<button type='button' data-mydl>${esc(this.u('myDownload'))}</button>` : '';
+    const del = this.receipt && api ? `<button type='button' data-mydel>${esc(this.u('myDelete'))}</button>` : '';
+    return dl || del ? `<div class='row'>${dl}${del}</div>${this.mine === 'fail' ? `<p class='err' role='alert'>${esc(this.u('myFail'))}</p>` : ''}` : '';
+  }
+  focusIn(sel) { const e = this.r.querySelector && this.r.querySelector(sel); if (e && e.focus) e.focus(); }
+  emit(name, detail) {
+    if (typeof this.dispatchEvent !== 'function') return;
+    const flow = this.getAttribute('flow') || this.constructor.flow;
+    this.dispatchEvent(new CustomEvent('db-' + flow + ':' + name, { detail, bubbles: true, composed: true }));
+  }
+
   // Colour theme: the person's own choice (saved on this device) wins over the site's theme attribute.
   setTheme(t) {
     this.theme = THEMES.includes(t) ? t : 'auto';
@@ -1032,6 +1398,24 @@ class DbForm extends HTMLElement {
     const sec = this.r.querySelector('section'); if (sec) sec.dataset.theme = this.theme;
     // Tell the host page, so its header, nav and footer can use the same colours.
     this.dispatchEvent(new CustomEvent('db-theme', { detail: { theme: this.theme }, bubbles: true, composed: true }));
+  }
+
+  // Text size. The host page is told (event 'db-textsize', detail.scale). A host that enlarges its own page with it
+  // (its header, nav and footer too) calls preventDefault(): the form's text is in rem, so it grows with the page and
+  // must not be enlarged twice. Otherwise the form enlarges itself.
+  announceSize() {
+    if (typeof this.dispatchEvent !== 'function') return;
+    const e = new CustomEvent('db-textsize', { detail: { scale: this.size }, bubbles: true, composed: true, cancelable: true });
+    this.hostSized = !this.dispatchEvent(e);
+  }
+  sizeStyle() { return this.size > 1 && !this.hostSized ? ` style='font-size:calc(1.125rem * ${this.size})'` : ''; }
+  setSize(z, quiet) {
+    this.size = SIZES.includes(z) ? z : 1; this.pref.large = this.size > 1;
+    store.set('db-form-size', this.size); store.del('db-form-large');
+    this.announceSize();
+    const sec = this.r.querySelector && this.r.querySelector('section');
+    if (sec && !quiet) sec.style.fontSize = this.size > 1 && !this.hostSized ? `calc(1.125rem * ${this.size})` : '';
+    const p = this.r.querySelector && this.r.querySelector('input[name=f][value=large]'); if (p && this.steps[this.i] && this.steps[this.i].id === 'prefs') p.checked = this.size > 1;
   }
 
   // Caption box. state: speaking | listening | idle.
@@ -1056,10 +1440,21 @@ class DbForm extends HTMLElement {
     on('[data-rm]', () => { this.rm = true; this.moved = true; this.draw(); });
     on('[data-stoprm]', () => { if (this.welcome && this.ra < 2) { this.stopRA(); this.say(this.u('stopped')); } else this.stopRead(); });
     this.r.querySelectorAll('input[name=th]').forEach(x => x.addEventListener('change', () => this.setTheme(x.value)));
+    this.r.querySelectorAll('input[name=ts]').forEach(x => x.addEventListener('change', () => this.setSize(+x.value)));
+    this.r.querySelectorAll('input[name=sp]').forEach(x => x.addEventListener('change', () => { this.speed = +x.value; store.set('db-form-speed', this.speed); if (this.aud) this.aud.playbackRate = this.speed; }));
+    if (s && s.exclusive) this.r.querySelectorAll('input[name=f]').forEach(x => x.addEventListener('change', () => this.exclusive(s, x)));
     this.r.querySelectorAll('[data-pick]').forEach(b => b.addEventListener('click', () => this.chooseLang(b.dataset.pick)));
     this.r.querySelectorAll('[data-ra]').forEach(b => b.addEventListener('click', () => { this.stopRA(); this.raDone(b.dataset.ra); }));
     on('[data-send]', () => this.send());
     on('[data-resume]', () => this.resume());
+    on('[data-mydl]', () => saveAnswers(this.sent, this.receipt, this.r));
+    on('[data-mydel]', () => { this.mine = 'sure'; this.draw(); this.focusIn('#sureq'); });
+    on('[data-mydel-no]', () => { this.mine = ''; this.draw(); this.focusIn('[data-mydel]'); });
+    on('[data-mydel-yes]', async () => {
+      const ok = await deleteByReceipt(this.getAttribute('api'), this.receipt);
+      this.mine = ok ? 'gone' : 'fail'; this.draw(); this.focusIn(ok ? '#mymsg' : '[data-mydel]');
+      if (ok) { this.say(this.u('myDeleted')); this.dispatchEvent(new CustomEvent('db-deleted', { detail: { id: this.recId }, bubbles: true, composed: true })); this.sent = null; }
+    });
     this.r.querySelectorAll('[data-consent]').forEach(x => x.addEventListener('change', () => {
       this.consent[x.dataset.consent] = x.checked;
       if (x.dataset.consent === 'a' && x.checked && this.errKey === 'consentNeed') { this.err = ''; this.errKey = ''; const e = this.r.querySelector('#err'); if (e) e.textContent = ''; x.removeAttribute('aria-invalid'); }
@@ -1081,7 +1476,7 @@ class DbForm extends HTMLElement {
     else if (!empty && s.check && !s.check(v)) { this.err = this.u(s.bad); this.errKey = s.bad; }
     else if (!empty && s.type === 'ecdate' && !v.m) { this.err = this.u('dateBad'); this.errKey = 'dateBad'; }
     this.a[s.id] = v; this.moved = true;
-    if (s.id === 'prefs') this.pref = { large: v.includes('large'), simple: v.includes('simple') };
+    if (s.id === 'prefs') { this.pref = { large: v.includes('large'), simple: v.includes('simple') }; if (this.pref.large !== this.size > 1) this.setSize(this.pref.large ? 1.5 : 1, true); }
     if (!this.err) this.advance();
     this.draw();
   }
@@ -1089,13 +1484,14 @@ class DbForm extends HTMLElement {
   speak(t, id, cb) {
     const live = this.r.querySelector('#live'), base = this.getAttribute('audio'), k = ++this.tok;
     { const c = cb; cb = () => { if (k === this.tok) { this.cap('idle'); if (c) c(); } }; }
-    if (this.aud) this.aud.pause();
+    if (this.aud) this.aud.pause(); this.stopDigits();
     if (window.speechSynthesis) speechSynthesis.cancel();
     live.textContent = this.u('reading');
     this.cap('speaking', t, this.l);
-    if (base && id && id !== 'review') {
+    const src = base && id && id !== 'review' ? base + '/' + this.al() + '/' + id + '.mp3' : null;
+    if (src && !CLIP_MISSING.has(src)) {
       let used = false; const fb = () => { if (!used) { used = true; this.tts(t, live, cb); } };
-      this.aud = new Audio(base + '/' + this.al() + '/' + id + '.mp3'); this.aud.onerror = fb; this.aud.onended = cb; this.aud.play().catch(fb); return;
+      this.aud = clipAudio(src); this.aud.defaultPlaybackRate = this.aud.playbackRate = this.speed || 1; this.aud.onerror = fb; this.aud.onended = cb; this.aud.play().catch(fb); return;
     }
     this.tts(t, live, cb);
   }
@@ -1109,14 +1505,14 @@ class DbForm extends HTMLElement {
         this.noticed = true; const n = new SpeechSynthesisUtterance(UI.novoicehere.en); n.lang = 'en-US'; n.onend = () => { if (cb) cb(); }; speechSynthesis.speak(n); } else if (cb) cb();
       return;
     }
-    const u = new SpeechSynthesisUtterance(t); u.lang = this.sl(); if (cb) { u.onend = cb; u.onerror = cb; } speechSynthesis.speak(u);
+    const u = new SpeechSynthesisUtterance(t); u.lang = this.sl(); u.rate = this.speed || 1; if (cb) { u.onend = cb; u.onerror = cb; } speechSynthesis.speak(u);
   }
 
   // True while the form is reading, listening, or in hands-free mode.
-  active() { return !!(this.rm || this.vrec || (window.speechSynthesis && speechSynthesis.speaking) || (this.aud && !this.aud.paused && !this.aud.ended)); }
+  active() { return !!(this.rm || this.vrec || this.digitSrc || (window.speechSynthesis && speechSynthesis.speaking) || (this.aud && !this.aud.paused && !this.aud.ended)); }
 
   // Stop all speech and listening right now.
-  halt() { this.tok++; if (window.speechSynthesis) speechSynthesis.cancel(); if (this.aud) this.aud.pause(); this.stopVoice(); this.cap('idle'); }
+  halt() { this.tok++; if (window.speechSynthesis) speechSynthesis.cancel(); if (this.aud) this.aud.pause(); this.stopDigits(); this.stopVoice(); this.cap('idle'); }
 
   // The Stop reading button, the Escape key and the voice word "stop": stop now and leave hands-free mode.
   stopRead() { this.rm = false; this.moved = true; this.draw(); this.say(this.u('stopped')); }
@@ -1130,7 +1526,7 @@ class DbForm extends HTMLElement {
 
   edit(n) { this.fromReview = true; this.rs = 0; this.i = n; this.err = ''; this.moved = true; this.draw(); }
 
-  restart() { this.steps.forEach(x => { if (!x.local) delete this.a[x.id]; }); this.i = 0; this.rs = 0; this.fromReview = false; this.err = ''; this.moved = true; this.draw(); }
+  restart() { this.steps.forEach(x => { if (!x.local) delete this.a[x.id]; }); this.consent = { a: false, s: false }; this.i = 0; this.rs = 0; this.fromReview = false; this.err = ''; this.moved = true; this.draw(); }
 
   goBack(s) { this.keep(s); this.i--; this.rs = 0; this.fromReview = false; this.err = ''; this.moved = true; this.draw(); }
 
@@ -1146,9 +1542,12 @@ class DbForm extends HTMLElement {
   // Which options did the person say? By number ("2", "two", "ሁለት") or by name (best word match).
   pick(t, s) {
     const opts = s.options || [], w = t.split(' ').filter(Boolean), hit = [];
+    const add = n => { if (n >= 1 && n <= opts.length && !hit.includes(n - 1)) hit.push(n - 1); };
     w.forEach(x => {
-      const n = /^\d+$/.test(x) ? +x : (NUM[x] || (w.length === 1 && NUM1[x]) || 0);
-      if (n >= 1 && n <= opts.length && !hit.includes(n - 1)) hit.push(n - 1);
+      const n = numOf(x, w.length === 1);
+      // "1 2" said quickly often comes back as "12": with fewer choices than that, each digit is a choice.
+      if (s.type === 'checkbox' && /^\d{2,}$/.test(x) && n > opts.length && [...x].every(d => +d >= 1 && +d <= opts.length)) [...x].forEach(d => add(+d));
+      else add(n);
     });
     if (hit.length) return s.type === 'radio' ? hit.slice(0, 1) : hit;
     const sc = opts.map(([, lab]) => {
@@ -1161,6 +1560,24 @@ class DbForm extends HTMLElement {
     if (s.type === 'radio') return top.length === 1 ? top : [];
     const many = sc.map((v, n) => (v >= 0.5 ? n : -1)).filter(n => n >= 0);
     return many.length ? many : top.length === 1 ? top : [];
+  }
+
+  // The recogniser's guesses, best first: take the first one that makes sense on this page (a command, a choice that
+  // matches, a valid phone number or email, a yes/no or number on the review page). Free text: the first guess.
+  bestAlt(list) {
+    if (!list || list.length < 2) return (list && list[0]) || '';
+    const s = this.steps[this.i], cmd = w => w.length <= (s && s.type === 'text' ? 1 : 3) && Object.keys(CMD).some(c => isCmd(c, w));
+    // A command in any guess wins (on every page, the phone page too), then a guess that fits the page.
+    const hit = list.find(x => cmd(this.norm(x).split(' ')));
+    if (hit) return hit;
+    const ok = x => {
+      const t = this.norm(x), w = t.split(' ');
+      if (!s) return !!this.ans(x) || w.some(y => /^\d+$/.test(y) || NUM[y]);
+      if (s.spoken === 'contact') return !!s.check(spokenContact(x));
+      if (s.type === 'text') return false;
+      return cmd(w) || this.pick(t, s).length > 0;
+    };
+    return list.find(ok) || list[0];
   }
 
   // Start listening for the answer to the page that was just read aloud.
@@ -1179,11 +1596,13 @@ class DbForm extends HTMLElement {
   readPage(s, cb) {
     if (s && s.id === 'role' && s.options && !this.err) {
       const l = this.l;
-      return this.playList([{ l, id: 'q_role', t: T(s.q, l) }, ...s.options.flatMap((p, k) => [{ l, id: 'n' + (k + 1), t: String(k + 1) }, { l, id: null, t: T(p[1], l) }])], cb);
+      return this.playList([{ l, id: 'q_role', t: T(s.q, l) }, ...s.options.flatMap((p, k) => [{ l, id: 'n' + (k + 1), t: String(k + 1) }, { l, id: null, t: T(p[1], l), any: true }])], cb);
     }
     const id = this.done ? (this.queued ? 'queued' : 'done') : this.welcome ? (this.draft ? 'draftH' : 'welcome') : s ? s.id : this.rs ? 'reviewFix' : 'review';
     const ek = this.err && this.errKey && this.err === this.u(this.errKey) ? 'err' + this.errKey[0].toUpperCase() + this.errKey.slice(1) : null;
-    const go = () => this.speak(this.pageText(s, !!ek), id, cb);
+    // The review page has the person's own answers, so it cannot be one recording: it is put together from short clips
+    // (heading, number, question, chosen option, digits, consent sentence) and a voice only for typed words such as a name.
+    const go = id === 'review' ? () => this.playList(this.reviewItems(), cb, this.pageText(s, true)) : () => this.speak(this.pageText(s, !!ek), id, cb);
     if (ek) this.speak(this.err, ek, go); else go();
   }
 
@@ -1196,7 +1615,7 @@ class DbForm extends HTMLElement {
   // Play several recorded clips one after another. If one is missing, read the whole message with the device voice instead.
   seq(ids, text, cb) {
     const base = this.getAttribute('audio'), live = this.r.querySelector('#live'), k = ++this.tok;
-    if (this.aud) this.aud.pause();
+    if (this.aud) this.aud.pause(); this.stopDigits();
     if (window.speechSynthesis) speechSynthesis.cancel();
     { const c = cb; cb = () => { if (k === this.tok) { this.cap('idle'); if (c) c(); } }; }
     this.cap('speaking', text, this.l);
@@ -1206,11 +1625,23 @@ class DbForm extends HTMLElement {
     const go = () => {
       if (k !== this.tok || bad) return;
       if (n >= ids.length) { if (cb) cb(); return; }
-      const a = this.aud = new Audio(base + '/' + this.al() + '/' + ids[n++] + '.mp3');
+      const u = x => base + '/' + this.al() + '/' + x + '.mp3', src = u(ids[n++]);
+      if (CLIP_MISSING.has(src)) { fail(); return; }
+      if (n < ids.length) preload(u(ids[n]));
+      const a = this.aud = clipAudio(src);
+      a.defaultPlaybackRate = a.playbackRate = this.speed || 1;
       a.onended = go; a.onerror = fail; a.play().catch(fail);
     };
     go();
   }
+
+  // "Prefer not to say": choosing it clears the other choices; choosing another clears it. changed = the box just changed.
+  exclusive(s, changed) {
+    const ex = s && s.exclusive; if (!ex || !changed || !changed.checked) return;
+    this.r.querySelectorAll('input[name=f]').forEach(x => { if (x !== changed && (changed.value === ex || x.value === ex)) x.checked = false; });
+  }
+  // Support choices that mean something to send ("prefer not to say" is not one).
+  supportChosen() { return (this.a.support || []).filter(x => x !== 'prefer'); }
 
   // Act on what the person said.
   heard(raw) {
@@ -1218,16 +1649,28 @@ class DbForm extends HTMLElement {
     if (this.done) return;
     const s = this.steps[this.i], t = this.norm(raw), w = t ? t.split(' ') : [];
     const lim = s && s.type === 'text' ? 1 : 3;
-    const is = c => w.length > 0 && w.length <= lim && w.some(x => CMD[c].includes(x));
+    const is = c => w.length > 0 && w.length <= lim && isCmd(c, w);
     const again = () => this.readPage(s, () => this.cue(() => this.listen(true)));
     if (this.welcome) { if (this.draft && is('next')) this.resume(); else if (is('start') || is('next')) { if (this.draft) { this.dropDraft(); this.a = {}; this.i = 0; } this.startForm(false); } else this.say2(this.u('sayWelcome'), 'sayWelcome'); return; }
     if (!s) {
       const rv = this.steps.map((x, n) => [x, n]).filter(([x]) => !x.local), yn = this.ans(raw);
-      const num = w.map(x => (/^\d+$/.test(x) ? +x : NUM[x] || 0)).find(n => n >= 1 && n <= rv.length);
+      const tick = k => { (this.consent = this.consent || { a: false, s: false })[k] = true; const c = this.r.querySelector(`[data-consent=${k}]`); if (c) c.checked = true; };
+      // Second question after Yes: share the support choices too? Only a clear Yes shares them; No sends without them.
+      if (this.sup) {
+        if (is('stop')) { this.sup = 0; return this.stopRead(); }
+        if (yn) { this.sup = 0; if (yn === 'y') tick('s'); return this.send(); }
+        return this.say2(this.u('askSupport'), 'askSupport');
+      }
+      const num = w.map(x => numOf(x)).find(n => n >= 1 && n <= rv.length);
       if (w.some(x => CMD.restart.includes(x)) || (w.some(x => CMD.start.includes(x)) && w.some(x => CMD.again.includes(x)))) return this.restart();
       if (is('stop')) return this.stopRead();
       if (num) return this.edit(rv[num - 1][1]);
-      if (is('send') || (!this.rs && yn === 'y')) { (this.consent = this.consent || { a: false, s: false }).a = true; return this.send(); }
+      if (is('send') || (!this.rs && yn === 'y')) {
+        tick('a');
+        // Support needs are sent only with their own agreement, by voice too: ask separately before sending.
+        if (this.f === FLOWS.signup && this.supportChosen().length && !(this.consent && this.consent.s)) { this.sup = 1; return this.say2(this.u('askSupport'), 'askSupport'); }
+        return this.send();
+      }
       if (!this.rs && yn === 'n') { this.rs = 1; this.moved = true; return this.draw(); }
       if (is('back')) return this.goBack(s);
       if (is('repeat')) return again(this.rs ? 'reviewFix' : 'review');
@@ -1240,14 +1683,20 @@ class DbForm extends HTMLElement {
     if (is('next')) return this.next(s);
     const e = this.r.querySelector('#err'); if (e) e.textContent = '';
     if (s.type === 'text') {
-      this.r.querySelector('#f').value = String(raw).trim();
-      return this.say2(this.u('heardNext', { x: String(raw).trim() }), this.hasVoice() ? null : 'heardGeneric');
+      // Phone or email: spoken digits and "at" / "dot" become the text the box needs.
+      const v = s.spoken === 'contact' ? spokenContact(raw) : String(raw).trim(), f = this.r.querySelector('#f');
+      // A word that is not a phone number or email never replaces a good number already in the box.
+      if (s.spoken === 'contact' && !s.check(v) && f && f.value && s.check(f.value)) return this.playList([{ l: this.l, id: 'heardB', t: this.u('heardB') }], () => this.cue(() => this.listen(true)));
+      if (f) f.value = v;
+      // Read it back from clips ("We heard" + the answer + "Say Next..."); a phone number is read digit by digit.
+      const m = this.u('heardNext', { x: v }); this.say(m);
+      return this.playList(this.heardItems(v, s), () => this.cue(() => this.listen(true)), m);
     }
     const hit = this.pick(t, s);
     if (!hit.length) return this.say2(this.u('unclear'), 'unclear');
     const ins = [...this.r.querySelectorAll('input[name=f]')];
     if (s.type === 'radio') ins.forEach((el, n) => { el.checked = n === hit[0]; });
-    else hit.forEach(n => { ins[n].checked = !ins[n].checked; });
+    else hit.forEach(n => { ins[n].checked = !ins[n].checked; this.exclusive(s, ins[n]); });
     const sel = ins.map((el, n) => (el.checked ? T(s.options[n][1], this.l) : null)).filter(Boolean);
     const nums = ins.map((el, n) => (el.checked ? 'n' + (n + 1) : null)).filter(Boolean), m = sel.length ? this.u('chose', { x: sel.join(', ') }) : this.u('noneSel');
     this.say(m); this.seq(sel.length ? ['choseA', ...nums, 'choseB'] : ['noneSel'], m, () => this.cue(() => this.listen(true)));
@@ -1259,7 +1708,7 @@ class DbForm extends HTMLElement {
     this.stopVoice();
     this.tok++;
     if (window.speechSynthesis) speechSynthesis.cancel();
-    if (this.aud) this.aud.pause();
+    if (this.aud) this.aud.pause(); this.stopDigits();
     const rec = this.recog(this.sl());
     if (!rec) { live.textContent = this.u('novoice'); return; }
     this.vrec = rec;
@@ -1268,7 +1717,7 @@ class DbForm extends HTMLElement {
     if (mb) mb.classList.add('on');
     live.textContent = this.u('listening');
     this.cap('listening');
-    rec.onresult = e => { got = true; off(); this.vrec = null; this.heard(e.results[0][0].transcript); };
+    rec.onresult = e => { got = true; off(); this.vrec = null; this.heard(this.bestAlt(alts(e))); };
     rec.onerror = e => {
       if (e.error === 'no-speech') return;
       got = true; this.vno = auto || this.vno; off();
@@ -1291,7 +1740,8 @@ class DbForm extends HTMLElement {
       if (s.type === 'ecdate') { if (v && v.m) { const r = ecResolve(v); out[s.id] = isoOf(fromEC(r.y, r.m, r.d)); } return; }
       out[s.id] = v;
     });
-    if (!this.consent.s) delete out.support;
+    if (Array.isArray(out.support)) out.support = out.support.filter(x => x !== 'prefer');
+    if (!this.consent.s || !(out.support || []).length) delete out.support;
     out.consent = { given: true, scope: ['answers', ...(this.consent.s && out.support ? ['support'] : [])], version: CONSENT_VERSION, lang: this.l, partner: this.getAttribute('partner') || '', at: new Date().toISOString() };
     return out;
   }
@@ -1313,8 +1763,13 @@ class DbForm extends HTMLElement {
         const j = await r.json().catch(() => ({}));
         this.receipt = j.receipt || ''; this.recId = j.id || '';
       }
+      this.sent = out; this.mine = '';
       this.done = true; this.moved = true; this.err = ''; this.dropDraft();
       this.dispatchEvent(new CustomEvent('db-complete', { detail: { answers: out, id: this.recId, receipt: this.receipt }, bubbles: true, composed: true }));
+      // The organisers' data contract (Technical Guide, Track 1): profile and support in two separate events.
+      const { support, consent, ...profile } = out;
+      this.emit('done', { profile: { ...profile, language: this.l }, id: this.recId, receipt: this.receipt, voiceNotes: [] });
+      if (support && support.length) this.emit('support', { support });
     } catch (e) {
       // No connection: keep the answers on the device and send them later. A server answer (4xx/5xx) is shown as an error.
       if (url && !e.status) {
@@ -1330,6 +1785,54 @@ class DbForm extends HTMLElement {
     this.draw();
   }
 }
+// Learner's own record, shared by the thank-you page and <db-my-answers>.
+function saveAnswers(data, receipt, root) {
+  if (!data || typeof document === 'undefined') return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify({ receipt, ...data }, null, 2)], { type: 'application/json' }));
+  a.download = 'my-answers' + (receipt ? '-' + receipt : '') + '.json';
+  (root || document.body).appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+async function deleteByReceipt(api, code) {
+  if (!api || !code) return false;
+  try { const r = await fetch(api + '/receipts/' + encodeURIComponent(code), { method: 'DELETE' }); return r.status === 204; } catch (e) { return false; }
+}
+// <db-my-answers api='…/v1' lang='am'>: a learner types the receipt code from the thank-you page to see, download or
+// delete their answers later, on any device. Uses the same look and the same words as the form.
+class DbMyAnswers extends DbForm {
+  connectedCallback() { this.l = this.getAttribute('lang') || this.l || 'en'; this.code = ''; this.rec = null; this.state = ''; this.paint(); }
+  disconnectedCallback() {}
+  paint(focus) {
+    const u = k => esc(this.u(k)), r = this.rec;
+    let b = `<h2 id='h' tabindex='-1'>${u('myH')}</h2>`;
+    if (this.state === 'gone') b += `<p id='mymsg' tabindex='-1' role='status'>${u('myDeleted')}</p>`;
+    else if (r) {
+      const rows = Object.entries(r.answers || {}).filter(([k]) => k !== 'consent').map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(Array.isArray(v) ? v.join(', ') : v)}</dd>`).join('');
+      b += `<dl class='mine'>${rows}</dl>` + (this.state === 'sure'
+        ? `<div class='sure' role='group' aria-labelledby='sureq'><p id='sureq' tabindex='-1'><strong>${u('mySure')}</strong></p><div class='row'><button type='button' class='p' data-yes>${u('myYes')}</button><button type='button' data-no>${u('myNo')}</button></div></div>`
+        : `<div class='row'><button type='button' data-dl>${u('myDownload')}</button><button type='button' data-del>${u('myDelete')}</button></div>`);
+    } else b += `<form novalidate><label for='code'>${u('myCode')}</label><p class='hint' id='codehint'>${u('myHint')}</p><input type='text' id='code' autocomplete='off' spellcheck='false' aria-describedby='codehint${this.state ? ' myerr' : ''}'${this.state ? " aria-invalid='true'" : ''} value='${esc(this.code)}'><div class='row'><button class='p'>${u('myShow')}</button></div></form>`;
+    if (this.state === 'missing' || this.state === 'fail') b += `<p class='err' id='myerr' role='alert'>${u(this.state === 'missing' ? 'myNotFound' : 'myFail')}</p>`;
+    this.r.innerHTML = `<style>${CSS}.mine{display:grid;grid-template-columns:auto 1fr;gap:var(--s2) var(--s4)}.mine dt{font-weight:700}.mine dd{margin:0;overflow-wrap:anywhere}label{display:block;font-weight:700}.hint{margin:var(--s1) 0 var(--s3);color:var(--ink-2)}</style><section lang='${esc(this.l)}'>${b}</section>`;
+    const $ = s => this.r.querySelector(s), api = this.getAttribute('api');
+    const f = $('form'); if (f) f.addEventListener('submit', async e => {
+      e.preventDefault(); this.code = $('#code').value.replace(/\s+/g, '');
+      try { const x = await fetch(api + '/receipts/' + encodeURIComponent(this.code)); if (x.ok) { this.rec = await x.json(); this.state = ''; } else this.state = x.status === 404 ? 'missing' : 'fail'; } catch (er) { this.state = 'fail'; }
+      this.paint(this.rec ? '#h' : '#code');
+    });
+    const on = (s, fn) => { const e = $(s); if (e) e.addEventListener('click', fn); };
+    on('[data-dl]', () => saveAnswers(r && { flow: r.flow, at: r.at, answers: r.answers, support: r.support }, this.code, this.r));
+    on('[data-del]', () => { this.state = 'sure'; this.paint('#sureq'); });
+    on('[data-no]', () => { this.state = ''; this.paint('[data-del]'); });
+    on('[data-yes]', async () => {
+      const ok = await deleteByReceipt(api, this.code);
+      if (ok) { this.rec = null; this.state = 'gone'; this.dispatchEvent(new CustomEvent('db-deleted', { detail: { id: r.id }, bubbles: true, composed: true })); } else this.state = 'fail';
+      this.paint(ok ? '#mymsg' : '[data-del]');
+    });
+    if (focus) { const e = $(focus); if (e) e.focus(); }
+  }
+}
 // Level 1 tags. All three are the same engine; the two named tags only change the default flow.
 // <db-onboarding> = sign-up, <db-career-gateway> = job search and application. Loading the script twice is harmless.
 class DbOnboarding extends DbForm { static flow = 'signup'; }
@@ -1337,4 +1840,5 @@ class DbCareerGateway extends DbForm { static flow = 'job'; }
 if (!customElements.get('db-form')) customElements.define('db-form', DbForm);
 if (!customElements.get('db-onboarding')) customElements.define('db-onboarding', DbOnboarding);
 if (!customElements.get('db-career-gateway')) customElements.define('db-career-gateway', DbCareerGateway);
+if (!customElements.get('db-my-answers')) customElements.define('db-my-answers', DbMyAnswers);
 }

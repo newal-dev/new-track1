@@ -61,6 +61,15 @@ NUMBERS = {
 }
 AT_SIGN = {"en": "at", "am": "at", "om": "at", "ti": "at", "so": "at", "sid": "at"}
 
+# Key names are said with the English voice in every language: people know the keys by their English names.
+KEY_WORDS = r"\b(Tab|Shift|Space|Enter|Escape|Esc)\b"
+# Words the romaniser spells badly for the voice (uroman adds a vowel after every vowelless Ge'ez letter, so ሁለት became
+# "hulate"). Whole phrase -> the Latin spelling the voice model is given instead. Chosen by a native speaker, by ear.
+PRONOUNCE = {
+    # Digits chosen by a native Amharic speaker, by ear (15 Nov 2026). ዜሮ, ሁለት, ስምንት, ዘጠኝ keep the romaniser's spelling.
+    "am": {"አንድ": "aand", "ሦስት": "sosst", "አራት": "aratt", "አምስት": "amest", "ስድስት": "sidist", "ሰባት": "sabaat",
+           "አሥር": "asser"},  # አሥር: same pattern as the chosen digits; a native speaker should listen to it
+}
 CLIPS = json.loads(r'''__CLIPS_JSON__''')
 
 # ------------------------------------------------------------------- code ---
@@ -120,6 +129,19 @@ def romanise(s, lang):
         romaniser = ur.Uroman()
     return romaniser.romanize_string(s, lcode=UROMAN_CODE[lang])
 
+_eng = {}
+def english_voice():
+    if not _eng:
+        _eng["tok"] = AutoTokenizer.from_pretrained(MODELS["en"])
+        m = VitsModel.from_pretrained(MODELS["en"]).to(device).eval(); m.speaking_rate = SPEAKING_RATE; _eng["model"] = m
+    return _eng["tok"], _eng["model"]
+def synth(tok, model, s):
+    inputs = tok(s, return_tensors="pt").to(device)
+    if inputs["input_ids"].shape[-1] < 2:                                        # nothing the model can say
+        return None
+    set_seed(SEED)
+    with torch.no_grad():
+        return model(**inputs).waveform[0].cpu().numpy().astype(np.float32)
 if os.path.isdir(OUT):
     shutil.rmtree(OUT)
 report, dropped = [], {}
@@ -138,20 +160,39 @@ for lang in LANGS_TO_MAKE:
             continue
         pieces = []
         for phrase, pause in segments(spoken(lang, text)):
-            s = romanise(phrase, lang) if needs_latin else phrase
-            s = s.lower()
-            lost = {c for c in s if c != " " and c not in vocab}
-            if lost:
-                dropped.setdefault(lang, {}).setdefault("".join(sorted(lost)), []).append(cid)
-            inputs = tok(s, return_tensors="pt").to(device)
-            if inputs["input_ids"].shape[-1] < 2:                                # nothing the model can say
-                continue
-            set_seed(SEED)
-            with torch.no_grad():
-                w = model(**inputs).waveform[0].cpu().numpy().astype(np.float32)
-            w = trim(w, rate)
-            if len(w):
-                pieces += [w, np.zeros(int(rate * pause), np.float32)]
+            # A phrase in another language can contain key names: those parts are said by the English voice.
+            parts = re.split(KEY_WORDS, phrase) if lang != "en" else [phrase]
+            ws = []
+            for j, part in enumerate(parts):
+                part = part.strip()
+                if not part:
+                    continue
+                if j % 2 == 1:
+                    et, em = english_voice(); w = synth(et, em, part.lower())
+                else:
+                    fixed = PRONOUNCE.get(lang, {}).get(part.strip(" .,!?።፣"))
+                    if fixed:
+                        s = fixed
+                    elif needs_latin and any(w.strip(" .,!?።፣") in PRONOUNCE.get(lang, {}) for w in part.split()):
+                        # A sentence with one of those words in it (a numbered choice): that word as chosen, the rest romanised.
+                        s = " ".join(PRONOUNCE[lang].get(w.strip(" .,!?።፣")) or romanise(w, lang) for w in part.split())
+                    else:
+                        s = romanise(part, lang) if needs_latin else part
+                    s = s.lower()
+                    # Letters this voice has no sound for: the nearest one it has (ቪዲዮ "video" -> "bidiyo", as many say it).
+                    for miss, near in (("v", "b"), ("p", "b")):
+                        if miss not in vocab and near in vocab:
+                            s = s.replace(miss, near)
+                    lost = {c for c in s if c != " " and c not in vocab}
+                    if lost:
+                        dropped.setdefault(lang, {}).setdefault("".join(sorted(lost)), []).append(cid)
+                    w = synth(tok, model, s)
+                if w is not None:
+                    w = trim(w, rate)
+                    if len(w):
+                        ws += [w / (float(np.abs(w).max()) or 1.0) * 0.9, np.zeros(int(rate * 0.06), np.float32)]
+            if ws:
+                pieces += [*ws[:-1], np.zeros(int(rate * pause), np.float32)]
         if not pieces:
             print(f"  !! {cid}: nothing to say, skipped")
             report.append((lang, cid, 0.0, "EMPTY"))

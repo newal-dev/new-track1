@@ -33,6 +33,32 @@ describe('health and widget', () => {
     assert.match(r.headers.get('content-type'), /javascript/);
     assert.ok((await r.arrayBuffer()).byteLength < 250 * 1024);
   });
+  test('after an update browsers get the new widget and clips: re-checked each load, offline cache named after the release', async () => {
+    for (const u of ['/widget.js', '/db-form.js', '/db-sw.js', '/audio/am/langSelf.mp3']) assert.equal((await fetch(U + u)).headers.get('cache-control'), 'no-cache', u);
+    const sw = await (await fetch(U + '/db-sw.js')).text();
+    assert.match(sw, /const DB_CACHE = 'db-form-[0-9a-f]{12}';/);
+    assert.doesNotMatch(sw, /db-form-v\d/);
+    assert.match(sw, /cache: 'no-cache'/);
+  });
+  test('the demo partner site is served at /site/ with the server address filled in, and the bare address opens it', async () => {
+    const r = await fetch(U + '/', { redirect: 'manual' }); assert.equal(r.status, 302); assert.equal(r.headers.get('location'), '/site/');
+    const html = await (await fetch(U + '/site/')).text();
+    assert.ok(html.includes(U + '/widget.js') && !html.includes('localhost:3000'));
+    assert.ok((await (await fetch(U + '/site/db-sw.js')).text()).includes(U + '/db-sw.js'));
+    assert.equal((await fetch(U + '/site/savanna.html')).status, 200);
+    assert.equal((await fetch(U + '/site/../server.js')).status, 404);
+    assert.match(await (await fetch(U + '/?info')).text(), /Inclusive Access plugin server/);
+  });
+  test('the official Savanna starter is served at /site/savanna/ with the sign-up page pointing at this server', async () => {
+    const html = await (await fetch(U + '/site/savanna/pages/signup.html')).text();
+    assert.ok(html.includes(U + '/widget.js') && html.includes('<db-onboarding') && !html.includes('localhost:3000'));
+    assert.equal((await fetch(U + '/site/savanna/assets/css/application_alx.css')).status, 200);
+    assert.equal((await fetch(U + '/site/savanna/../server.js')).status, 404);
+  });
+  test('interactive API docs at /docs, and the specification names this server', async () => {
+    assert.match(await (await fetch(U + '/docs')).text(), /SwaggerUIBundle\(\{ url: '\/openapi.yaml'/);
+    assert.match(await (await fetch(U + '/openapi.yaml')).text(), new RegExp('url: ' + U));
+  });
   test('db-form.js is still served (old install snippet)', async () => { assert.equal((await fetch(U + '/db-form.js')).status, 200); });
   test('OpenAPI spec is served', async () => { const t = await (await fetch(U + '/openapi.yaml')).text(); assert.match(t, /openapi: 3/); });
   test('service worker and local fonts are served', async () => {
@@ -166,6 +192,45 @@ describe('consent', () => {
     const { id, receipt } = await (await post('/v1/employer/jobs', { job: 'Temporary post', consent: consent() })).json();
     await fetch(U + '/v1/records/' + id, { method: 'DELETE', headers: { 'X-Receipt': receipt } });
     assert.ok(!(await (await fetch(U + '/v1/jobs')).json()).some(j => j.title === 'Temporary post'));
+  });
+});
+
+describe('learner data rights', () => {
+  test('with only the receipt code a learner can see, then delete, their answers', async () => {
+    const { id, receipt } = await (await learner({ fullName: 'Receipt Only', support: ['voice'], consent: consent(['answers', 'support']) })).json();
+    const g = await fetch(U + '/v1/receipts/' + receipt);
+    assert.equal(g.status, 200);
+    const j = await g.json();
+    assert.equal(j.id, id); assert.equal(j.answers.fullName, 'Receipt Only'); assert.deepEqual(j.support, ['voice']);
+    assert.equal(g.headers.get('cache-control'), 'no-store');
+    assert.equal((await fetch(U + '/v1/receipts/' + receipt, { method: 'DELETE' })).status, 204);
+    assert.equal(app.locals.stores.records.has(id), false);
+    assert.equal(app.locals.stores.supportPreferences.has(id), false);
+    assert.ok(app.locals.stores.consents.get(id).withdrawnAt);
+    assert.equal((await fetch(U + '/v1/receipts/' + receipt)).status, 404);
+    assert.equal((await fetch(U + '/v1/receipts/' + receipt, { method: 'DELETE' })).status, 404);
+  });
+  test('a wrong or malformed receipt code finds nothing and deletes nothing', async () => {
+    const { id, receipt } = await (await learner()).json();
+    const wrong = (receipt[0] === 'a' ? 'b' : 'a') + receipt.slice(1);
+    for (const c of [wrong, 'short', receipt + 'x']) {
+      assert.equal((await fetch(U + '/v1/receipts/' + c)).status, 404);
+      assert.equal((await fetch(U + '/v1/receipts/' + c, { method: 'DELETE' })).status, 404);
+    }
+    assert.equal(app.locals.stores.records.has(id), true);
+  });
+  test('a learner can export everything held about them, with their receipt; without it the record does not exist', async () => {
+    const { id, receipt } = await (await learner({ fullName: 'Export Me', contact: '0911 22 33 44', support: ['captions', 'time', 'interp', 'prefer'], consent: consent(['answers', 'support']) })).json();
+    const r = await fetch(U + '/v1/records/' + id, { headers: { 'x-receipt': receipt } }); assert.equal(r.status, 200);
+    const j = await r.json();
+    assert.equal(j.answers.fullName, 'Export Me');
+    assert.equal(j.answers.contact, '+251911223344'); // one stored format
+    assert.deepEqual(j.support, ['captions', 'time', 'interp']); // "prefer not to say" is never stored
+    assert.deepEqual(j.consent.scope, ['answers', 'support']);
+    assert.equal((await fetch(U + '/v1/records/' + id)).status, 404);
+    assert.equal((await fetch(U + '/v1/records/' + id, { headers: { 'x-receipt': 'wrong' } })).status, 404);
+    assert.equal((await fetch(U + '/v1/records/' + id, { method: 'DELETE', headers: { 'x-receipt': receipt } })).status, 204);
+    assert.equal((await fetch(U + '/v1/records/' + id, { headers: { 'x-receipt': receipt } })).status, 404);
   });
 });
 

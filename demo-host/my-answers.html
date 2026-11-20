@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang='en'>
+<head>
+<meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>My answers</title>
+</head>
+<body>
+<!-- A learner types the receipt code from the thank-you page to see, download or delete their answers.
+     No account and no password: the receipt code is the key. Add ?lang=am (or om, ti, so, sid) for another language. -->
+<main>
+<h1>My answers</h1>
+<script src='http://localhost:3000/widget.js' defer></script>
+<db-my-answers api='http://localhost:3000/v1'></db-my-answers>
+</main>
+<script>
+  const l = new URLSearchParams(location.search).get('lang');
+  if (l) { document.documentElement.lang = l; document.querySelector('db-my-answers').setAttribute('lang', l); }
+</script>
+</body>
+</html>

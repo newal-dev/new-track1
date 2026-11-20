@@ -58,7 +58,7 @@ test('signup: every question, the review and the thank-you page', async ({ page 
   await next(page);
   await expect(heading(page)).toHaveText('What is your full name?'); await axe(page, 'signup fullName (text)');
   await F(page).locator('#f').fill('Abebe Kebede'); await next(page);
-  await axe(page, 'signup contact (text, typed only)');
+  await axe(page, 'signup contact (text, spoken or typed)');
   await F(page).locator('#f').fill('0911223344'); await next(page);
   await expect(heading(page)).toHaveText('How would you like to show who you are?'); await axe(page, 'signup idRoute (radio)');
   await F(page).getByText("I don't have an ID", { exact: false }).click(); await next(page);
@@ -74,6 +74,50 @@ test('signup: every question, the review and the thank-you page', async ({ page 
   await expect(F(page).locator('.receipt')).toBeVisible();
   await expect(F(page).locator('.done .when')).toContainText('Ethiopian calendar');
   await axe(page, 'signup done');
+});
+
+test('the learner can delete their answers with their receipt: on the thank-you page, and later on "My answers"', async ({ page, request }) => {
+  const send = async () => {
+    await toForm(page);
+    await next(page);
+    await F(page).locator('#f').fill('Delete Me'); await next(page);
+    await F(page).locator('#f').fill('0911223344'); await next(page);
+    await F(page).getByText("I don't have an ID", { exact: false }).click(); await next(page);
+    await next(page);
+    await F(page).locator('#cons').check(); await F(page).locator('[data-send]').click();
+    await expect(heading(page)).toHaveText('Thank you. We received your answers.');
+    return (await F(page).locator('.receipt').textContent()).trim();
+  };
+  // 1. Thank-you page: Delete asks first; No keeps everything; Yes deletes.
+  const code = await send();
+  await expect(F(page).locator('[data-mydl]')).toBeVisible();
+  await F(page).locator('[data-mydel]').click();
+  expect((await deepActive(page)).id).toBe('sureq');
+  await axe(page, 'thank-you page, delete confirmation');
+  await F(page).locator('[data-mydel-no]').click();
+  expect((await request.get('http://localhost:3000/v1/receipts/' + code)).status()).toBe(200);
+  const gone = page.evaluate(() => new Promise(r => document.addEventListener('db-deleted', () => r(true), { once: true })));
+  await F(page).locator('[data-mydel]').click(); await F(page).locator('[data-mydel-yes]').click();
+  await expect(F(page).locator('#mymsg')).toHaveText('Your answers have been deleted.');
+  expect(await gone).toBe(true);
+  expect((await request.get('http://localhost:3000/v1/receipts/' + code)).status()).toBe(404);
+  // 2. "My answers" page, by keyboard: a wrong code explains itself; the right code shows the answers and deletes them.
+  const code2 = await send();
+  await page.goto('/my-answers.html');
+  const M = page.locator('db-my-answers');
+  await expect(M.locator('#h')).toHaveText('Your answers');
+  await axe(page, 'my answers: enter the code');
+  await M.locator('#code').fill('wrongcode'); await M.locator('#code').press('Enter');
+  await expect(M.locator('#myerr')).toContainText('No answers were found');
+  await expect(M.locator('#code')).toHaveAttribute('aria-invalid', 'true');
+  await M.locator('#code').fill(code2.replace(/(.{4})/g, '$1 ')); await M.locator('#code').press('Enter');
+  await expect(M.locator('.mine')).toContainText('Delete Me');
+  await axe(page, 'my answers: shown');
+  const [dl] = await Promise.all([page.waitForEvent('download'), M.locator('[data-dl]').click()]);
+  expect(dl.suggestedFilename()).toBe('my-answers-' + code2 + '.json');
+  await M.locator('[data-del]').click(); await page.keyboard.press('Tab'); await page.keyboard.press('Enter');
+  await expect(M.locator('#mymsg')).toHaveText('Your answers have been deleted.');
+  expect((await request.get('http://localhost:3000/v1/receipts/' + code2)).status()).toBe(404);
 });
 
 test('error summary: an empty answer shows an alert, marks the field and moves focus to it', async ({ page }) => {
@@ -268,4 +312,101 @@ test('LTI 1.3: the demo LMS launches the plug-in in Amharic', async ({ page }) =
 test('partner pages: SMS inbox and design system', async ({ page }) => {
   await page.goto('http://localhost:3000/demo/sms-inbox'); await axe(page, 'SMS inbox');
   await page.goto('/design-system.html'); await axe(page, 'design system page');
+});
+
+test('keyboard: Tab visits every radio choice, Enter chooses it, Enter again goes on; help is shown in the chosen language', async ({ page }) => {
+  await toForm(page, 'signup', 'am');
+  await expect(F(page).locator('.keys')).toContainText('ወደ ታች ለመሄድ');
+  await expect(F(page).locator('.keys')).toContainText('ድምፁን ለማቆም');
+  await next(page);
+  await F(page).locator('#f').fill('ሳሙኤል'); await next(page);
+  await F(page).locator('#f').fill('0911223344'); await next(page);
+  await expect(heading(page)).toHaveText('ማንነትዎን እንዴት ማሳየት ይፈልጋሉ?');
+  const seen = [];
+  for (let k = 0; k < 4; k++) { await page.keyboard.press('Tab'); seen.push((await deepActive(page)).value); }
+  expect(seen).toEqual(['kebele', 'refugee', 'other', 'refer']);
+  await page.keyboard.press('Shift+Tab'); await page.keyboard.press('Shift+Tab');
+  expect((await deepActive(page)).value).toBe('refugee');
+  await page.keyboard.press('Enter');
+  await expect(F(page).locator('input[value=refugee]')).toBeChecked();
+  await expect(heading(page)).toHaveText('ማንነትዎን እንዴት ማሳየት ይፈልጋሉ?');
+  await expect(F(page).locator('#err')).toBeEmpty();
+  await page.keyboard.press('Enter');
+  await expect(heading(page)).toHaveText('ምን ዓይነት እገዛ ይጠቅምዎታል? የፈለጉትን ይምረጡ።');
+  // Checkboxes: Enter ticks, Enter on a ticked box goes on.
+  await page.keyboard.press('Tab'); await page.keyboard.press('Enter');
+  await expect(F(page).locator('input[value=screenreader]')).toBeChecked();
+  await page.keyboard.press('Enter');
+  await expect(heading(page)).toHaveText('መልሶችዎን ያረጋግጡ');
+  await axe(page, 'Amharic review with keyboard help');
+});
+
+test('text size 200%: the whole page grows (header and nav too), the form is not doubled, and it is kept', async ({ page }) => {
+  await toForm(page);
+  await F(page).locator('details.disp summary').click();
+  await F(page).locator('input[name=ts][value="2"]').check();
+  const sizes = () => page.evaluate(() => ({ html: getComputedStyle(document.documentElement).fontSize, nav: getComputedStyle(document.querySelector('nav.primary a')).fontSize, form: getComputedStyle(document.querySelector('db-form').shadowRoot.querySelector('section')).fontSize, side: document.documentElement.scrollWidth > innerWidth }));
+  expect(await sizes()).toEqual({ html: '32px', nav: '34px', form: '36px', side: false });
+  await axe(page, 'Display menu open, text 200%');
+  await page.reload();
+  expect(await sizes()).toEqual({ html: '32px', nav: '34px', form: '36px', side: false });
+  await page.setViewportSize({ width: 360, height: 800 });
+  expect((await sizes()).side).toBe(false);
+});
+
+test('review page by voice: every clip it plays exists, in every language', async ({ page, request }) => {
+  await toForm(page);
+  await next(page);
+  await F(page).locator('#f').fill('Abebe'); await next(page);
+  await F(page).locator('#f').fill('0911223344'); await next(page);
+  await F(page).locator('input[value=refugee]').check(); await next(page);
+  await F(page).locator('input[value=sign]').check(); await next(page);
+  await expect(heading(page)).toHaveText('Check your answers');
+  for (const l of ['en', 'am', 'om', 'ti', 'so', 'sid']) {
+    const ids = await F(page).evaluate((el, l) => { el.l = l; return el.reviewItems().filter(x => x.id).map(x => x.id); }, l);
+    expect(ids).toContain('reviewH'); expect(ids).toContain('q_idRoute'); expect(ids).toContain('o_support_sign');
+    for (const id of new Set(ids)) expect((await request.head(`http://localhost:3000/audio/${l}/${id}.mp3`)).status(), `${l}/${id}.mp3`).toBe(200);
+  }
+});
+
+test('outside Savanna: a blank page with no styles at all, only the two lines; the organisers’ events fire', async ({ page }) => {
+  const events = [];
+  await page.exposeFunction('__ev', (t, d) => events.push([t, d]));
+  await page.addInitScript(() => ['db-signup:step', 'db-signup:done', 'db-signup:support'].forEach(t => document.addEventListener(t, e => window.__ev(t, e.detail))));
+  await page.goto('/blank.html');
+  const W = page.locator('db-onboarding');
+  await expect(W.locator('#h')).toHaveText('Which language would you like to use?');
+  await axe(page, 'blank page');
+  await W.locator('[data-pick=en]').click(); await W.locator('[data-ra=n]').click(); await W.locator('[data-start=t]').click();
+  await W.locator('[data-next]').click();
+  await W.locator('#f').fill('Blank Page Tester'); await W.locator('[data-next]').click();
+  await W.locator('#f').fill('0911223344'); await W.locator('[data-next]').click();
+  await W.locator('input[value=refer]').check(); await W.locator('[data-next]').click();
+  await W.locator('input[value=prefer]').check(); await W.locator('[data-next]').click();
+  await expect(W.locator('#h')).toHaveText('Check your answers');
+  await expect(W.locator('[data-consent=s]')).toHaveCount(0); // "prefer not to say": no second consent box, nothing about support sent
+  await W.locator('#cons').check(); await W.locator('[data-send]').click();
+  await expect(W.locator('#h')).toHaveText('Thank you. We received your answers.');
+  expect(events.some(([t, d]) => t === 'db-signup:step' && d.step === 2)).toBe(true);
+  const done = events.find(([t]) => t === 'db-signup:done');
+  expect(done[1].profile.idRoute).toBe('refer'); // no ID: the "refer me" route finishes successfully
+  expect(events.some(([t]) => t === 'db-signup:support')).toBe(false);
+});
+
+test('inside the official Savanna starter: signup.html mounts the plug-in; when sign-up is done the page goes to the learner homepage', async ({ page }) => {
+  await page.goto('/savanna/pages/signup.html');
+  const W = page.locator('db-onboarding');
+  await expect(W.locator('#h')).toHaveText('Which language would you like to use?');
+  // Our module only: Savanna's own defects belong to the starter (the guide: "your score is for your module").
+  const r = await new AxeBuilder({ page }).include('db-onboarding').withTags(TAGS).analyze();
+  expect(r.violations.filter(v => ['critical', 'serious'].includes(v.impact)).map(v => v.id)).toEqual([]);
+  await W.locator('[data-pick=am]').click(); await W.locator('[data-ra=n]').click(); await W.locator('[data-start=t]').click();
+  await W.locator('[data-next]').click();
+  await W.locator('#f').fill('ሳሙኤል'); await W.locator('[data-next]').click();
+  await W.locator('#f').fill('0911223344'); await W.locator('[data-next]').click();
+  await W.locator('input[value=refugee]').check(); await W.locator('[data-next]').click();
+  await W.locator('[data-next]').click();
+  await W.locator('#cons').check(); await W.locator('[data-send]').click();
+  await expect(W.locator('#h')).toHaveText('እናመሰግናለን። መልሶችዎን ተቀብለናል።');
+  await page.waitForURL(/homepage-v1-self-paced\.html$/, { timeout: 15000 });
 });

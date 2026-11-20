@@ -15,6 +15,7 @@
     "recording": "node tools/make-recording-script.mjs"
   },
   "dependencies": {
+    "compression": "^1.8.2",
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "jose": "^5.10.0"

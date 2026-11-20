@@ -1,0 +1,15 @@
+# One-click deploy on Render (https://render.com, free plan): New -> Blueprint -> pick this repository and branch.
+# Everything runs in one container: the plug-in (/widget.js), the API (/v1), the voice clips (/audio), the demo
+# partner site (/site/, also where the bare address goes), the demo learning platform (/demo/lms) and the SMS inbox.
+# The public address is picked up automatically (RENDER_EXTERNAL_URL). On the free plan the service sleeps when
+# unused; the first visit after that takes about a minute.
+services:
+  - type: web
+    name: inclusive-access
+    runtime: docker
+    plan: free
+    healthCheckPath: /v1/health
+    envVars:
+      # Protects GET /v1/consents (the consent log). Render makes a random value; see it under Environment.
+      - key: ADMIN_TOKEN
+        generateValue: true
