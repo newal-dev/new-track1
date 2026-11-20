@@ -80,6 +80,7 @@ Attributes go inside the `<db-form ...>` tag. Only `flow` and `api` are usually 
 | `theme` | `auto`, `standard`, `dark`, `contrast`, `rg`, `by` | `auto` | Starting colours. `auto` follows the device. The visitor's own choice in the **Colours** menu always wins. |
 | `hide` | comma list of question ids | none | Leave out optional questions, for example `hide='idRoute,support'`. `fullName`, `role` and `job` can never be hidden. |
 | `partner` | your organisation's name | "the organisers of this website" | Shown in the consent question: "I agree to send these answers to …". |
+| `continue` | an address, for example `courses.html` | none | Where to go after the thank-you page. It shows a **Next** button there and, when the page reads aloud, says "Say Next to continue" and listens. It fires the cancelable `db-continue` event first. Use this instead of a timer, so the person can hear and keep their receipt code. |
 | `sw` | path to your one-line service worker | none | Offline use, see section 12. |
 | `asr` | `browser`, `off`, or a registered name | `browser` | Speech recogniser. `off` hides voice input. See section 15. |
 | `fonts` | `no` | (loads) | Do not load the local Atkinson Hyperlegible and Noto Sans Ethiopic fonts. |

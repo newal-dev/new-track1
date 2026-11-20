@@ -24,7 +24,7 @@ When a clip is missing **and** the device has no voice for the language, the plu
 7. A native speaker must listen to every clip. If a word is wrong, fix the text in `public/db-form.js` (not here), then repeat from step 1.
 
 ## What to produce
-- **715 files in total**: 120 for `en`, 120 for `am`, 119 for `om`, 119 for `ti`, 118 for `so`, 119 for `sid`.
+- **721 files in total**: 121 for `en`, 121 for `am`, 120 for `om`, 120 for `ti`, 119 for `so`, 120 for `sid`.
 - Format: **mp3**, mono, 64 kbps or lower (small for 3G). The Colab script makes 48 kbps.
 - File name = the **ID** in the first column, plus `.mp3`. Example: `public/audio/am/fullName.mp3`. Use exactly this spelling and capital letters.
 - The plugin loads them from the `audio` attribute: `audio='http://localhost:3000/audio'` (the server serves the `public` folder).
@@ -87,6 +87,7 @@ When a clip is missing **and** the device has no voice for the language, the plu
 | `heardGeneric` | Spoken answer received (used when the device has no voice) | - | en, am, om, ti, so, sid |
 | `choseA` | Confirmation, first part ("You chose") | - | en, am, om, ti, so, sid |
 | `choseB` | Confirmation, last part | - | en, am, om, ti, so, sid |
+| `doneNext` | Thank-you page: say Next to continue (the first part of choseB) | - | en, am, om, ti, so, sid |
 | `errConsentNeed` | Error: consent box not ticked | - | en, am, om, ti, so, sid |
 | `errDateBad` | Error: date has no month | - | en, am, om, ti, so, sid |
 | `draftH` | Welcome back (answers kept on this device) | - | en, am, om, ti, so, sid |
@@ -855,6 +856,32 @@ Each box is the exact text of one clip. "1:" is spoken "one", "2:" "two", and so
 **Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/choseB.mp3`
 
 > Albisate Albisi yi, woy wole doori.
+
+### `doneNext`: Thank-you page: say Next to continue (the first part of choseB)
+
+**English** → `public/audio/en/doneNext.mp3`
+
+> Say Next to continue.
+
+**አማርኛ (checked by a native speaker)** → `public/audio/am/doneNext.mp3`
+
+> ለመቀጠል «ቀጥል» ይበሉ።
+
+**Afaan Oromoo (draft, VERIFY_NATIVE)** → `public/audio/om/doneNext.mp3`
+
+> Itti fufuuf Itti fufi jedhi.
+
+**ትግርኛ (draft, VERIFY_NATIVE)** → `public/audio/ti/doneNext.mp3`
+
+> ንምቕጻል «ቀጽል» በሉ።
+
+**Soomaali (draft, VERIFY_NATIVE)** → `public/audio/so/doneNext.mp3`
+
+> Dheh Xiga si aad u sii socoto.
+
+**Sidaamu Afoo (draft, VERIFY_NATIVE)** → `public/audio/sid/doneNext.mp3`
+
+> Albisate Albisi yi.
 
 ### `errConsentNeed`: Error: consent box not ticked
 

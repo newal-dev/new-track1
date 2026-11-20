@@ -393,7 +393,7 @@ test('outside Savanna: a blank page with no styles at all, only the two lines; t
   expect(events.some(([t]) => t === 'db-signup:support')).toBe(false);
 });
 
-test('inside the official Savanna starter: signup.html mounts the plug-in; when sign-up is done the page goes to the learner homepage', async ({ page }) => {
+test('inside the official Savanna starter: signup.html mounts the plug-in; after sign-up, Next (never a timer) goes to the learner homepage', async ({ page }) => {
   await page.goto('/savanna/pages/signup.html');
   const W = page.locator('db-onboarding');
   await expect(W.locator('#h')).toHaveText('Which language would you like to use?');
@@ -408,5 +408,14 @@ test('inside the official Savanna starter: signup.html mounts the plug-in; when 
   await W.locator('[data-next]').click();
   await W.locator('#cons').check(); await W.locator('[data-send]').click();
   await expect(W.locator('#h')).toHaveText('እናመሰግናለን። መልሶችዎን ተቀብለናል።');
+  // The learner stays on the thank-you page (receipt, download, delete) until they choose to go on.
+  await page.waitForTimeout(7000);
+  await expect(page).toHaveURL(/signup\.html/);
+  await expect(W.locator('.receipt')).toHaveText(/^[\w-]{24}$/);
+  const go = W.locator('[data-continue]');
+  await expect(go).toHaveText('ቀጥል');
+  const thanks = await new AxeBuilder({ page }).include('db-onboarding').withTags(TAGS).analyze();
+  expect(thanks.violations.map(v => v.id)).toEqual([]);
+  await go.focus(); await page.keyboard.press('Enter');
   await page.waitForURL(/homepage-v1-self-paced\.html$/, { timeout: 15000 });
 });

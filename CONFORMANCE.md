@@ -7,7 +7,7 @@ The full report, with every criterion, the evidence and the contrast table, is *
 | axe-core 4.14.0, WCAG 2.0/2.1/2.2 A and AA rules | 37 scans across every flow, state and theme, including a blank host page: **0 violations of any impact** |
 | Browser tests (Playwright, Chromium) | 33 of 33 pass: keyboard-only flow, deleting answers with the receipt, inside the official Savanna starter, a blank host page with no styles, Tab and Enter on every choice, keyboard help, Larger text, spoken review clips in six languages, focus, 200% and 400% zoom, six themes, captions with sound off, drafts, offline, hosts |
 | Contrast (`npm run contrast`) | 75 of 75 colour pairs pass in five token sets |
-| Unit and API tests | 115 of 115 pass |
+| Unit and API tests | 117 of 117 pass |
 | Criteria (55 at A and AA) | 45 Supports, 2 Partially supports (1.3.5, 3.2.6), 1 Not yet tested (1.4.12), 7 Not applicable, 0 Does not support |
 | NVDA, TalkBack | **Not yet tested** with a screen reader user |
 

@@ -245,3 +245,23 @@ test('events follow the organisers’ data contract: db-signup:step, :done and :
   d.emit('step', { step: 2, of: 5 });
   assert.deepEqual(got, [['db-signup:step', { step: 2, of: 5 }]]);
 });
+test('thank-you page with a host "continue" address: "Next" (any language) goes on, anything else asks again; no address, no listening', () => {
+  const thanks = (l, cont) => { const d = make({ l, done: true }); d.getAttribute = k => (k === 'continue' ? cont : null); d.goOn = () => d.log.push('GO'); d.stopRead = () => d.log.push('STOP'); return d; };
+  for (const [l, said] of [['en', 'next'], ['en', 'continue'], ['am', 'ቀጥል'], ['om', 'itti fufi'], ['ti', 'ቀጽል'], ['so', 'xiga']]) {
+    const d = thanks(l, 'home.html'); d.heard(said); assert.deepEqual(d.log, ['GO'], l + ': ' + said);
+  }
+  const a = thanks('am', 'home.html'); a.heard('ሙዝ'); assert.deepEqual(a.log, ['say2:doneNext']);
+  const s = thanks('en', 'home.html'); s.heard('stop'); assert.deepEqual(s.log, ['STOP']);
+  const n = thanks('en', null); n.heard('next'); assert.deepEqual(n.log, []);
+  for (const l of ['en', 'am', 'om', 'ti', 'so', 'sid']) assert.ok(thanks(l, 'x').u('doneNext').length > 5, l);
+});
+test('Next on the thank-you page fires a cancelable db-continue, then opens the address unless the host handled it', () => {
+  const seen = [], d = make({ done: true, recId: 'r1' }); d.getAttribute = k => (k === 'continue' ? 'home.html' : null); d.halt = () => {};
+  const loc = globalThis.location; const went = []; globalThis.location = { assign: u => went.push(u) };
+  try {
+    d.dispatchEvent = e => { seen.push([e.type, e.detail, e.cancelable]); return true; }; d.goOn();
+    d.dispatchEvent = () => false; d.goOn();
+  } finally { globalThis.location = loc; }
+  assert.deepEqual(seen, [['db-continue', { id: 'r1', url: 'home.html' }, true]]);
+  assert.deepEqual(went, ['home.html']);
+});
