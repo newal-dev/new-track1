@@ -4,7 +4,7 @@
 **Live:** https://inclusive-access.onrender.com (no login) · **Licence:** [MIT](LICENSE) (the generated voice clips are CC-BY-NC 4.0, see [Libraries and their licences](#libraries-and-their-licences))
 Partner install guide: **[PARTNER_GUIDE.md](PARTNER_GUIDE.md)** · Put it online: **[DEPLOY.md](DEPLOY.md)** · Accessibility: **[CONFORMANCE.md](CONFORMANCE.md)** and the full **[WCAG 2.2 AA report](docs/WCAG-2.2-AA-Report.md)**
 
-[![tests](https://github.com/newal-dev/new-track1/actions/workflows/test.yml/badge.svg?branch=claude/busy-tesla-9gbzv7)](https://github.com/newal-dev/new-track1/actions/workflows/test.yml) · every push runs 115 unit/voice/API tests, the colour-contrast check and 33 browser tests with axe-core
+[![tests](https://github.com/newal-dev/new-track1/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/newal-dev/new-track1/actions/workflows/test.yml) · every push runs 115 unit/voice/API tests, the colour-contrast check and 33 browser tests with axe-core
 
 ## Start here
 
@@ -13,6 +13,7 @@ Partner install guide: **[PARTNER_GUIDE.md](PARTNER_GUIDE.md)** · Put it online
 | Link | What it is |
 |---|---|
 | https://inclusive-access.onrender.com/site/savanna/pages/signup.html | **The plug-in inside the Savanna page** (the demo we show) |
+| https://inclusive-access.onrender.com/site/savanna/pages/signup.html?lang=am | **Voice-first Amharic sign-up:** opens in አማርኛ, every step read aloud and answered by voice (`?lang=om`, `ti`, `so`, `sid` work too) |
 | https://inclusive-access.onrender.com/site/ | Demo partner site: sign-up, **Apply for a job**, **For employers** |
 | https://inclusive-access.onrender.com/site/blank.html | An empty page with only the two install lines |
 | https://inclusive-access.onrender.com/site/my-answers.html | **My answers:** type your receipt code to see, download or delete your answers |
@@ -21,7 +22,7 @@ Partner install guide: **[PARTNER_GUIDE.md](PARTNER_GUIDE.md)** · Put it online
 **Install in three steps** (Node.js 20+ and git; or `docker compose up --build` instead of steps 2–3):
 
 ```sh
-git clone -b claude/busy-tesla-9gbzv7 https://github.com/newal-dev/new-track1.git && cd new-track1
+git clone https://github.com/newal-dev/new-track1.git && cd new-track1
 npm ci
 npm start      # then open http://localhost:3000/site/savanna/pages/signup.html
 ```

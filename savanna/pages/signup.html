@@ -147,6 +147,15 @@
           <script src="http://localhost:3000/widget.js" defer></script>
           <db-onboarding api="http://localhost:3000/v1" audio="http://localhost:3000/audio" partner="Digital Bridge (ALX)"></db-onboarding>
           <script>
+            // ?lang=am (or om, ti, so, sid, en) opens straight in that language and skips the language page:
+            // signup.html?lang=am is the voice-first Amharic sign-up. Runs before the deferred widget starts.
+            (function () {
+              var l = new URLSearchParams(location.search).get('lang');
+              if (!/^(en|am|om|ti|so|sid)$/.test(l || '')) return;
+              var f = document.querySelector('db-onboarding');
+              f.setAttribute('lang', l); f.setAttribute('lang-ask', 'no');
+              document.documentElement.lang = l;
+            })();
             // The host decides what happens next: when sign-up is done, go to the learner homepage.
             document.addEventListener('db-signup:done', function () {
               setTimeout(function () { window.location.href = 'homepage-v1-self-paced.html'; }, 6000);

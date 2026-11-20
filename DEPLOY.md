@@ -19,7 +19,7 @@ the demo learning platform (LTI 1.3) and the simulated SMS inbox. The bare addre
 
 1. Go to https://render.com and sign up **with GitHub**. Allow Render to see the `new-track1` repository.
 2. Click **New**, then **Blueprint**. Choose the repository `newal-dev/new-track1` and the branch
-   `claude/busy-tesla-9gbzv7` (or `main` once it is merged).
+   `main`.
 3. Render reads `render.yaml` from the repository and shows one web service, **inclusive-access**. Click **Apply**.
 4. Wait for the build (about 5 minutes) until it says **Live**. Your address is shown at the top, for example
    `https://inclusive-access-ab12.onrender.com`. Open it: you should see the demo partner site.
