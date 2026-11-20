@@ -21,9 +21,9 @@ Partner install guide: **[PARTNER_GUIDE.md](PARTNER_GUIDE.md)** · Put it online
 **Install in three steps** (Node.js 20+ and git; or `docker compose up --build` instead of steps 2–3):
 
 ```sh
-git clone https://github.com/newal-dev/new-track1.git && cd new-track1
+git clone -b claude/busy-tesla-9gbzv7 https://github.com/newal-dev/new-track1.git && cd new-track1
 npm ci
-npm start      # then open http://localhost:3000
+npm start      # then open http://localhost:3000/site/savanna/pages/signup.html
 ```
 
 On any partner website it is two lines: `<script src='https://inclusive-access.onrender.com/widget.js' defer></script>` and `<db-onboarding api='https://inclusive-access.onrender.com/v1'></db-onboarding>`.
