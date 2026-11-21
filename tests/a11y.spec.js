@@ -153,8 +153,11 @@ test('consent: nothing is sent until the box is ticked', async ({ page }) => {
   expect((await deepActive(page)).id).toBe('cons');
   expect(posts).toEqual([]);
   await axe(page, 'error state: consent missing');
-  await F(page).locator('#cons').check();
-  await F(page).locator('[data-send]').click();
+  // Keyboard only: Enter ticks the box (as the keyboard help says), Enter again unticks, then Enter on Send sends.
+  await page.keyboard.press('Enter'); await expect(F(page).locator('#cons')).toBeChecked();
+  await page.keyboard.press('Enter'); await expect(F(page).locator('#cons')).not.toBeChecked();
+  await page.keyboard.press('Enter');
+  await F(page).locator('[data-send]').focus(); await page.keyboard.press('Enter');
   await expect(heading(page)).toHaveText('Thank you. We received your answers.');
   expect(posts.length).toBe(1);
 });
