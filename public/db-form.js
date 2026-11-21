@@ -621,6 +621,7 @@ dl.review{margin:var(--s4) 0 0;border-top:1px solid var(--line)}
 .done{display:flex;flex-direction:column;gap:var(--s3);padding:var(--s4) 0}
 .done svg{color:var(--accent)}
 .sure{margin-top:var(--s4);padding:var(--s3);border-left:6px solid var(--error);border-radius:var(--r1);background:var(--error-soft)}
+.revmic{margin-top:var(--s3)}
 .done .receipt{font-family:ui-monospace,Consolas,monospace;font-weight:700;letter-spacing:.04em}
 .when{color:var(--ink-2);font-size:.9375em}
 .note{padding:var(--s3);border-left:4px solid var(--accent);background:var(--accent-soft);color:var(--ink)}
@@ -1001,7 +1002,7 @@ class DbForm extends HTMLElement {
     const inp = s.type === 'ecdate' ? this.dateHTML(this.a[s.id]) : s.type === 'text'
       ? `<input id='f' type='text' value='${esc(v)}' aria-labelledby='h' aria-describedby='hint err' ${this.err ? "aria-invalid='true'" : ''} lang='${this.l}' dir='auto' ${INPUT_HINTS[s.id] || "autocomplete='off' spellcheck='false'"}>`
       : `<div class='opts'>${s.options.map(([k, t]) => `<label class='opt'><input type='${s.type}' name='f' value='${esc(k)}' ${[].concat(v).includes(k) ? 'checked' : ''}>${this.pref.simple && P[k] ? `<span class='pic'>${I(k, 28)}</span>` : ''}<span>${esc(T(t, this.l))}</span><span class='tick'>${I('check', 20)}</span></label>`).join('')}</div>`;
-    const mic = this.canHear() && !s.novoice ? `<button type='button' data-mic class='mic'><span class='lab'>${I('mic')}${this.u('speak')}</span><span class='lvl' aria-hidden='true'><i></i><i></i><i></i><i></i></span></button>` : '';
+    const mic = this.canHear() && !s.novoice ? this.micHTML() : '';
     return `<form novalidate><p class='step'><span>${esc(this.u('of', { n: this.i + 1, t: n }))}</span></p><div class='track' aria-hidden='true'><i style='width:${Math.round((this.i + 1) / n * 100)}%'></i></div>
       <fieldset><legend id='h' tabindex='-1'>${esc(T(s.q, this.l))}</legend><p id='hint'>${esc(T(s.hint, this.l))}</p>${mic}${inp}
       ${this.errHTML()}</fieldset>
@@ -1348,6 +1349,7 @@ class DbForm extends HTMLElement {
       <p class='after'>${this.u('reviewKeys')}</p>
       ${this.consentHTML()}
       <p class='after'>${this.u(this.rs ? 'reviewFix' : 'reviewAsk')}</p>
+      ${this.canHear() ? `<div class='revmic'>${this.micHTML()}</div>` : ''}
       ${this.errHTML()}
       <div class='row'><button type='button' class='p big' data-send>${I('check')}${this.u('send')}</button>${this.rs ? '' : `<button type='button' class='big' data-nochange>${this.u('noChange')}</button>`}<button type='button' class='big' data-restart>${this.u('restart')}</button><button type='button' data-back>${I('back', 20)}${this.u('back')}</button></div>`;
     }
@@ -1397,6 +1399,8 @@ class DbForm extends HTMLElement {
     const del = this.receipt && api ? `<button type='button' data-mydel>${esc(this.u('myDelete'))}</button>` : '';
     return dl || del ? `<div class='row'>${dl}${del}</div>${this.mine === 'fail' ? `<p class='err' role='alert'>${esc(this.u('myFail'))}</p>` : ''}` : '';
   }
+  // The Speak button: on every question, and on the review page (say Yes to send, a number to change that answer).
+  micHTML() { return `<button type='button' data-mic class='mic'><span class='lab'>${I('mic')}${this.u('speak')}</span><span class='lvl' aria-hidden='true'><i></i><i></i><i></i><i></i></span></button>`; }
   focusIn(sel) { const e = this.r.querySelector && this.r.querySelector(sel); if (e && e.focus) e.focus(); }
   emit(name, detail) {
     if (typeof this.dispatchEvent !== 'function') return;
