@@ -4,7 +4,7 @@
 **Live:** https://inclusive-access.onrender.com (no login) · **Licence:** [MIT](LICENSE) (the generated voice clips are CC-BY-NC 4.0, see [Libraries and their licences](#libraries-and-their-licences))
 Partner install guide: **[PARTNER_GUIDE.md](PARTNER_GUIDE.md)** · Put it online: **[DEPLOY.md](DEPLOY.md)** · Accessibility: **[CONFORMANCE.md](CONFORMANCE.md)** and the full **[WCAG 2.2 AA report](docs/WCAG-2.2-AA-Report.md)**
 
-[![tests](https://github.com/newal-dev/new-track1/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/newal-dev/new-track1/actions/workflows/test.yml) · every push runs 117 unit/voice/API tests, the colour-contrast check and 34 browser tests with axe-core
+[![tests](https://github.com/newal-dev/new-track1/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/newal-dev/new-track1/actions/workflows/test.yml) · every push runs 117 unit/voice/API tests, the colour-contrast check and 35 browser tests with axe-core
 
 ## Start here
 
@@ -33,7 +33,7 @@ On any partner website it is two lines: `<script src='https://inclusive-access.o
 
 ```sh
 npm test                                   # 117 unit, voice and API tests, no server needed
-npx playwright install chromium && npm run test:a11y   # 34 browser + axe-core tests, starts the servers itself
+npx playwright install chromium && npm run test:a11y   # 35 browser + axe-core tests, starts the servers itself
 ```
 
 **Privacy in one line:** nothing is sent without a tick; support needs need a second tick and are never shown to employers; every learner gets a receipt code to see, download or **delete** their answers. Full note: **[PRIVACY.md](PRIVACY.md)**.
@@ -83,7 +83,7 @@ Wait for `Plugin server on http://localhost:3000`, then open:
 npm ci
 npm test                       # 117 unit, voice and API tests; no server needed
 npx playwright install chromium
-npm run test:a11y              # 34 browser tests with axe-core; starts the servers itself
+npm run test:a11y              # 35 browser tests with axe-core; starts the servers itself
 npm run contrast               # every colour pair in every theme
 node tools/measure-3g.mjs      # load time on Slow 3G and 3G (servers running)
 ```
@@ -195,7 +195,7 @@ Rough estimate for **3,000 learners a month**: **about US$5–10 a month** for o
 
 ## Finished and not finished
 
-**Finished:** the three flows (sign-up, job application, employer form) in six languages; voice input and read-aloud with recorded clips; keyboard, screen-reader, 200% text and colour-theme support; consent, separate support consent, export and deletion (on the thank-you page and the "My answers" page, with only the receipt code); drafts and offline sending; Ethiopian calendar; Level 1, Level 2 (OpenAPI + `/docs`) and Level 3 (LTI 1.3 launch, JobPosting); running inside the official Savanna starter; one-container deployment; 117 unit/API tests, 34 browser tests, 0 axe violations, run by GitHub Actions on every push.
+**Finished:** the three flows (sign-up, job application, employer form) in six languages; voice input and read-aloud with recorded clips; keyboard, screen-reader, 200% text and colour-theme support; consent, separate support consent, export and deletion (on the thank-you page and the "My answers" page, with only the receipt code); drafts and offline sending; Ethiopian calendar; Level 1, Level 2 (OpenAPI + `/docs`) and Level 3 (LTI 1.3 launch, JobPosting); running inside the official Savanna starter; one-container deployment; 117 unit/API tests, 35 browser tests, 0 axe violations, run by GitHub Actions on every push.
 
 **Not finished, honestly:**
 - **Native review** of Afaan Oromoo, Tigrinya, Somali and Sidaamu Afoo (Amharic is checked).

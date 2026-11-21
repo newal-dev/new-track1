@@ -210,6 +210,9 @@ const UI = {
   receipt: { en: 'Your receipt code is {r}. Keep it if you may want your answers deleted later.', am: 'የደረሰኝ ኮድዎ {r} ነው። መልሶችዎ በኋላ እንዲሰረዙ ሊፈልጉ ከቻሉ ይያዙት።', om: "Koodiin ragaa kee {r} dha. Booda deebiin kee akka haqamu barbaaduu yoo dandeesse qabadhu.", ti: "ኮድ ቅብሊትኩም {r} እዩ። ደሓር መልስታትኩም ክድምሰሱ ክትደልዩ እንተ ኽኢልኩም ሓዝዎ።", so: "Koodhkaaga rasiidka waa {r}. Hayso haddii aad hadhow rabto in jawaabahaaga la tirtiro." }, // VERIFY_NATIVE
   // The learner's own record (thank-you page and the "My answers" page): download it, or delete it with the receipt code.
   // Added 19 Nov from the organisers' feedback. All languages, Amharic too, are drafts: VERIFY_NATIVE.
+  doneSay: { en: 'Say Download to keep a copy of your answers, or Delete to delete them.', am: 'የመልሶችዎን ቅጂ ለማስቀመጥ «አውርድ»፣ ለመሰረዝ «ሰርዝ» ይበሉ።', om: 'Garagalcha deebii keetii qabachuuf Buusi jedhi, haquuf Haqi jedhi.', ti: 'ቅዳሕ መልስታትኩም ንምሓዝ «ኣውርድ»፣ ንምድምሳስ «ደምስስ» በሉ።', so: 'Dheh Soo deji si aad u hesho nuqul jawaabahaaga, ama Tirtir si aad u tirtirto.' },
+  mySay: { en: 'Say Yes to delete, or No to keep them.', am: 'ለመሰረዝ «አዎ»፣ ለማቆየት «አይ» ይበሉ።', om: 'Haquuf Eeyyee, tursiisuuf Lakki jedhi.', ti: 'ንምድምሳስ «እወ»፣ ንምዕቃብ «ኣይፋል» በሉ።', so: 'Dheh Haa si aad u tirtirto, ama Maya si aad u hayso.' },
+  myDownloaded: { en: 'A copy of your answers was downloaded.', am: 'የመልሶችዎ ቅጂ ወርዷል።', om: 'Garagalchi deebii keetii buufameera.', ti: 'ቅዳሕ መልስታትኩም ወሪዱ።', so: 'Nuqul jawaabahaaga waa la soo dejiyay.' },
   myDownload: { en: 'Download my answers', am: 'መልሶቼን አውርድ', om: 'Deebii koo buusi', ti: 'መልስታተይ ኣውርድ', so: 'Soo dejiso jawaabahayga' },
   myDelete: { en: 'Delete my answers', am: 'መልሶቼን ሰርዝ', om: 'Deebii koo haqi', ti: 'መልስታተይ ደምስስ', so: 'Tirtir jawaabahayga' },
   mySure: { en: 'Delete all your answers? This cannot be undone. Your support choices are deleted too.', am: 'ሁሉንም መልሶችዎን መሰረዝ ይፈልጋሉ? ይህ ሊመለስ አይችልም። የእገዛ ምርጫዎችዎም ይሰረዛሉ።', om: "Deebii kee hunda haquu barbaaddaa? Kun deebi'uu hin danda'u. Filannoon deeggarsa kees ni haqama.", ti: 'ኩሉ መልስታትኩም ክትድምስሱ ትደልዩ ዶ? እዚ ክምለስ ኣይክእልን። ምርጫታት ደገፍኩም እውን ይድምሰሱ።', so: 'Ma rabtaa inaad tirtirto dhammaan jawaabahaaga? Tan dib looma celin karo. Doorashooyinkaaga taageerada sidoo kale waa la tirtirayaa.' },
@@ -348,6 +351,9 @@ const SID = {
     heardB: 'Albisate Albisi yi, woy dawarokki wole yi.',
     voiceSpeed: 'Qaalu saffisa', // VERIFY_NATIVE
     textSize: 'Borrote lowina',
+    doneSay: 'Dawaro keeshshi qaxxaamo amadate Ajiisi yi, huqisate Huqisi yi.',
+    mySay: 'Huqisate Ee yi, agarate Dee\'ni yi.',
+    myDownloaded: 'Dawaro keeshshi qaxxaamo ajiifamino.',
     myDownload: 'Dawaro keeshsha ajiisi',
     myDelete: 'Dawaro keeshsha huqisi',
     mySure: 'Dawaro keeshsha baala huqisate hasatto? Kuni higge didandiitanno. Kaa\'lo doorshoyyikkino huqqisamanno.',
@@ -752,6 +758,11 @@ const CMD = {
   // "Start again" = a start word plus one of these (review page only).
   again: ['again', 'እንደገና',
     'deebi', 'ደጊምካ', 'ደጊምኩም', 'dib'], // om ti so, VERIFY_NATIVE
+  // Thank-you page: delete or download my answers.
+  del: ['delete', 'remove', 'erase', 'ሰርዝ', 'ሰርዙ', 'አጥፋ', 'አጥፉ',
+    'haqi', 'ደምስስ', 'ደምስሱ', 'tirtir', 'huqisi'], // om ti so sid, VERIFY_NATIVE
+  download: ['download', 'save', 'copy', 'keep', 'አውርድ', 'አውርዱ', 'አስቀምጥ',
+    'buusi', 'ኣውርድ', 'dejiso', 'ajiisi'], // om ti so sid, VERIFY_NATIVE
   stop: ['stop', 'ቁም', 'አቁም',
     'dhaabi', 'ኣቋርጽ', 'ደው', 'jooji'], // om ti so, VERIFY_NATIVE
 };
@@ -1340,7 +1351,7 @@ class DbForm extends HTMLElement {
     if (this.moved) { this.halt(); this.sup = 0; }
     const st = this.steps, s = st[this.i];
     let b;
-    if (this.done) b = `<div class='done'>${CHECK}<h2 id='h' tabindex='-1'>${this.u(this.queued ? 'queued' : 'thanks')}</h2>${this.receipt ? `<p>${this.u('receipt', { r: `<span class='receipt'>${esc(this.receipt)}</span>` })}</p>` : ''}<p class='when'>${esc(this.todayText())}</p>${this.mineHtml()}${this.cont() ? `<div class='row'><button type='button' class='p big' data-continue>${this.u('next')}${I('next', 20)}</button></div>` : ''}</div>`;
+    if (this.done) b = `<div class='done'>${CHECK}<h2 id='h' tabindex='-1'>${this.u(this.queued ? 'queued' : 'thanks')}</h2>${this.receipt ? `<p>${this.u('receipt', { r: `<span class='receipt'>${esc(this.receipt)}</span>` })}</p>` : ''}<p class='when'>${esc(this.todayText())}</p>${this.mineHtml()}${this.canHear() && (this.canMine() || this.cont()) ? `<div class='revmic'>${this.micHTML()}</div>` : ''}${this.cont() ? `<div class='row'><button type='button' class='p big' data-continue>${this.u('next')}${I('next', 20)}</button></div>` : ''}</div>`;
     else if (this.welcome) b = this.welcomeHTML();
     else if (!s) {
       const rv = st.map((x, n) => [x, n]).filter(([x]) => !x.local);
@@ -1383,7 +1394,7 @@ class DbForm extends HTMLElement {
     this.vtries = 0;
     const quiet = this.quiet; this.quiet = false;
     // Thank-you page: with a host "continue" address, ask "Say Next to continue" and listen, so nobody is moved on by a timer.
-    const askNext = this.cont() && this.canHear() && !this.vno ? () => this.say2(this.u('doneNext'), 'doneNext') : null;
+    const askNext = (this.cont() || this.canMine()) && this.canHear() && !this.vno ? () => this.doneAsk() : null;
     if (this.rm && this.moved && !quiet) this.readPage(s, this.done ? askNext : () => this.listenAnswer());
     else if (this.err && this.moved && !quiet && (this.vm || this.usedRead)) this.readErr();
   }
@@ -1401,6 +1412,23 @@ class DbForm extends HTMLElement {
   }
   // The Speak button: on every question, and on the review page (say Yes to send, a number to change that answer).
   micHTML() { return `<button type='button' data-mic class='mic'><span class='lab'>${I('mic')}${this.u('speak')}</span><span class='lvl' aria-hidden='true'><i></i><i></i><i></i><i></i></span></button>`; }
+  async delMine(voice) {
+    const ok = await deleteByReceipt(this.getAttribute('api'), this.receipt);
+    this.mine = ok ? 'gone' : 'fail'; this.draw(); this.focusIn(ok ? '#mymsg' : '[data-mydel]');
+    const m = this.u(ok ? 'myDeleted' : 'myFail'); this.say(m); if (voice) { if (this.hasVoice()) this.speak(m, null); else this.cap('speaking', m, this.l); }
+    if (ok) { this.dispatchEvent(new CustomEvent('db-deleted', { detail: { id: this.recId }, bubbles: true, composed: true })); this.sent = null; }
+  }
+  // Thank-you page by voice: what can be said here (Download, Delete, and Next when the host gave a "continue" address).
+  // These sentences are new and have no recorded clip yet: a device voice reads them where the phone has one for this
+  // language; otherwise they are shown as a caption, the listening tone plays and the form listens (no English notice).
+  doneAsk() {
+    const t = this.mine === 'sure' ? this.u('mySure') + ' ' + this.u('mySay') : [this.canMine() ? this.u('doneSay') : '', this.cont() ? this.u('doneNext') : ''].filter(Boolean).join(' ');
+    if (!t) return null;
+    if (this.mine !== 'sure' && !this.canMine()) return this.say2(t, 'doneNext');
+    if (this.hasVoice()) return this.say2(t);
+    this.say(t); this.cap('speaking', t, this.l); return this.cue(() => this.listen(true));
+  }
+  canMine() { return this.mine !== 'gone' && !!(this.sent || (this.receipt && this.getAttribute('api'))); }
   focusIn(sel) { const e = this.r.querySelector && this.r.querySelector(sel); if (e && e.focus) e.focus(); }
   emit(name, detail) {
     if (typeof this.dispatchEvent !== 'function') return;
@@ -1468,11 +1496,7 @@ class DbForm extends HTMLElement {
     on('[data-continue]', () => this.goOn());
     on('[data-mydel]', () => { this.mine = 'sure'; this.draw(); this.focusIn('#sureq'); });
     on('[data-mydel-no]', () => { this.mine = ''; this.draw(); this.focusIn('[data-mydel]'); });
-    on('[data-mydel-yes]', async () => {
-      const ok = await deleteByReceipt(this.getAttribute('api'), this.receipt);
-      this.mine = ok ? 'gone' : 'fail'; this.draw(); this.focusIn(ok ? '#mymsg' : '[data-mydel]');
-      if (ok) { this.say(this.u('myDeleted')); this.dispatchEvent(new CustomEvent('db-deleted', { detail: { id: this.recId }, bubbles: true, composed: true })); this.sent = null; }
-    });
+    on('[data-mydel-yes]', () => this.delMine());
     this.r.querySelectorAll('[data-consent]').forEach(x => x.addEventListener('change', () => {
       this.consent[x.dataset.consent] = x.checked;
       if (x.dataset.consent === 'a' && x.checked && this.errKey === 'consentNeed') { this.err = ''; this.errKey = ''; const e = this.r.querySelector('#err'); if (e) e.textContent = ''; x.removeAttribute('aria-invalid'); }
@@ -1674,12 +1698,19 @@ class DbForm extends HTMLElement {
   heard(raw) {
     this.vtries = 0;
     if (this.done) {
-      // Only the thank-you page of a host with a "continue" address listens: "Next" goes on, "Stop" stops reading.
-      if (!this.cont()) return;
-      const dw = (this.norm(raw) || '').split(' ').filter(Boolean), dis = c => dw.length > 0 && dw.length <= 3 && isCmd(c, dw);
-      if (dis('next')) return this.goOn();
+      // Thank-you page: "Download", "Delete" (then Yes or No), "Next" when the host gave a "continue" address, "Stop".
+      const dw = (this.norm(raw) || '').split(' ').filter(Boolean), dis = c => dw.length > 0 && dw.length <= 4 && isCmd(c, dw);
       if (dis('stop')) return this.stopRead();
-      return this.say2(this.u('doneNext'), 'doneNext');
+      if (this.mine === 'sure') {
+        const yn = this.ans(raw);
+        if (yn === 'y') return this.delMine(true);
+        if (yn === 'n') { this.mine = ''; this.quiet = true; this.draw(); this.focusIn('[data-mydel]'); return this.doneAsk(); }
+        return this.doneAsk();
+      }
+      if (this.canMine() && dis('del') && this.receipt && this.getAttribute('api')) { this.mine = 'sure'; this.quiet = true; this.draw(); this.focusIn('#sureq'); return this.doneAsk(); }
+      if (this.canMine() && dis('download') && this.sent) { saveAnswers(this.sent, this.receipt, this.r); const m = this.u('myDownloaded'); this.say(m); return this.hasVoice() ? this.speak(m, null) : this.cap('speaking', m, this.l); }
+      if (this.cont() && dis('next')) return this.goOn();
+      return this.doneAsk();
     }
     const s = this.steps[this.i], t = this.norm(raw), w = t ? t.split(' ') : [];
     const lim = s && s.type === 'text' ? 1 : 3;
