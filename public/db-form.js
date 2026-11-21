@@ -909,6 +909,14 @@ class DbForm extends HTMLElement {
         t.dispatchEvent(new Event('change', { bubbles: true }));
         return;
       }
+      // Enter on every other tick box or choice (the consent boxes on the review page, colours, text size, voice speed)
+      // ticks or chooses it too, as the keyboard help says. The browser would do nothing.
+      if (e.key === 'Enter' && t && (t.type === 'checkbox' || t.type === 'radio') && !e.shiftKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault(); this.kbd = Date.now(); if (this.vrec) this.stopVoice();
+        if (t.type === 'checkbox') t.checked = !t.checked; else if (!t.checked) t.checked = true; else return;
+        t.dispatchEvent(new Event('change', { bubbles: true }));
+        return;
+      }
       // Tab and Shift+Tab visit every radio choice, one by one, like the checkboxes (the browser would jump over the group).
       // The arrow keys still work as usual.
       if (e.key === 'Tab' && opt && t.type === 'radio' && !e.ctrlKey && !e.altKey) {
