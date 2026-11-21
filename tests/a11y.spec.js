@@ -16,7 +16,7 @@ test.afterAll(async ({}, info) => { await info.attach('axe-scans', { body: JSON.
 
 // Speech recognition is not available in CI browsers; turn it off so the tests are the same everywhere.
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => { Object.defineProperty(window, 'webkitSpeechRecognition', { value: undefined }); Object.defineProperty(window, 'SpeechRecognition', { value: undefined }); });
+  await page.addInitScript(() => { Object.defineProperty(window, 'webkitSpeechRecognition', { value: undefined, configurable: true }); Object.defineProperty(window, 'SpeechRecognition', { value: undefined, configurable: true }); });
 });
 
 const F = page => page.locator('db-form');
@@ -160,6 +160,30 @@ test('consent: nothing is sent until the box is ticked', async ({ page }) => {
   await F(page).locator('[data-send]').focus(); await page.keyboard.press('Enter');
   await expect(heading(page)).toHaveText('Thank you. We received your answers.');
   expect(posts.length).toBe(1);
+});
+
+test('review page: a Speak button; saying "Yes" ticks the consent and sends', async ({ page }) => {
+  // A stand-in microphone that hears whatever window.__say holds.
+  await page.addInitScript(() => {
+    class R { start() { setTimeout(() => { const t = window.__say || ''; const alt = { transcript: t, confidence: 0.9 }; const res = [alt]; res.isFinal = true; this.onresult && this.onresult({ results: [res], resultIndex: 0 }); this.onend && this.onend(); }, 50); } stop() {} abort() {} }
+    Object.defineProperty(window, 'SpeechRecognition', { value: R, configurable: true }); Object.defineProperty(window, 'webkitSpeechRecognition', { value: R, configurable: true });
+  });
+  await page.goto('/index.html?flow=signup');
+  const sent = page.evaluate(() => new Promise(r => document.addEventListener('db-complete', e => r(e.detail.answers), { once: true })));
+  await F(page).locator('[data-pick=en]').click(); await F(page).locator('[data-ra=n]').click(); await F(page).locator('[data-start=t]').click();
+  await next(page);
+  await F(page).locator('#f').fill('Voice Review'); await next(page);
+  await F(page).locator('#f').fill('0911223344'); await next(page);
+  await F(page).locator('input[name=f]').first().check(); await next(page);
+  await next(page);
+  await expect(heading(page)).toHaveText('Check your answers');
+  const mic = F(page).locator('.revmic [data-mic]');
+  await expect(mic).toBeVisible();
+  await axe(page, 'review page with Speak');
+  await page.evaluate(() => { window.__say = 'yes'; });
+  await mic.focus(); await page.keyboard.press('Enter');
+  await expect(heading(page)).toHaveText('Thank you. We received your answers.');
+  expect((await sent).fullName).toBe('Voice Review');
 });
 
 test('focus moves to the new question heading on every step; Back keeps the answer', async ({ page }) => {
