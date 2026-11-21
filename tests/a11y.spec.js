@@ -186,6 +186,35 @@ test('review page: a Speak button; saying "Yes" ticks the consent and sends', as
   expect((await sent).fullName).toBe('Voice Review');
 });
 
+test('thank-you page by voice: Speak, "Download" saves a copy; "Delete" asks, "No" keeps, "Yes" deletes', async ({ page, request }) => {
+  await page.addInitScript(() => {
+    class R { start() { setTimeout(() => { const t = (window.__says || []).shift() || ''; if (!t) { this.onend && this.onend(); return; } const res = [{ transcript: t, confidence: 0.9 }]; res.isFinal = true; this.onresult && this.onresult({ results: [res], resultIndex: 0 }); this.onend && this.onend(); }, 50); } stop() {} abort() {} }
+    Object.defineProperty(window, 'SpeechRecognition', { value: R, configurable: true }); Object.defineProperty(window, 'webkitSpeechRecognition', { value: R, configurable: true });
+  });
+  await page.goto('/index.html?flow=signup');
+  await F(page).locator('[data-pick=en]').click(); await F(page).locator('[data-ra=n]').click(); await F(page).locator('[data-start=t]').click();
+  await next(page);
+  await F(page).locator('#f').fill('Voice Delete'); await next(page);
+  await F(page).locator('#f').fill('0911223344'); await next(page);
+  await F(page).locator('input[name=f]').first().check(); await next(page);
+  await next(page);
+  await F(page).locator('#cons').check(); await F(page).locator('[data-send]').click();
+  await expect(heading(page)).toHaveText('Thank you. We received your answers.');
+  const code = (await F(page).locator('.receipt').textContent()).trim();
+  const mic = () => F(page).locator('.done [data-mic]');
+  await expect(mic()).toBeVisible();
+  await axe(page, 'thank-you page with Speak');
+  const speak = async t => { await page.evaluate(x => { window.__says = [x]; }, t); await mic().click(); };
+  const [dl] = await Promise.all([page.waitForEvent('download'), speak('download')]);
+  expect(dl.suggestedFilename()).toBe('my-answers-' + code + '.json');
+  await speak('delete'); await expect(F(page).locator('#sureq')).toBeVisible();
+  await speak('no'); await expect(F(page).locator('#sureq')).toHaveCount(0);
+  expect((await request.get('http://localhost:3000/v1/receipts/' + code)).status()).toBe(200);
+  await speak('delete'); await expect(F(page).locator('#sureq')).toBeVisible();
+  await speak('yes'); await expect(F(page).locator('#mymsg')).toHaveText('Your answers have been deleted.');
+  expect((await request.get('http://localhost:3000/v1/receipts/' + code)).status()).toBe(404);
+});
+
 test('focus moves to the new question heading on every step; Back keeps the answer', async ({ page }) => {
   await toForm(page); await next(page);
   expect((await deepActive(page)).id).toBe('h');
